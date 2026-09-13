@@ -1,7 +1,14 @@
 "use client";
-import { useCart } from "@/src/contexts/CartContext";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { useCart } from "@/src/contexts/CartContext";
+import {
+  dispatchFavoriteUpdated,
+  FAVORITES_UPDATED_EVENT,
+} from "@/src/lib/favorites-events";
+import { supabase } from "@/src/lib/supabase/client";
 
 type ProductActionsProps = {
   product: {
@@ -18,38 +25,182 @@ type ProductActionsProps = {
 export default function ProductActions({
   product,
 }: ProductActionsProps) {
+  const router = useRouter();
+
   const [quantity, setQuantity] = useState(1);
+  const [isFavorite, setIsFavorite] =
+    useState(false);
+  const [favoriteLoading, setFavoriteLoading] =
+    useState(false);
 
   const { addItem } = useCart();
 
   const stock = product.stock;
-
   const isOutOfStock = stock <= 0;
 
+  useEffect(() => {
+    async function loadFavorite() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setIsFavorite(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("favorites")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("product_id", product.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error(
+          "Erro ao carregar favorito:",
+          error
+        );
+        return;
+      }
+
+      setIsFavorite(Boolean(data));
+    }
+
+    loadFavorite();
+  }, [product.id]);
+
+  useEffect(() => {
+    function handleFavoriteUpdated(
+      event: Event
+    ) {
+      const customEvent =
+        event as CustomEvent<{
+          productId: string;
+          isFavorite: boolean;
+        }>;
+
+      if (
+        customEvent.detail.productId !==
+        product.id
+      ) {
+        return;
+      }
+
+      setIsFavorite(
+        customEvent.detail.isFavorite
+      );
+    }
+
+    window.addEventListener(
+      FAVORITES_UPDATED_EVENT,
+      handleFavoriteUpdated
+    );
+
+    return () => {
+      window.removeEventListener(
+        FAVORITES_UPDATED_EVENT,
+        handleFavoriteUpdated
+      );
+    };
+  }, [product.id]);
+
   function decreaseQuantity() {
-    setQuantity((current) => Math.max(1, current - 1));
+    setQuantity((current) =>
+      Math.max(1, current - 1)
+    );
   }
 
   function increaseQuantity() {
-    setQuantity((current) => Math.min(stock, current + 1));
+    setQuantity((current) =>
+      Math.min(stock, current + 1)
+    );
   }
 
-  function handleAddToCart() {
-  const finalPrice =
-    product.promoPrice ?? product.price;
+  async function handleAddToCart() {
+    const finalPrice =
+      product.promoPrice ?? product.price;
 
-  addItem(
-    {
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      price: finalPrice,
-      imageUrl: product.imageUrl,
-      stock: product.stock,
-    },
-    quantity
-  );
-}
+    await addItem(
+      {
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        price: finalPrice,
+        imageUrl: product.imageUrl,
+        stock: product.stock,
+      },
+      quantity
+    );
+  }
+
+  async function handleFavorite() {
+    if (favoriteLoading) {
+      return;
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      setFavoriteLoading(true);
+
+      if (isFavorite) {
+        const { error } = await supabase
+          .from("favorites")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("product_id", product.id);
+
+        if (error) {
+          console.error(
+            "Erro ao remover favorito:",
+            error
+          );
+          return;
+        }
+
+        setIsFavorite(false);
+
+        dispatchFavoriteUpdated({
+          productId: product.id,
+          isFavorite: false,
+        });
+
+        return;
+      }
+
+      const { error } = await supabase
+        .from("favorites")
+        .insert({
+          user_id: user.id,
+          product_id: product.id,
+        });
+
+      if (error) {
+        console.error(
+          "Erro ao adicionar favorito:",
+          error
+        );
+        return;
+      }
+
+      setIsFavorite(true);
+
+      dispatchFavoriteUpdated({
+        productId: product.id,
+        isFavorite: true,
+      });
+    } finally {
+      setFavoriteLoading(false);
+    }
+  }
 
   return (
     <div className="mt-10">
@@ -103,9 +254,13 @@ export default function ProductActions({
 
         <button
           type="button"
-          className="border border-neutral-300 px-6 py-4 text-sm font-medium transition hover:bg-neutral-100"
+          onClick={handleFavorite}
+          disabled={favoriteLoading}
+          className="border border-neutral-300 px-6 py-4 text-sm font-medium transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          ♡ Favoritar
+          {isFavorite
+            ? "♥ Favoritado"
+            : "♡ Favoritar"}
         </button>
       </div>
     </div>

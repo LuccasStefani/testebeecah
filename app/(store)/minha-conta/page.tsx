@@ -34,14 +34,16 @@ function getStatusLabel(status: string) {
     case "refunded":
       return "Reembolsado";
 
+    case "expired":
+      return "Expirado";
+
     default:
       return status;
   }
 }
 
 export default async function MinhaContaPage() {
-  const supabase =
-    await createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const {
     data: { user },
@@ -51,27 +53,23 @@ export default async function MinhaContaPage() {
     redirect("/login");
   }
 
-  const {
-    data: orders,
-    error: ordersError,
-  } = await supabase
+  const { data: orders, error: ordersError } = await supabase
     .from("orders")
-    .select(`
+    .select(
+      `
       id,
       status,
       total,
       created_at
-    `)
+    `
+    )
     .eq("user_id", user.id)
     .order("created_at", {
       ascending: false,
     });
 
   if (ordersError) {
-    console.error(
-      "Erro ao carregar pedidos:",
-      ordersError
-    );
+    console.error("Erro ao carregar pedidos:", ordersError);
   }
 
   return (
@@ -85,9 +83,7 @@ export default async function MinhaContaPage() {
           Olá, seja bem-vindo
         </h1>
 
-        <p className="mt-2 text-neutral-500">
-          {user.email}
-        </p>
+        <p className="mt-2 text-neutral-500">{user.email}</p>
       </div>
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -95,9 +91,7 @@ export default async function MinhaContaPage() {
           href="/favoritos"
           className="border border-neutral-200 p-6 transition hover:border-neutral-950"
         >
-          <h2 className="font-semibold">
-            Favoritos
-          </h2>
+          <h2 className="font-semibold">Favoritos</h2>
 
           <p className="mt-2 text-sm text-neutral-500">
             Veja os perfumes que você salvou.
@@ -108,9 +102,7 @@ export default async function MinhaContaPage() {
           href="/carrinho"
           className="border border-neutral-200 p-6 transition hover:border-neutral-950"
         >
-          <h2 className="font-semibold">
-            Carrinho
-          </h2>
+          <h2 className="font-semibold">Carrinho</h2>
 
           <p className="mt-2 text-sm text-neutral-500">
             Confira os produtos adicionados.
@@ -118,9 +110,7 @@ export default async function MinhaContaPage() {
         </Link>
 
         <div className="border border-neutral-200 p-6 sm:col-span-2">
-          <h2 className="font-semibold">
-            Pedidos
-          </h2>
+          <h2 className="font-semibold">Pedidos</h2>
 
           {(orders ?? []).length === 0 ? (
             <p className="mt-2 text-sm text-neutral-500">
@@ -150,9 +140,7 @@ export default async function MinhaContaPage() {
                     </span>
 
                     <span className="font-medium">
-                      {formatPrice(
-                        Number(order.total)
-                      )}
+                      {formatPrice(Number(order.total))}
                     </span>
 
                     <span className="text-sm text-neutral-400">
@@ -166,13 +154,9 @@ export default async function MinhaContaPage() {
         </div>
 
         <div className="border border-neutral-200 p-6 sm:col-span-2">
-          <h2 className="font-semibold">
-            Dados da conta
-          </h2>
+          <h2 className="font-semibold">Dados da conta</h2>
 
-          <p className="mt-2 text-sm text-neutral-500">
-            E-mail: {user.email}
-          </p>
+          <p className="mt-2 text-sm text-neutral-500">E-mail: {user.email}</p>
         </div>
       </div>
     </section>

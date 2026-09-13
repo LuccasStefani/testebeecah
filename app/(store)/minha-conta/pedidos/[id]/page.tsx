@@ -1,8 +1,5 @@
 import Link from "next/link";
-import {
-  notFound,
-  redirect,
-} from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { createSupabaseServerClient } from "@/src/lib/supabase/server";
 
@@ -37,6 +34,9 @@ function getStatusLabel(status: string) {
     case "refunded":
       return "Reembolsado";
 
+    case "expired":
+      return "Expirado";
+
     default:
       return status;
   }
@@ -48,13 +48,10 @@ type PageProps = {
   }>;
 };
 
-export default async function OrderDetailPage({
-  params,
-}: PageProps) {
+export default async function OrderDetailPage({ params }: PageProps) {
   const { id } = await params;
 
-  const supabase =
-    await createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const {
     data: { user },
@@ -64,12 +61,10 @@ export default async function OrderDetailPage({
     redirect("/login");
   }
 
-  const {
-    data: order,
-    error,
-  } = await supabase
+  const { data: order, error } = await supabase
     .from("orders")
-    .select(`
+    .select(
+      `
       id,
       user_id,
       status,
@@ -85,7 +80,8 @@ export default async function OrderDetailPage({
         quantity,
         subtotal
       )
-    `)
+    `
+    )
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -108,9 +104,7 @@ export default async function OrderDetailPage({
           Pedido #{order.id.slice(0, 8)}
         </p>
 
-        <h1 className="mt-3 text-3xl font-semibold">
-          Detalhes do pedido
-        </h1>
+        <h1 className="mt-3 text-3xl font-semibold">Detalhes do pedido</h1>
 
         <p className="mt-2 text-sm text-neutral-500">
           Realizado em {formatDate(order.created_at)}
@@ -145,47 +139,34 @@ export default async function OrderDetailPage({
             ID do pagamento
           </p>
 
-          <p className="mt-2 text-sm">
-            {order.mercado_pago_payment_id}
-          </p>
+          <p className="mt-2 text-sm">{order.mercado_pago_payment_id}</p>
         </div>
       )}
 
       <div className="mt-8 border border-neutral-200">
         <div className="border-b border-neutral-200 p-5">
-          <h2 className="text-lg font-semibold">
-            Itens do pedido
-          </h2>
+          <h2 className="text-lg font-semibold">Itens do pedido</h2>
         </div>
 
         <div className="divide-y divide-neutral-200">
-          {(order.order_items ?? []).map(
-            (item) => (
-              <div
-                key={item.id}
-                className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <p className="font-medium">
-                    {item.product_name}
-                  </p>
+          {(order.order_items ?? []).map((item) => (
+            <div
+              key={item.id}
+              className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <p className="font-medium">{item.product_name}</p>
 
-                  <p className="mt-1 text-sm text-neutral-500">
-                    {item.quantity} ×{" "}
-                    {formatPrice(
-                      Number(item.unit_price)
-                    )}
-                  </p>
-                </div>
-
-                <p className="font-semibold">
-                  {formatPrice(
-                    Number(item.subtotal)
-                  )}
+                <p className="mt-1 text-sm text-neutral-500">
+                  {item.quantity} × {formatPrice(Number(item.unit_price))}
                 </p>
               </div>
-            )
-          )}
+
+              <p className="font-semibold">
+                {formatPrice(Number(item.subtotal))}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

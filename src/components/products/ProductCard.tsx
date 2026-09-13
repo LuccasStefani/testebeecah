@@ -2,15 +2,25 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 
+import { useCart } from "@/src/contexts/CartContext";
+import {
+  dispatchFavoriteUpdated,
+  FAVORITES_UPDATED_EVENT,
+} from "@/src/lib/favorites-events";
 import { supabase } from "@/src/lib/supabase/client";
 import { Product } from "@/src/types/product";
 
 type ProductCardProps = {
   product: Product;
-  onFavoriteRemoved?: (productId: string) => void;
+  onFavoriteRemoved?: (
+    productId: string
+  ) => void;
 };
 
 function formatPrice(value: number) {
@@ -25,12 +35,25 @@ export default function ProductCard({
   onFavoriteRemoved,
 }: ProductCardProps) {
   const router = useRouter();
+  const { addItem } = useCart();
 
   const [isFavorite, setIsFavorite] =
     useState(false);
 
-  const [favoriteLoading, setFavoriteLoading] =
-    useState(false);
+  const [
+    favoriteLoading,
+    setFavoriteLoading,
+  ] = useState(false);
+
+  const [
+    cartLoading,
+    setCartLoading,
+  ] = useState(false);
+
+  const [
+    addedToCart,
+    setAddedToCart,
+  ] = useState(false);
 
   const hasPromotion =
     product.promoPrice !== undefined &&
@@ -40,7 +63,8 @@ export default function ProductCard({
     ? product.promoPrice!
     : product.price;
 
-  const isOutOfStock = product.stock <= 0;
+  const isOutOfStock =
+    product.stock <= 0;
 
   useEffect(() => {
     async function loadFavorite() {
@@ -53,11 +77,17 @@ export default function ProductCard({
         return;
       }
 
-      const { data, error } = await supabase
+      const {
+        data,
+        error,
+      } = await supabase
         .from("favorites")
         .select("id")
         .eq("user_id", user.id)
-        .eq("product_id", product.id)
+        .eq(
+          "product_id",
+          product.id
+        )
         .maybeSingle();
 
       if (error) {
@@ -73,6 +103,74 @@ export default function ProductCard({
 
     loadFavorite();
   }, [product.id]);
+
+  useEffect(() => {
+    function handleFavoriteUpdated(
+      event: Event
+    ) {
+      const customEvent =
+        event as CustomEvent<{
+          productId: string;
+          isFavorite: boolean;
+        }>;
+
+      if (
+        customEvent.detail.productId !==
+        product.id
+      ) {
+        return;
+      }
+
+      setIsFavorite(
+        customEvent.detail.isFavorite
+      );
+    }
+
+    window.addEventListener(
+      FAVORITES_UPDATED_EVENT,
+      handleFavoriteUpdated
+    );
+
+    return () => {
+      window.removeEventListener(
+        FAVORITES_UPDATED_EVENT,
+        handleFavoriteUpdated
+      );
+    };
+  }, [product.id]);
+
+  async function handleAddToCart() {
+    if (
+      isOutOfStock ||
+      cartLoading
+    ) {
+      return;
+    }
+
+    try {
+      setCartLoading(true);
+
+      await addItem(
+        {
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          price: finalPrice,
+          imageUrl: product.imageUrl,
+          stock: product.stock,
+        },
+        1
+      );
+
+      setAddedToCart(true);
+
+      window.setTimeout(() => {
+        setAddedToCart(false);
+      }, 1500);
+    } finally {
+      setCartLoading(false);
+    }
+  }
 
   async function handleFavorite() {
     if (favoriteLoading) {
@@ -92,11 +190,18 @@ export default function ProductCard({
       setFavoriteLoading(true);
 
       if (isFavorite) {
-        const { error } = await supabase
-          .from("favorites")
-          .delete()
-          .eq("user_id", user.id)
-          .eq("product_id", product.id);
+        const { error } =
+          await supabase
+            .from("favorites")
+            .delete()
+            .eq(
+              "user_id",
+              user.id
+            )
+            .eq(
+              "product_id",
+              product.id
+            );
 
         if (error) {
           console.error(
@@ -108,17 +213,25 @@ export default function ProductCard({
 
         setIsFavorite(false);
 
-        onFavoriteRemoved?.(product.id);
+        dispatchFavoriteUpdated({
+          productId: product.id,
+          isFavorite: false,
+        });
+
+        onFavoriteRemoved?.(
+          product.id
+        );
 
         return;
       }
 
-      const { error } = await supabase
-        .from("favorites")
-        .insert({
-          user_id: user.id,
-          product_id: product.id,
-        });
+      const { error } =
+        await supabase
+          .from("favorites")
+          .insert({
+            user_id: user.id,
+            product_id: product.id,
+          });
 
       if (error) {
         console.error(
@@ -129,6 +242,11 @@ export default function ProductCard({
       }
 
       setIsFavorite(true);
+
+      dispatchFavoriteUpdated({
+        productId: product.id,
+        isFavorite: true,
+      });
     } finally {
       setFavoriteLoading(false);
     }
@@ -136,7 +254,9 @@ export default function ProductCard({
 
   return (
     <article className="group overflow-hidden border border-neutral-200 bg-white">
-      <Link href={`/perfumes/${product.slug}`}>
+      <Link
+        href={`/perfumes/${product.slug}`}
+      >
         <div className="relative aspect-square overflow-hidden bg-neutral-100">
           <Image
             src={product.imageUrl}
@@ -167,7 +287,9 @@ export default function ProductCard({
           {product.brand}
         </span>
 
-        <Link href={`/perfumes/${product.slug}`}>
+        <Link
+          href={`/perfumes/${product.slug}`}
+        >
           <h2 className="mt-1 text-base font-medium text-neutral-950 transition hover:text-neutral-600">
             {product.name}
           </h2>
@@ -180,30 +302,46 @@ export default function ProductCard({
         <div className="mt-4">
           {hasPromotion && (
             <span className="mr-2 text-sm text-neutral-400 line-through">
-              {formatPrice(product.price)}
+              {formatPrice(
+                product.price
+              )}
             </span>
           )}
 
           <span className="text-lg font-semibold">
-            {formatPrice(finalPrice)}
+            {formatPrice(
+              finalPrice
+            )}
           </span>
         </div>
 
         <div className="mt-5 flex gap-2">
           <button
             type="button"
-            disabled={isOutOfStock}
+            onClick={handleAddToCart}
+            disabled={
+              isOutOfStock ||
+              cartLoading
+            }
             className="flex-1 bg-neutral-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
           >
             {isOutOfStock
               ? "Esgotado"
-              : "Adicionar"}
+              : cartLoading
+                ? "Adicionando..."
+                : addedToCart
+                  ? "Adicionado ✓"
+                  : "Adicionar"}
           </button>
 
           <button
             type="button"
-            onClick={handleFavorite}
-            disabled={favoriteLoading}
+            onClick={
+              handleFavorite
+            }
+            disabled={
+              favoriteLoading
+            }
             aria-label={
               isFavorite
                 ? `Remover ${product.name} dos favoritos`
@@ -211,7 +349,9 @@ export default function ProductCard({
             }
             className="min-w-12 border border-neutral-300 px-4 text-xl transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isFavorite ? "♥" : "♡"}
+            {isFavorite
+              ? "♥"
+              : "♡"}
           </button>
         </div>
       </div>

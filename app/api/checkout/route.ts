@@ -120,7 +120,7 @@ export async function POST(request: Request) {
     if (
       !products ||
       products.length !==
-        productIds.length
+      productIds.length
     ) {
       return NextResponse.json(
         {
@@ -160,8 +160,8 @@ export async function POST(request: Request) {
           const unitPrice =
             product.promo_price !== null
               ? Number(
-                  product.promo_price
-                )
+                product.promo_price
+              )
               : Number(product.price);
 
           if (
@@ -194,6 +194,7 @@ export async function POST(request: Request) {
       0
     );
 
+
     if (
       !Number.isFinite(total) ||
       total <= 0
@@ -212,6 +213,18 @@ export async function POST(request: Request) {
      * 1. Cria o pedido antes de chamar
      *    o Mercado Pago.
      */
+    /*
+ * A preferência de pagamento ficará
+ * disponível por 24 horas.
+ *
+ * A mesma data é salva no pedido e
+ * enviada ao Mercado Pago.
+ */
+    const expirationDate =
+      new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    const expirationDateIso =
+      expirationDate.toISOString();
     const {
       data: order,
       error: orderError,
@@ -220,6 +233,7 @@ export async function POST(request: Request) {
       .insert({
         user_id: user.id,
         status: "pending",
+        expires_at: expirationDateIso,
         total,
       })
       .select(`
@@ -328,6 +342,14 @@ export async function POST(request: Request) {
       await preference.create({
         body: {
           items: preferenceItems,
+
+          expires: true,
+
+          expiration_date_from:
+            new Date().toISOString(),
+
+          expiration_date_to:
+            expirationDateIso,
 
           payer: {
             email:

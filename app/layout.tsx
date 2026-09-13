@@ -1,11 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-import Header from "@/src/components/layout/Header";
-import Footer from "@/src/components/layout/Footer";
-
-import { CartProvider } from "@/src/contexts/CartContext";
-
 export const metadata: Metadata = {
   title: {
     default: "Beecah Perfumes",
@@ -22,15 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body>
-        <CartProvider>
-          <Header />
-
-          <main>{children}</main>
-
-          <Footer />
-        </CartProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

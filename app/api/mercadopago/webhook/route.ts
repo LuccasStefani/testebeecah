@@ -162,7 +162,8 @@ export async function POST(request: Request) {
       .select(`
         id,
         user_id,
-        status
+        status,
+        stock_processed_at
       `)
       .eq("id", orderId)
       .single();
@@ -184,13 +185,60 @@ export async function POST(request: Request) {
     }
 
     /*
-     * Idempotência:
-     * se já está approved, não processa
-     * estoque/carrinho novamente.
+     * Pagamento aprovado:
+     * processa o estoque de forma atômica.
+     *
+     * A função no PostgreSQL garante que
+     * o mesmo pedido não baixe estoque
+     * duas vezes.
      */
-    const wasAlreadyApproved =
-      order.status === "approved";
+    if (orderStatus === "approved") {
+      const {
+        data: stockProcessed,
+        error: stockError,
+      } = await supabaseAdmin.rpc(
+        "process_order_stock",
+        {
+          p_order_id: order.id,
+        }
+      );
 
+      if (stockError) {
+        console.error(
+          "Erro ao processar estoque do pedido:",
+          order.id,
+          stockError
+        );
+
+        /*
+         * Retornamos 500 para que a notificação
+         * possa ser reenviada posteriormente.
+         *
+         * O pedido ainda não é marcado como
+         * aprovado enquanto o estoque não for
+         * processado corretamente.
+         */
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "Não foi possível processar o estoque do pedido.",
+          },
+          { status: 500 }
+        );
+      }
+
+      console.log(
+        stockProcessed
+          ? `Estoque processado para o pedido ${order.id}.`
+          : `Estoque do pedido ${order.id} já havia sido processado.`
+      );
+    }
+
+    /*
+     * Depois do processamento do estoque,
+     * atualizamos o status financeiro do pedido.
+     */
     const {
       error: updateOrderError,
     } = await supabaseAdmin
@@ -224,100 +272,13 @@ export async function POST(request: Request) {
     }
 
     /*
-     * Só baixa estoque e limpa carrinho
-     * na primeira confirmação approved.
+     * Depois da aprovação, limpamos o carrinho.
+     *
+     * Se o webhook for recebido novamente,
+     * apagar um carrinho já vazio não causa
+     * nenhum problema.
      */
-    if (
-      orderStatus === "approved" &&
-      !wasAlreadyApproved
-    ) {
-      const {
-        data: orderItems,
-        error: orderItemsError,
-      } = await supabaseAdmin
-        .from("order_items")
-        .select(`
-          product_id,
-          quantity
-        `)
-        .eq("order_id", order.id);
-
-      if (orderItemsError) {
-        console.error(
-          "Erro ao buscar itens do pedido:",
-          orderItemsError
-        );
-
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              "Não foi possível processar os itens do pedido.",
-          },
-          { status: 500 }
-        );
-      }
-
-      for (const item of orderItems ?? []) {
-        if (!item.product_id) {
-          continue;
-        }
-
-        const {
-          data: product,
-          error: productError,
-        } = await supabaseAdmin
-          .from("products")
-          .select("stock")
-          .eq(
-            "id",
-            item.product_id
-          )
-          .single();
-
-        if (
-          productError ||
-          !product
-        ) {
-          console.error(
-            "Erro ao carregar estoque do produto:",
-            item.product_id,
-            productError
-          );
-
-          continue;
-        }
-
-        const newStock =
-          Math.max(
-            0,
-            Number(product.stock) -
-              Number(item.quantity)
-          );
-
-        const {
-          error: stockError,
-        } = await supabaseAdmin
-          .from("products")
-          .update({
-            stock: newStock,
-            updated_at:
-              new Date().toISOString(),
-          })
-          .eq(
-            "id",
-            item.product_id
-          );
-
-        if (stockError) {
-          console.error(
-            "Erro ao atualizar estoque:",
-            item.product_id,
-            stockError
-          );
-        }
-      }
-
+    if (orderStatus === "approved") {
       const {
         error: clearCartError,
       } = await supabaseAdmin
