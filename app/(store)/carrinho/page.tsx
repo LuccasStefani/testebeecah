@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { useCart } from "@/src/contexts/CartContext";
 
@@ -14,6 +14,8 @@ function formatPrice(value: number) {
 }
 
 export default function CartPage() {
+  const router = useRouter();
+
   const {
     items,
     removeItem,
@@ -22,71 +24,12 @@ export default function CartPage() {
     totalPrice,
   } = useCart();
 
-  const [checkoutLoading, setCheckoutLoading] =
-    useState(false);
-
-  const [checkoutError, setCheckoutError] =
-    useState("");
-
-  async function handleCheckout() {
+  function handleCheckout() {
     if (items.length === 0) {
       return;
     }
 
-    try {
-      setCheckoutLoading(true);
-      setCheckoutError("");
-
-      const response = await fetch(
-        "/api/checkout",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            items: items.map((item) => ({
-              productId: item.id,
-              quantity: item.quantity,
-            })),
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setCheckoutError(
-          data.message ??
-            "Não foi possível iniciar o pagamento."
-        );
-        return;
-      }
-
-      const checkoutUrl =
-        data.initPoint ??
-        data.sandboxInitPoint;
-
-      if (!checkoutUrl) {
-        setCheckoutError(
-          "O Mercado Pago não retornou o link de pagamento."
-        );
-        return;
-      }
-
-      window.location.href = checkoutUrl;
-    } catch (error) {
-      console.error(
-        "Erro ao iniciar checkout:",
-        error
-      );
-
-      setCheckoutError(
-        "Não foi possível iniciar o pagamento."
-      );
-    } finally {
-      setCheckoutLoading(false);
-    }
+    router.push("/checkout/entrega");
   }
 
   if (items.length === 0) {
@@ -121,15 +64,14 @@ export default function CartPage() {
           </h1>
 
           <p className="mt-2 text-sm text-neutral-500">
-            Revise seus produtos antes de finalizar.
+            Revise seus produtos antes de continuar para a entrega.
           </p>
         </div>
 
         <button
           type="button"
           onClick={clearCart}
-          disabled={checkoutLoading}
-          className="text-sm text-neutral-500 underline underline-offset-4 transition hover:text-neutral-950 disabled:cursor-not-allowed disabled:opacity-50"
+          className="text-sm text-neutral-500 underline underline-offset-4 transition hover:text-neutral-950"
         >
           Limpar carrinho
         </button>
@@ -175,8 +117,7 @@ export default function CartPage() {
                     onClick={() =>
                       removeItem(item.id)
                     }
-                    disabled={checkoutLoading}
-                    className="h-fit text-sm text-neutral-500 transition hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-fit text-sm text-neutral-500 transition hover:text-red-600"
                   >
                     Remover
                   </button>
@@ -197,10 +138,7 @@ export default function CartPage() {
                             item.quantity - 1
                           )
                         }
-                        disabled={
-                          item.quantity <= 1 ||
-                          checkoutLoading
-                        }
+                        disabled={item.quantity <= 1}
                         className="h-10 w-10 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:text-neutral-300"
                       >
                         −
@@ -220,8 +158,7 @@ export default function CartPage() {
                         }
                         disabled={
                           item.quantity >=
-                            item.stock ||
-                          checkoutLoading
+                          item.stock
                         }
                         className="h-10 w-10 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:text-neutral-300"
                       >
@@ -257,7 +194,7 @@ export default function CartPage() {
 
           <div className="mt-5 flex items-center justify-between">
             <span className="font-medium">
-              Total
+              Total parcial
             </span>
 
             <span className="text-2xl font-semibold">
@@ -265,21 +202,17 @@ export default function CartPage() {
             </span>
           </div>
 
-          {checkoutError && (
-            <div className="mt-5 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {checkoutError}
-            </div>
-          )}
+          <p className="mt-3 text-xs leading-5 text-neutral-500">
+            O valor do frete será calculado após a
+            confirmação do endereço de entrega.
+          </p>
 
           <button
             type="button"
             onClick={handleCheckout}
-            disabled={checkoutLoading}
-            className="mt-6 w-full bg-neutral-950 px-6 py-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-6 w-full bg-neutral-950 px-6 py-4 text-sm font-medium text-white transition hover:bg-neutral-800"
           >
-            {checkoutLoading
-              ? "Abrindo Mercado Pago..."
-              : "Finalizar compra"}
+            Continuar para entrega
           </button>
 
           <Link
