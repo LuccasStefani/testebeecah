@@ -1,10 +1,15 @@
-import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
+import { NextResponse } from "next/server";
 
 export async function GET() {
-  const clientId = process.env.MELHOR_ENVIO_CLIENT_ID;
-  const redirectUri = process.env.MELHOR_ENVIO_REDIRECT_URI;
-  const baseUrl = process.env.MELHOR_ENVIO_BASE_URL;
+  const clientId =
+    process.env.MELHOR_ENVIO_CLIENT_ID;
+
+  const redirectUri =
+    process.env.MELHOR_ENVIO_REDIRECT_URI;
+
+  const baseUrl =
+    process.env.MELHOR_ENVIO_BASE_URL;
 
   if (!clientId || !redirectUri || !baseUrl) {
     return NextResponse.json(
@@ -45,16 +50,12 @@ export async function GET() {
     [
       "cart-read",
       "cart-write",
-      "companies-read",
-      "coupons-read",
-      "services-read",
-      "shipment-calculate",
-      "shipment-checkout",
-      "shipment-generate",
-      "shipment-print",
-      "shipment-read",
+      "orders-read",
       "shipping-calculate",
-      "tracking-read",
+      "shipping-checkout",
+      "shipping-generate",
+      "shipping-print",
+      "shipping-tracking",
     ].join(" ")
   );
 
@@ -73,8 +74,7 @@ export async function GET() {
     {
       httpOnly: true,
       secure:
-        process.env.NODE_ENV ===
-        "production",
+        process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 10,
       path: "/",
