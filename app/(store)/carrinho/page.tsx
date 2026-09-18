@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
+import CheckoutSummary from "@/src/components/checkout/CheckoutSummary";
 import { useCart } from "@/src/contexts/CartContext";
 
 function formatPrice(value: number) {
@@ -14,23 +14,12 @@ function formatPrice(value: number) {
 }
 
 export default function CartPage() {
-  const router = useRouter();
-
   const {
     items,
     removeItem,
     updateQuantity,
     clearCart,
-    totalPrice,
   } = useCart();
-
-  function handleCheckout() {
-    if (items.length === 0) {
-      return;
-    }
-
-    router.push("/checkout/entrega");
-  }
 
   if (items.length === 0) {
     return (
@@ -64,7 +53,7 @@ export default function CartPage() {
           </h1>
 
           <p className="mt-2 text-sm text-neutral-500">
-            Revise seus produtos antes de continuar para a entrega.
+            Revise seus produtos, endereço e entrega antes de finalizar.
           </p>
         </div>
 
@@ -77,7 +66,7 @@ export default function CartPage() {
         </button>
       </div>
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_360px]">
+      <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_380px]">
         <div className="space-y-4">
           {items.map((item) => (
             <article
@@ -177,51 +166,16 @@ export default function CartPage() {
               </div>
             </article>
           ))}
-        </div>
-
-        <aside className="h-fit border border-neutral-200 p-6">
-          <h2 className="text-xl font-semibold">
-            Resumo
-          </h2>
-
-          <div className="mt-6 flex items-center justify-between border-b border-neutral-200 pb-5 text-sm">
-            <span>Subtotal</span>
-
-            <span className="font-medium">
-              {formatPrice(totalPrice)}
-            </span>
-          </div>
-
-          <div className="mt-5 flex items-center justify-between">
-            <span className="font-medium">
-              Total parcial
-            </span>
-
-            <span className="text-2xl font-semibold">
-              {formatPrice(totalPrice)}
-            </span>
-          </div>
-
-          <p className="mt-3 text-xs leading-5 text-neutral-500">
-            O valor do frete será calculado após a
-            confirmação do endereço de entrega.
-          </p>
-
-          <button
-            type="button"
-            onClick={handleCheckout}
-            className="mt-6 w-full bg-neutral-950 px-6 py-4 text-sm font-medium text-white transition hover:bg-neutral-800"
-          >
-            Continuar para entrega
-          </button>
 
           <Link
             href="/perfumes"
-            className="mt-4 block text-center text-sm text-neutral-500 underline underline-offset-4 hover:text-neutral-950"
+            className="inline-block pt-2 text-sm text-neutral-500 underline underline-offset-4 hover:text-neutral-950"
           >
             Continuar comprando
           </Link>
-        </aside>
+        </div>
+
+        <CheckoutSummary />
       </div>
     </section>
   );
