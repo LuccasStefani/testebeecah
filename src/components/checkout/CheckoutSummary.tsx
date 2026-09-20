@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 
 import { useCart } from "@/src/contexts/CartContext";
@@ -22,11 +26,83 @@ type Address = {
   is_default: boolean;
 };
 
+type ShippingQuote = {
+  serviceId: number;
+  serviceName: string;
+  companyId: number | null;
+  companyName: string;
+  companyPicture: string | null;
+  price: number;
+  deliveryTime: number | null;
+  deliveryRange: {
+    min: number | null;
+    max: number | null;
+  };
+};
+
+type QuoteResponse = {
+  success: boolean;
+  message?: string;
+  quotes?: ShippingQuote[];
+};
+
+type CheckoutResponse = {
+  success: boolean;
+  message?: string;
+  orderId?: string;
+  preferenceId?: string;
+  initPoint?: string;
+  sandboxInitPoint?: string;
+};
+
 function formatPrice(value: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
+  return new Intl.NumberFormat(
+    "pt-BR",
+    {
+      style: "currency",
+      currency: "BRL",
+    }
+  ).format(value);
+}
+
+function getDeliveryText(
+  quote: ShippingQuote
+) {
+  const min =
+    quote.deliveryRange?.min ??
+    quote.deliveryTime;
+
+  const max =
+    quote.deliveryRange?.max ??
+    quote.deliveryTime;
+
+  if (
+    typeof min === "number" &&
+    typeof max === "number"
+  ) {
+    if (min === max) {
+      return `${min} ${
+        min === 1
+          ? "dia útil"
+          : "dias úteis"
+      }`;
+    }
+
+    return `${min} a ${max} dias úteis`;
+  }
+
+  if (
+    typeof quote.deliveryTime ===
+    "number"
+  ) {
+    return `${quote.deliveryTime} ${
+      quote.deliveryTime === 1
+        ? "dia útil"
+        : "dias úteis"
+    }`;
+  }
+
+  return "Prazo não informado";
 }
 
 export default function CheckoutSummary() {
@@ -40,29 +116,78 @@ export default function CheckoutSummary() {
   const [userId, setUserId] =
     useState<string | null>(null);
 
-  const [profileComplete, setProfileComplete] =
-    useState(false);
+  const [
+    profileComplete,
+    setProfileComplete,
+  ] = useState(false);
 
   const [addresses, setAddresses] =
     useState<Address[]>([]);
 
-  const [selectedAddressId, setSelectedAddressId] =
-    useState<string | null>(null);
+  const [
+    selectedAddressId,
+    setSelectedAddressId,
+  ] = useState<string | null>(null);
 
-  const [changingAddress, setChangingAddress] =
-    useState(false);
+  const [
+    changingAddress,
+    setChangingAddress,
+  ] = useState(false);
 
   const [loading, setLoading] =
     useState(true);
+
+  const [
+    shippingQuotes,
+    setShippingQuotes,
+  ] = useState<ShippingQuote[]>([]);
+
+  const [
+    selectedShippingId,
+    setSelectedShippingId,
+  ] = useState<number | null>(null);
+
+  const [
+    calculatingShipping,
+    setCalculatingShipping,
+  ] = useState(false);
+
+  const [
+    processingCheckout,
+    setProcessingCheckout,
+  ] = useState(false);
+
+  const [
+    shippingError,
+    setShippingError,
+  ] = useState<string | null>(null);
 
   const selectedAddress = useMemo(
     () =>
       addresses.find(
         (address) =>
-          address.id === selectedAddressId
+          address.id ===
+          selectedAddressId
       ) ?? null,
     [addresses, selectedAddressId]
   );
+
+  const selectedShipping = useMemo(
+    () =>
+      shippingQuotes.find(
+        (quote) =>
+          quote.serviceId ===
+          selectedShippingId
+      ) ?? null,
+    [
+      shippingQuotes,
+      selectedShippingId,
+    ]
+  );
+
+  const finalTotal =
+    totalPrice +
+    (selectedShipping?.price ?? 0);
 
   useEffect(() => {
     async function loadCheckoutData() {
@@ -151,7 +276,103 @@ export default function CheckoutSummary() {
     loadCheckoutData();
   }, []);
 
-  function handleContinue() {
+  function resetShipping() {
+    setShippingQuotes([]);
+    setSelectedShippingId(null);
+    setShippingError(null);
+  }
+
+  function handleAddressChange(
+    addressId: string
+  ) {
+    setSelectedAddressId(addressId);
+
+    /*
+     * Uma cotação pertence ao CEP
+     * usado no cálculo.
+     *
+     * Ao trocar o endereço,
+     * descartamos a cotação anterior.
+     */
+    resetShipping();
+  }
+
+  async function calculateShipping() {
+    if (!selectedAddress) {
+      return;
+    }
+
+    setCalculatingShipping(true);
+    setShippingError(null);
+    setShippingQuotes([]);
+    setSelectedShippingId(null);
+
+    try {
+      const response = await fetch(
+        "/api/shipping/quote",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            addressId:
+              selectedAddress.id,
+          }),
+        }
+      );
+
+      const data =
+        (await response.json()) as
+          QuoteResponse;
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
+        throw new Error(
+          data.message ||
+            "Não foi possível calcular o frete."
+        );
+      }
+
+      const quotes =
+        Array.isArray(data.quotes)
+          ? data.quotes
+          : [];
+
+      if (quotes.length === 0) {
+        throw new Error(
+          "Nenhuma modalidade de frete está disponível para este endereço."
+        );
+      }
+
+      setShippingQuotes(quotes);
+
+      /*
+       * Não selecionamos automaticamente.
+       * O cliente escolhe a modalidade.
+       */
+    } catch (error) {
+      console.error(
+        "Erro ao calcular frete:",
+        error
+      );
+
+      setShippingError(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível calcular o frete."
+      );
+    } finally {
+      setCalculatingShipping(false);
+    }
+  }
+
+  async function handleContinue() {
     if (!userId) {
       router.push("/login");
       return;
@@ -171,9 +392,123 @@ export default function CheckoutSummary() {
       return;
     }
 
-    router.push(
-      `/checkout/frete?address=${selectedAddress.id}`
-    );
+    if (
+      shippingQuotes.length === 0
+    ) {
+      await calculateShipping();
+      return;
+    }
+
+    if (!selectedShipping) {
+      setShippingError(
+        "Selecione uma modalidade de frete para continuar."
+      );
+      return;
+    }
+
+    /*
+     * Evita múltiplos cliques enquanto
+     * o pedido está sendo preparado.
+     */
+    if (processingCheckout) {
+      return;
+    }
+
+    setProcessingCheckout(true);
+    setShippingError(null);
+
+    try {
+      /*
+       * O navegador envia somente:
+       *
+       * - addressId
+       * - shippingServiceId
+       *
+       * Produtos, quantidades, preços,
+       * estoque e valor do frete serão
+       * recalculados no servidor.
+       */
+      const response = await fetch(
+        "/api/checkout",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            addressId:
+              selectedAddress.id,
+
+            shippingServiceId:
+              selectedShipping.serviceId,
+          }),
+        }
+      );
+
+      const data =
+        (await response.json()) as
+          CheckoutResponse;
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
+        /*
+         * 409 significa que o serviço
+         * selecionado deixou de estar
+         * disponível na nova cotação
+         * feita pelo servidor.
+         */
+        if (response.status === 409) {
+          setShippingQuotes([]);
+          setSelectedShippingId(null);
+        }
+
+        throw new Error(
+          data.message ||
+            "Não foi possível preparar o pagamento."
+        );
+      }
+
+      /*
+       * No Checkout Pro via Preferences,
+       * o init_point é a URL retornada
+       * pelo Mercado Pago para iniciar
+       * o checkout.
+       */
+      if (!data.initPoint) {
+        throw new Error(
+          "O Mercado Pago não retornou a URL de pagamento."
+        );
+      }
+
+      /*
+       * Não limpamos o carrinho aqui.
+       *
+       * O cliente ainda não pagou.
+       * A confirmação definitiva será
+       * tratada pelo webhook.
+       */
+      window.location.assign(
+        data.initPoint
+      );
+    } catch (error) {
+      console.error(
+        "Erro ao finalizar compra:",
+        error
+      );
+
+      setShippingError(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível preparar o pagamento."
+      );
+
+      setProcessingCheckout(false);
+    }
   }
 
   if (loading) {
@@ -214,11 +549,13 @@ export default function CheckoutSummary() {
 
             {!userId ? (
               <p className="mt-2 text-sm text-neutral-500">
-                Entre na sua conta para continuar.
+                Entre na sua conta para
+                continuar.
               </p>
             ) : !profileComplete ? (
               <p className="mt-2 text-sm text-neutral-500">
-                Complete seus dados pessoais.
+                Complete seus dados
+                pessoais.
               </p>
             ) : selectedAddress ? (
               <div className="mt-2 text-sm leading-6 text-neutral-600">
@@ -244,7 +581,8 @@ export default function CheckoutSummary() {
               </div>
             ) : (
               <p className="mt-2 text-sm text-neutral-500">
-                Nenhum endereço cadastrado.
+                Nenhum endereço
+                cadastrado.
               </p>
             )}
           </div>
@@ -260,7 +598,10 @@ export default function CheckoutSummary() {
                       !current
                   )
                 }
-                className="text-sm font-medium underline underline-offset-4"
+                disabled={
+                  processingCheckout
+                }
+                className="text-sm font-medium underline underline-offset-4 disabled:opacity-50"
               >
                 Alterar
               </button>
@@ -282,8 +623,11 @@ export default function CheckoutSummary() {
                       selectedAddressId ===
                       address.id
                     }
+                    disabled={
+                      processingCheckout
+                    }
                     onChange={() =>
-                      setSelectedAddressId(
+                      handleAddressChange(
                         address.id
                       )
                     }
@@ -293,6 +637,7 @@ export default function CheckoutSummary() {
                     <p className="font-medium">
                       {address.label ||
                         "Endereço"}
+
                       {address.is_default
                         ? " · Principal"
                         : ""}
@@ -324,7 +669,10 @@ export default function CheckoutSummary() {
               onClick={() =>
                 setChangingAddress(false)
               }
-              className="block w-full bg-neutral-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
+              disabled={
+                processingCheckout
+              }
+              className="block w-full bg-neutral-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Confirmar endereço
             </button>
@@ -333,44 +681,205 @@ export default function CheckoutSummary() {
       </div>
 
       <div className="border-b border-neutral-200 py-5">
-        <div className="flex items-center justify-between">
-          <span className="text-sm">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-sm font-medium">
             Frete
           </span>
 
-          <span className="text-sm text-neutral-500">
-            A calcular
+          {selectedShipping && (
+            <span className="text-sm font-medium">
+              {formatPrice(
+                selectedShipping.price
+              )}
+            </span>
+          )}
+        </div>
+
+        {!userId ||
+        !profileComplete ||
+        !selectedAddress ? (
+          <p className="mt-2 text-xs leading-5 text-neutral-500">
+            Informe seus dados e endereço
+            para calcular o frete.
+          </p>
+        ) : shippingQuotes.length ===
+          0 ? (
+          <div className="mt-3">
+            <p className="text-xs leading-5 text-neutral-500">
+              Calcule as modalidades de
+              entrega disponíveis para este
+              endereço.
+            </p>
+
+            <button
+              type="button"
+              onClick={calculateShipping}
+              disabled={
+                calculatingShipping ||
+                processingCheckout ||
+                items.length === 0
+              }
+              className="mt-3 w-full border border-neutral-950 px-4 py-3 text-sm font-medium transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {calculatingShipping
+                ? "Calculando frete..."
+                : "Calcular frete"}
+            </button>
+          </div>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {shippingQuotes.map(
+              (quote) => {
+                const selected =
+                  selectedShippingId ===
+                  quote.serviceId;
+
+                return (
+                  <label
+                    key={
+                      quote.serviceId
+                    }
+                    className={`flex cursor-pointer items-start gap-3 border p-4 transition ${
+                      selected
+                        ? "border-neutral-950"
+                        : "border-neutral-200"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="shipping-service"
+                      checked={selected}
+                      disabled={
+                        processingCheckout
+                      }
+                      onChange={() => {
+                        setSelectedShippingId(
+                          quote.serviceId
+                        );
+
+                        setShippingError(
+                          null
+                        );
+                      }}
+                    />
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-medium">
+                            {
+                              quote.serviceName
+                            }
+                          </p>
+
+                          <p className="mt-1 text-xs text-neutral-500">
+                            {
+                              quote.companyName
+                            }
+                          </p>
+                        </div>
+
+                        <p className="shrink-0 text-sm font-medium">
+                          {formatPrice(
+                            quote.price
+                          )}
+                        </p>
+                      </div>
+
+                      <p className="mt-2 text-xs text-neutral-500">
+                        {getDeliveryText(
+                          quote
+                        )}
+                      </p>
+                    </div>
+                  </label>
+                );
+              }
+            )}
+
+            <button
+              type="button"
+              onClick={calculateShipping}
+              disabled={
+                calculatingShipping ||
+                processingCheckout
+              }
+              className="text-xs font-medium underline underline-offset-4 disabled:opacity-50"
+            >
+              {calculatingShipping
+                ? "Atualizando..."
+                : "Recalcular frete"}
+            </button>
+          </div>
+        )}
+
+        {shippingError && (
+          <p className="mt-3 text-sm leading-5 text-neutral-600">
+            {shippingError}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-3 pt-5">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-neutral-600">
+            Produtos
+          </span>
+
+          <span>
+            {formatPrice(totalPrice)}
           </span>
         </div>
 
-        <p className="mt-2 text-xs leading-5 text-neutral-500">
-          O frete será calculado para o endereço
-          selecionado antes do pagamento.
-        </p>
-      </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-neutral-600">
+            Frete
+          </span>
 
-      <div className="mt-5 flex items-center justify-between">
-        <span className="font-medium">
-          Total parcial
-        </span>
+          <span>
+            {selectedShipping
+              ? formatPrice(
+                  selectedShipping.price
+                )
+              : "—"}
+          </span>
+        </div>
 
-        <span className="text-2xl font-semibold">
-          {formatPrice(totalPrice)}
-        </span>
+        <div className="flex items-center justify-between border-t border-neutral-200 pt-4">
+          <span className="font-medium">
+            Total
+          </span>
+
+          <span className="text-2xl font-semibold">
+            {formatPrice(finalTotal)}
+          </span>
+        </div>
       </div>
 
       <button
         type="button"
         onClick={handleContinue}
-        className="mt-6 w-full bg-neutral-950 px-6 py-4 text-sm font-medium text-white transition hover:bg-neutral-800"
+        disabled={
+          calculatingShipping ||
+          processingCheckout ||
+          items.length === 0
+        }
+        className="mt-6 w-full bg-neutral-950 px-6 py-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {!userId
-          ? "Entrar para continuar"
-          : !profileComplete
-            ? "Completar dados"
-            : !selectedAddress
-              ? "Adicionar endereço"
-              : "Calcular frete"}
+        {processingCheckout
+          ? "Preparando pagamento..."
+          : !userId
+            ? "Entrar para continuar"
+            : !profileComplete
+              ? "Completar dados"
+              : !selectedAddress
+                ? "Adicionar endereço"
+                : shippingQuotes.length ===
+                    0
+                  ? "Calcular frete"
+                  : !selectedShipping
+                    ? "Selecione o frete"
+                    : "Finalizar compra"}
       </button>
     </aside>
   );

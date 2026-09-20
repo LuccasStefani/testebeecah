@@ -30,6 +30,29 @@ function getR2ObjectKey(imageUrl: string) {
   );
 }
 
+function parseOptionalPositiveNumber(
+  value: unknown
+): number | null {
+  if (
+    value === undefined ||
+    value === null ||
+    value === ""
+  ) {
+    return null;
+  }
+
+  const parsed = Number(value);
+
+  if (
+    !Number.isFinite(parsed) ||
+    parsed <= 0
+  ) {
+    return null;
+  }
+
+  return parsed;
+}
+
 export async function PATCH(
   request: Request,
   { params }: RouteProps
@@ -60,6 +83,10 @@ export async function PATCH(
       price,
       promoPrice,
       stock,
+      weight,
+      width,
+      height,
+      length,
       category,
       volume,
       fragranceFamily,
@@ -145,6 +172,53 @@ export async function PATCH(
       }
     }
 
+    const parsedWeight =
+      parseOptionalPositiveNumber(weight);
+
+    const parsedWidth =
+      parseOptionalPositiveNumber(width);
+
+    const parsedHeight =
+      parseOptionalPositiveNumber(height);
+
+    const parsedLength =
+      parseOptionalPositiveNumber(length);
+
+    const shippingValues = [
+      weight,
+      width,
+      height,
+      length,
+    ];
+
+    const hasAnyShippingValue =
+      shippingValues.some(
+        (value) =>
+          value !== undefined &&
+          value !== null &&
+          value !== ""
+      );
+
+    const hasAllValidShippingValues =
+      parsedWeight !== null &&
+      parsedWidth !== null &&
+      parsedHeight !== null &&
+      parsedLength !== null;
+
+    if (
+      hasAnyShippingValue &&
+      !hasAllValidShippingValues
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Para configurar o frete, informe peso, largura, altura e comprimento com valores maiores que zero.",
+        },
+        { status: 400 }
+      );
+    }
+
     const { data, error } =
       await supabaseAdmin
         .from("products")
@@ -154,7 +228,7 @@ export async function PATCH(
 
           description:
             typeof description ===
-            "string"
+              "string"
               ? description.trim()
               : "",
 
@@ -162,6 +236,10 @@ export async function PATCH(
           promo_price:
             parsedPromoPrice,
           stock: parsedStock,
+          weight: parsedWeight,
+          width: parsedWidth,
+          height: parsedHeight,
+        length: parsedLength,
 
           category:
             category.trim(),
@@ -169,14 +247,14 @@ export async function PATCH(
           volume:
             typeof volume ===
               "string" &&
-            volume.trim()
+              volume.trim()
               ? volume.trim()
               : null,
 
           fragrance_family:
             typeof fragranceFamily ===
               "string" &&
-            fragranceFamily.trim()
+              fragranceFamily.trim()
               ? fragranceFamily.trim()
               : null,
 

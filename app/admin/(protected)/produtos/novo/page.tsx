@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  FormEvent,
-  useRef,
-  useState,
-} from "react";
+import { FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -23,9 +19,7 @@ export default function NewProductPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  async function uploadImages(
-    productId: string
-  ) {
+  async function uploadImages(productId: string) {
     for (let index = 0; index < files.length; index++) {
       const file = files[index];
 
@@ -34,41 +28,29 @@ export default function NewProductPage() {
       formData.append("file", file);
       formData.append("productId", productId);
       formData.append("position", String(index));
-      formData.append(
-        "isCover",
-        String(index === 0)
-      );
+      formData.append("isCover", String(index === 0));
 
-      const response = await fetch(
-        "/api/upload",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.message ??
-            "Erro ao enviar imagem."
-        );
+        throw new Error(data.message ?? "Erro ao enviar imagem.");
       }
     }
   }
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
-  ) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     try {
       setLoading(true);
       setMessage("");
 
-      const form =
-        new FormData(event.currentTarget);
+      const form = new FormData(event.currentTarget);
 
       const payload = {
         name: form.get("name"),
@@ -79,58 +61,46 @@ export default function NewProductPage() {
         promoPrice: form.get("promoPrice"),
         stock: form.get("stock"),
 
+        weight: form.get("weight"),
+        width: form.get("width"),
+        height: form.get("height"),
+        length: form.get("length"),
+
         category: form.get("category"),
         volume: form.get("volume"),
 
-        fragranceFamily:
-          form.get("fragranceFamily"),
+        fragranceFamily: form.get("fragranceFamily"),
 
-        topNotes: notesToArray(
-          String(form.get("topNotes") ?? "")
-        ),
+        topNotes: notesToArray(String(form.get("topNotes") ?? "")),
 
-        heartNotes: notesToArray(
-          String(form.get("heartNotes") ?? "")
-        ),
+        heartNotes: notesToArray(String(form.get("heartNotes") ?? "")),
 
-        baseNotes: notesToArray(
-          String(form.get("baseNotes") ?? "")
-        ),
+        baseNotes: notesToArray(String(form.get("baseNotes") ?? "")),
 
-        featured:
-          form.get("featured") === "on",
+        featured: form.get("featured") === "on",
 
-        active:
-          form.get("active") === "on",
+        active: form.get("active") === "on",
       };
 
-      const response = await fetch(
-        "/api/admin/products",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch("/api/admin/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(
-          data.message ??
-            "Não foi possível cadastrar."
-        );
+        setMessage(data.message ?? "Não foi possível cadastrar.");
         return;
       }
 
       const productId = data.product?.id;
 
       if (!productId) {
-        setMessage(
-          "Produto criado, mas o ID não foi retornado."
-        );
+        setMessage("Produto criado, mas o ID não foi retornado.");
         return;
       }
 
@@ -163,23 +133,16 @@ export default function NewProductPage() {
       </Link>
 
       <div className="mt-4">
-        <h1 className="text-3xl font-semibold">
-          Novo produto
-        </h1>
+        <h1 className="text-3xl font-semibold">Novo produto</h1>
 
         <p className="mt-2 text-neutral-500">
           Cadastre um novo perfume na Beecah.
         </p>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="mt-10 space-y-10"
-      >
+      <form onSubmit={handleSubmit} className="mt-10 space-y-10">
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">
-            Informações básicas
-          </h2>
+          <h2 className="text-lg font-semibold">Informações básicas</h2>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
             <Field
@@ -215,25 +178,15 @@ export default function NewProductPage() {
                   Selecione
                 </option>
 
-                <option value="Feminino">
-                  Feminino
-                </option>
+                <option value="Feminino">Feminino</option>
 
-                <option value="Masculino">
-                  Masculino
-                </option>
+                <option value="Masculino">Masculino</option>
 
-                <option value="Unissex">
-                  Unissex
-                </option>
+                <option value="Unissex">Unissex</option>
               </select>
             </div>
 
-            <Field
-              label="Volume"
-              name="volume"
-              placeholder="Ex: 100ml"
-            />
+            <Field label="Volume" name="volume" placeholder="Ex: 100ml" />
 
             <Field
               label="Família olfativa"
@@ -261,9 +214,7 @@ export default function NewProductPage() {
         </div>
 
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">
-            Preço e estoque
-          </h2>
+          <h2 className="text-lg font-semibold">Preço e estoque</h2>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-3">
             <Field
@@ -298,9 +249,59 @@ export default function NewProductPage() {
         </div>
 
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">
-            Pirâmide olfativa
-          </h2>
+          <h2 className="text-lg font-semibold">Peso e dimensões para envio</h2>
+
+          <p className="mt-2 text-sm text-neutral-500">
+            Informe o peso e as dimensões do produto já considerando a embalagem
+            usada para envio.
+          </p>
+
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <Field
+              label="Peso (kg)"
+              name="weight"
+              type="number"
+              min="0.001"
+              step="0.001"
+              placeholder="0.650"
+            />
+
+            <Field
+              label="Largura (cm)"
+              name="width"
+              type="number"
+              min="0.1"
+              step="0.1"
+              placeholder="12"
+            />
+
+            <Field
+              label="Altura (cm)"
+              name="height"
+              type="number"
+              min="0.1"
+              step="0.1"
+              placeholder="18"
+            />
+
+            <Field
+              label="Comprimento (cm)"
+              name="length"
+              type="number"
+              min="0.1"
+              step="0.1"
+              placeholder="10"
+            />
+          </div>
+
+          <p className="mt-4 text-xs leading-5 text-neutral-500">
+            Esses dados serão utilizados para calcular o frete no checkout. Se
+            preencher um deles, preencha os quatro.
+          </p>
+        </div>
+
+        <div className="border border-neutral-200 p-6">
+          <h2 className="text-lg font-semibold">Pirâmide olfativa</h2>
 
           <p className="mt-2 text-sm text-neutral-500">
             Separe cada nota por vírgula.
@@ -328,9 +329,7 @@ export default function NewProductPage() {
         </div>
 
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">
-            Imagens
-          </h2>
+          <h2 className="text-lg font-semibold">Imagens</h2>
 
           <p className="mt-2 text-sm text-neutral-500">
             A primeira imagem será usada como capa.
@@ -343,10 +342,7 @@ export default function NewProductPage() {
             accept="image/jpeg,image/png,image/webp"
             className="hidden"
             onChange={(event) => {
-              const selectedFiles =
-                Array.from(
-                  event.target.files ?? []
-                );
+              const selectedFiles = Array.from(event.target.files ?? []);
 
               setFiles(selectedFiles);
             }}
@@ -354,14 +350,10 @@ export default function NewProductPage() {
 
           <button
             type="button"
-            onClick={() =>
-              inputRef.current?.click()
-            }
+            onClick={() => inputRef.current?.click()}
             className="mt-6 w-full border-2 border-dashed border-neutral-300 px-6 py-10 transition hover:border-neutral-950"
           >
-            <span className="block font-medium">
-              Selecionar imagens
-            </span>
+            <span className="block font-medium">Selecionar imagens</span>
 
             <span className="mt-2 block text-sm text-neutral-500">
               JPG, PNG ou WEBP
@@ -376,14 +368,10 @@ export default function NewProductPage() {
                   className="flex items-center justify-between border border-neutral-200 px-4 py-3"
                 >
                   <div>
-                    <p className="text-sm font-medium">
-                      {file.name}
-                    </p>
+                    <p className="text-sm font-medium">{file.name}</p>
 
                     <p className="mt-1 text-xs text-neutral-500">
-                      {index === 0
-                        ? "Imagem principal"
-                        : `Imagem ${index + 1}`}
+                      {index === 0 ? "Imagem principal" : `Imagem ${index + 1}`}
                     </p>
                   </div>
 
@@ -397,32 +385,19 @@ export default function NewProductPage() {
         </div>
 
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">
-            Publicação
-          </h2>
+          <h2 className="text-lg font-semibold">Publicação</h2>
 
           <div className="mt-5 space-y-4">
             <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                name="active"
-                defaultChecked
-              />
+              <input type="checkbox" name="active" defaultChecked />
 
-              <span className="text-sm">
-                Produto ativo na loja
-              </span>
+              <span className="text-sm">Produto ativo na loja</span>
             </label>
 
             <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                name="featured"
-              />
+              <input type="checkbox" name="featured" />
 
-              <span className="text-sm">
-                Produto em destaque
-              </span>
+              <span className="text-sm">Produto em destaque</span>
             </label>
           </div>
         </div>
@@ -446,9 +421,7 @@ export default function NewProductPage() {
             disabled={loading}
             className="bg-neutral-950 px-6 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading
-              ? "Cadastrando..."
-              : "Cadastrar produto"}
+            {loading ? "Cadastrando..." : "Cadastrar produto"}
           </button>
         </div>
       </form>
@@ -479,10 +452,7 @@ function Field({
 }: FieldProps) {
   return (
     <div>
-      <label
-        htmlFor={name}
-        className="mb-2 block text-sm font-medium"
-      >
+      <label htmlFor={name} className="mb-2 block text-sm font-medium">
         {label}
       </label>
 

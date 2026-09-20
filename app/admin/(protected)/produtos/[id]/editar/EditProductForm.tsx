@@ -24,6 +24,12 @@ type Product = {
   price: number;
   promoPrice: number | null;
   stock: number;
+
+  weight: number | null;
+  width: number | null;
+  height: number | null;
+  length: number | null;
+
   category: string;
   volume: string;
   fragranceFamily: string;
@@ -106,6 +112,11 @@ export default function EditProductForm({
         promoPrice:
           form.get("promoPrice"),
         stock: form.get("stock"),
+
+        weight: form.get("weight"),
+        width: form.get("width"),
+        height: form.get("height"),
+        length: form.get("length"),
 
         category: form.get("category"),
         volume: form.get("volume"),
@@ -634,6 +645,62 @@ export default function EditProductForm({
               )}
             />
           </div>
+        </div>
+
+        {/* PESO E DIMENSÕES PARA ENVIO */}
+
+        <div className="border border-neutral-200 p-6">
+          <h2 className="text-lg font-semibold">
+            Peso e dimensões para envio
+          </h2>
+
+          <p className="mt-2 text-sm text-neutral-500">
+            Informe o peso e as dimensões do produto já considerando
+            a embalagem usada para envio.
+          </p>
+
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <Field
+              label="Peso (kg)"
+              name="weight"
+              type="number"
+              min="0.001"
+              step="0.001"
+              defaultValue={String(product.weight ?? "")}
+            />
+
+            <Field
+              label="Largura (cm)"
+              name="width"
+              type="number"
+              min="0.1"
+              step="0.1"
+              defaultValue={String(product.width ?? "")}
+            />
+
+            <Field
+              label="Altura (cm)"
+              name="height"
+              type="number"
+              min="0.1"
+              step="0.1"
+              defaultValue={String(product.height ?? "")}
+            />
+
+            <Field
+              label="Comprimento (cm)"
+              name="length"
+              type="number"
+              min="0.1"
+              step="0.1"
+              defaultValue={String(product.length ?? "")}
+            />
+          </div>
+
+          <p className="mt-4 text-xs leading-5 text-neutral-500">
+            Esses dados serão utilizados para calcular o frete no
+            checkout. Se preencher um deles, preencha os quatro.
+          </p>
         </div>
 
         {/* PIRÂMIDE OLFATIVA */}

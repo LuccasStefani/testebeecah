@@ -13,6 +13,29 @@ function createSlug(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+function parseOptionalPositiveNumber(
+  value: unknown
+): number | null {
+  if (
+    value === undefined ||
+    value === null ||
+    value === ""
+  ) {
+    return null;
+  }
+
+  const parsed = Number(value);
+
+  if (
+    !Number.isFinite(parsed) ||
+    parsed <= 0
+  ) {
+    return null;
+  }
+
+  return parsed;
+}
+
 export async function POST(request: Request) {
   try {
     const auth = await requireAdmin();
@@ -46,6 +69,11 @@ export async function POST(request: Request) {
       baseNotes,
       featured,
       active,
+
+      weight,
+      width,
+      height,
+      length,
     } = body;
 
     if (
@@ -121,6 +149,53 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+    }
+
+    const parsedWeight =
+      parseOptionalPositiveNumber(weight);
+
+    const parsedWidth =
+      parseOptionalPositiveNumber(width);
+
+    const parsedHeight =
+      parseOptionalPositiveNumber(height);
+
+    const parsedLength =
+      parseOptionalPositiveNumber(length);
+
+    const shippingValues = [
+      weight,
+      width,
+      height,
+      length,
+    ];
+
+    const hasAnyShippingValue =
+      shippingValues.some(
+        (value) =>
+          value !== undefined &&
+          value !== null &&
+          value !== ""
+      );
+
+    const hasAllValidShippingValues =
+      parsedWeight !== null &&
+      parsedWidth !== null &&
+      parsedHeight !== null &&
+      parsedLength !== null;
+
+    if (
+      hasAnyShippingValue &&
+      !hasAllValidShippingValues
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Para configurar o frete, informe peso, largura, altura e comprimento com valores maiores que zero.",
+        },
+        { status: 400 }
+      );
     }
 
     const slug = createSlug(name);
@@ -205,6 +280,11 @@ export async function POST(request: Request) {
             Array.isArray(baseNotes)
               ? baseNotes
               : [],
+
+          weight: parsedWeight,
+          width: parsedWidth,
+          height: parsedHeight,
+          length: parsedLength,
 
           featured:
             featured === true,

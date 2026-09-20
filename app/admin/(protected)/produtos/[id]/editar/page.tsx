@@ -25,34 +25,40 @@ export default async function EditProductPage({
 
   const { id } = await params;
 
-  const { data: product, error } =
-    await supabaseAdmin
-      .from("products")
-      .select(`
+  const {
+    data: product,
+    error,
+  } = await supabaseAdmin
+    .from("products")
+    .select(`
+      id,
+      name,
+      brand,
+      description,
+      price,
+      promo_price,
+      stock,
+      weight,
+      width,
+      height,
+      length,
+      category,
+      volume,
+      fragrance_family,
+      top_notes,
+      heart_notes,
+      base_notes,
+      featured,
+      active,
+      product_images (
         id,
-        name,
-        brand,
-        description,
-        price,
-        promo_price,
-        stock,
-        category,
-        volume,
-        fragrance_family,
-        top_notes,
-        heart_notes,
-        base_notes,
-        featured,
-        active,
-        product_images (
-          id,
-          image_url,
-          position,
-          is_cover
-        )
-      `)
-      .eq("id", id)
-      .single();
+        image_url,
+        position,
+        is_cover
+      )
+    `)
+    .eq("id", id)
+    .single();
 
   if (error || !product) {
     notFound();
@@ -72,42 +78,89 @@ export default async function EditProductPage({
         id: product.id,
         name: product.name,
         brand: product.brand,
-        description: product.description,
+        description:
+          product.description,
 
-        price: Number(product.price),
+        price: Number(
+          product.price
+        ),
 
         promoPrice:
           product.promo_price !== null
-            ? Number(product.promo_price)
+            ? Number(
+                product.promo_price
+              )
             : null,
 
         stock: product.stock,
-        category: product.category,
+
+        weight:
+          product.weight !== null
+            ? Number(
+                product.weight
+              )
+            : null,
+
+        width:
+          product.width !== null
+            ? Number(
+                product.width
+              )
+            : null,
+
+        height:
+          product.height !== null
+            ? Number(
+                product.height
+              )
+            : null,
+
+        length:
+          product.length !== null
+            ? Number(
+                product.length
+              )
+            : null,
+
+        category:
+          product.category,
 
         volume:
           product.volume ?? "",
 
         fragranceFamily:
-          product.fragrance_family ?? "",
+          product.fragrance_family ??
+          "",
 
         topNotes:
-          (product.top_notes ?? []) as string[],
+          (product.top_notes ??
+            []) as string[],
 
         heartNotes:
-          (product.heart_notes ?? []) as string[],
+          (product.heart_notes ??
+            []) as string[],
 
         baseNotes:
-          (product.base_notes ?? []) as string[],
+          (product.base_notes ??
+            []) as string[],
 
-        featured: product.featured,
-        active: product.active,
+        featured:
+          product.featured,
 
-        images: images.map((image) => ({
-          id: image.id,
-          imageUrl: image.image_url,
-          position: image.position,
-          isCover: image.is_cover,
-        })),
+        active:
+          product.active,
+
+        images: images.map(
+          (image) => ({
+            id: image.id,
+            imageUrl:
+              image.image_url,
+            position:
+              image.position,
+            isCover:
+              image.is_cover,
+          })
+        ),
       }}
     />
   );
