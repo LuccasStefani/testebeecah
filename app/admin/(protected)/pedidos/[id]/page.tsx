@@ -18,6 +18,16 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function formatZipCode(value: string) {
+  const digits = value.replace(/\D/g, "");
+
+  if (digits.length !== 8) {
+    return value;
+  }
+
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
 function getStatusLabel(status: string) {
   switch (status) {
     case "approved":
@@ -31,9 +41,6 @@ function getStatusLabel(status: string) {
 
     case "cancelled":
       return "Cancelado";
-
-    case "refunded":
-      return "Reembolsado";
 
     case "refunded":
       return "Reembolsado";
@@ -52,7 +59,9 @@ type PageProps = {
   }>;
 };
 
-export default async function AdminOrderDetailPage({ params }: PageProps) {
+export default async function AdminOrderDetailPage({
+  params,
+}: PageProps) {
   const auth = await requireAdmin();
 
   if (!auth.authorized) {
@@ -61,45 +70,106 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
 
   const { id } = await params;
 
-  const { data: order, error: orderError } = await supabaseAdmin
-    .from("orders")
-    .select(
-      `
-      id,
-      user_id,
-      status,
-      total,
-      mercado_pago_preference_id,
-      mercado_pago_payment_id,
-      created_at,
-      updated_at,
-      order_items (
+  const { data: order, error: orderError } =
+    await supabaseAdmin
+      .from("orders")
+      .select(
+        `
         id,
-        product_id,
-        product_name,
-        unit_price,
-        quantity,
-        subtotal
+        user_id,
+        status,
+        subtotal,
+        shipping_price,
+        shipping_service_id,
+        shipping_service_name,
+        shipping_company_id,
+        shipping_company_name,
+        shipping_delivery_min,
+        shipping_delivery_max,
+        total,
+        mercado_pago_preference_id,
+        mercado_pago_payment_id,
+        created_at,
+        updated_at,
+        order_items (
+          id,
+          product_id,
+          product_name,
+          unit_price,
+          quantity,
+          subtotal
+        )
+      `
       )
-    `
-    )
-    .eq("id", id)
-    .single();
+      .eq("id", id)
+      .single();
 
   if (orderError || !order) {
     notFound();
   }
 
-  const {
-    data: userData,
-    error: userError,
-  } = await supabaseAdmin.auth.admin.getUserById(order.user_id);
+  const [
+    { data: userData, error: userError },
+    { data: shippingAddress, error: shippingAddressError },
+  ] = await Promise.all([
+    supabaseAdmin.auth.admin.getUserById(order.user_id),
+
+    supabaseAdmin
+      .from("order_shipping_addresses")
+      .select(
+        `
+        id,
+        recipient_name,
+        phone,
+        zip_code,
+        street,
+        number,
+        complement,
+        neighborhood,
+        city,
+        state,
+        created_at
+      `
+      )
+      .eq("order_id", order.id)
+      .maybeSingle(),
+  ]);
 
   if (userError) {
-    console.error("Erro ao carregar cliente do pedido:", userError);
+    console.error(
+      "Erro ao carregar cliente do pedido:",
+      userError
+    );
   }
 
-  const customerEmail = userData?.user?.email ?? "E-mail não disponível";
+  if (shippingAddressError) {
+    console.error(
+      "Erro ao carregar endereço de entrega do pedido:",
+      shippingAddressError
+    );
+  }
+
+  const customerEmail =
+    userData?.user?.email ?? "E-mail não disponível";
+
+  const subtotal =
+    order.subtotal !== null
+      ? Number(order.subtotal)
+      : (order.order_items ?? []).reduce(
+          (total, item) =>
+            total + Number(item.subtotal),
+          0
+        );
+
+  const shippingPrice =
+    order.shipping_price !== null
+      ? Number(order.shipping_price)
+      : 0;
+
+  const hasShipping =
+    order.shipping_service_name ||
+    order.shipping_company_name ||
+    order.shipping_price !== null;
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-12">
@@ -115,7 +185,9 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
           Pedido #{order.id.slice(0, 8)}
         </p>
 
-        <h1 className="mt-3 text-3xl font-semibold">Detalhes do pedido</h1>
+        <h1 className="mt-3 text-3xl font-semibold">
+          Detalhes do pedido
+        </h1>
 
         <p className="mt-2 text-sm text-neutral-500">
           Realizado em {formatDate(order.created_at)}
@@ -128,7 +200,9 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
             Cliente
           </p>
 
-          <p className="mt-2 font-medium">{customerEmail}</p>
+          <p className="mt-2 font-medium">
+            {customerEmail}
+          </p>
         </div>
 
         <div className="border border-neutral-200 p-6">
@@ -156,35 +230,132 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
             Última atualização
           </p>
 
-          <p className="mt-2 text-sm">{formatDate(order.updated_at)}</p>
+          <p className="mt-2 text-sm">
+            {formatDate(order.updated_at)}
+          </p>
         </div>
       </div>
 
-      <div className="mt-8 border border-neutral-200 p-6">
-        <h2 className="font-semibold">Mercado Pago</h2>
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <div className="border border-neutral-200 p-6">
+          <h2 className="text-lg font-semibold">
+            Endereço de entrega
+          </h2>
 
-        <div className="mt-4 space-y-3 text-sm">
-          <div>
-            <p className="text-neutral-500">Preference ID</p>
+          {shippingAddress ? (
+            <div className="mt-5 space-y-4 text-sm">
+              <div>
+                <p className="font-semibold">
+                  {shippingAddress.recipient_name}
+                </p>
 
-            <p className="mt-1 break-all">
-              {order.mercado_pago_preference_id ?? "Não disponível"}
+                <p className="mt-1 text-neutral-600">
+                  {shippingAddress.phone}
+                </p>
+              </div>
+
+              <div className="leading-6 text-neutral-700">
+                <p>
+                  {shippingAddress.street},{" "}
+                  {shippingAddress.number}
+                </p>
+
+                {shippingAddress.complement && (
+                  <p>{shippingAddress.complement}</p>
+                )}
+
+                <p>{shippingAddress.neighborhood}</p>
+
+                <p>
+                  {shippingAddress.city} -{" "}
+                  {shippingAddress.state}
+                </p>
+
+                <p>
+                  CEP:{" "}
+                  {formatZipCode(
+                    shippingAddress.zip_code
+                  )}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-neutral-500">
+              Este pedido não possui um endereço de entrega
+              registrado.
             </p>
-          </div>
+          )}
+        </div>
 
-          <div>
-            <p className="text-neutral-500">Payment ID</p>
+        <div className="border border-neutral-200 p-6">
+          <h2 className="text-lg font-semibold">
+            Entrega
+          </h2>
 
-            <p className="mt-1 break-all">
-              {order.mercado_pago_payment_id ?? "Não disponível"}
+          {hasShipping ? (
+            <div className="mt-5 space-y-4 text-sm">
+              <div>
+                <p className="text-neutral-500">
+                  Transportadora
+                </p>
+
+                <p className="mt-1 font-semibold">
+                  {order.shipping_company_name ??
+                    "Não informada"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-neutral-500">
+                  Serviço
+                </p>
+
+                <p className="mt-1">
+                  {order.shipping_service_name ??
+                    "Não informado"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-neutral-500">
+                  Valor do frete
+                </p>
+
+                <p className="mt-1 font-medium">
+                  {formatPrice(shippingPrice)}
+                </p>
+              </div>
+
+              {order.shipping_delivery_min !== null &&
+                order.shipping_delivery_max !== null && (
+                  <div>
+                    <p className="text-neutral-500">
+                      Prazo estimado
+                    </p>
+
+                    <p className="mt-1">
+                      {order.shipping_delivery_min ===
+                      order.shipping_delivery_max
+                        ? `${order.shipping_delivery_min} dias úteis`
+                        : `${order.shipping_delivery_min} a ${order.shipping_delivery_max} dias úteis`}
+                    </p>
+                  </div>
+                )}
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-neutral-500">
+              Informações de frete não disponíveis para
+              este pedido.
             </p>
-          </div>
+          )}
         </div>
       </div>
 
       <div className="mt-8 border border-neutral-200">
         <div className="border-b border-neutral-200 p-5">
-          <h2 className="text-lg font-semibold">Itens do pedido</h2>
+          <h2 className="text-lg font-semibold">
+            Itens do pedido
+          </h2>
         </div>
 
         <div className="divide-y divide-neutral-200">
@@ -194,18 +365,81 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
               className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"
             >
               <div>
-                <p className="font-medium">{item.product_name}</p>
+                <p className="font-medium">
+                  {item.product_name}
+                </p>
 
                 <p className="mt-1 text-sm text-neutral-500">
-                  {item.quantity} × {formatPrice(Number(item.unit_price))}
+                  {item.quantity} ×{" "}
+                  {formatPrice(
+                    Number(item.unit_price)
+                  )}
                 </p>
               </div>
 
               <p className="font-semibold">
-                {formatPrice(Number(item.subtotal))}
+                {formatPrice(
+                  Number(item.subtotal)
+                )}
               </p>
             </div>
           ))}
+        </div>
+
+        <div className="space-y-3 border-t border-neutral-200 p-5">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-neutral-500">
+              Subtotal
+            </span>
+
+            <span>{formatPrice(subtotal)}</span>
+          </div>
+
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-neutral-500">
+              Frete
+            </span>
+
+            <span>{formatPrice(shippingPrice)}</span>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-neutral-200 pt-3 font-semibold">
+            <span>Total</span>
+
+            <span>
+              {formatPrice(Number(order.total))}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8 border border-neutral-200 p-6">
+        <h2 className="font-semibold">
+          Mercado Pago
+        </h2>
+
+        <div className="mt-4 space-y-3 text-sm">
+          <div>
+            <p className="text-neutral-500">
+              Preference ID
+            </p>
+
+            <p className="mt-1 break-all">
+              {order.mercado_pago_preference_id ??
+                "Não disponível"}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-neutral-500">
+              Payment ID
+            </p>
+
+            <p className="mt-1 break-all">
+              {order.mercado_pago_payment_id ??
+                "Não disponível"}
+            </p>
+          </div>
         </div>
       </div>
     </section>
