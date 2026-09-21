@@ -356,7 +356,7 @@ export async function POST(
     if (
       !products ||
       products.length !==
-      productIds.length
+        productIds.length
     ) {
       return NextResponse.json(
         {
@@ -408,8 +408,8 @@ export async function POST(
         const promotionalPrice =
           product.promo_price !== null
             ? Number(
-              product.promo_price
-            )
+                product.promo_price
+              )
             : null;
 
         const unitPrice =
@@ -580,7 +580,7 @@ export async function POST(
     const total =
       money(
         subtotal +
-        shippingPrice
+          shippingPrice
       );
 
     if (
@@ -599,7 +599,7 @@ export async function POST(
     const expirationDate =
       new Date(
         Date.now() +
-        24 * 60 * 60 * 1000
+          24 * 60 * 60 * 1000
       );
 
     const expirationDateIso =
@@ -743,120 +743,11 @@ export async function POST(
       );
 
       /*
- * Salva o snapshot dos pacotes
- * calculados pelo Melhor Envio para
- * a modalidade escolhida.
- *
- * Esses pacotes serão utilizados
- * posteriormente na criação da
- * etiqueta, sem depender de um novo
- * cálculo de empacotamento.
- */
-      const orderShippingPackages =
-        selectedShipping.packages.map(
-          (shippingPackage, index) => ({
-            order_id:
-              order.id,
-
-            package_index:
-              index,
-
-            weight:
-              shippingPackage.weight,
-
-            width:
-              shippingPackage.width,
-
-            height:
-              shippingPackage.height,
-
-            length:
-              shippingPackage.length,
-
-            insurance_value:
-              shippingPackage.insuranceValue,
-
-            products:
-              shippingPackage.products,
-          })
-        );
-
-      if (
-        orderShippingPackages.length === 0
-      ) {
-        await supabaseAdmin
-          .from("orders")
-          .delete()
-          .eq(
-            "id",
-            order.id
-          );
-
-        createdOrderId =
-          null;
-
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              "Não foi possível identificar os volumes do envio.",
-          },
-          {
-            status: 500,
-          }
-        );
-      }
-
-      const {
-        error:
-        shippingPackagesError,
-      } = await supabaseAdmin
-        .from(
-          "order_shipping_packages"
-        )
-        .insert(
-          orderShippingPackages
-        );
-
-      if (shippingPackagesError) {
-        console.error(
-          "Erro ao salvar pacotes do pedido:",
-          shippingPackagesError
-        );
-
-        /*
-         * O pedido ainda não possui
-         * preferência no Mercado Pago.
-         *
-         * Ao apagar o pedido, os snapshots
-         * relacionados são removidos por
-         * ON DELETE CASCADE.
-         */
-        await supabaseAdmin
-          .from("orders")
-          .delete()
-          .eq(
-            "id",
-            order.id
-          );
-
-        createdOrderId =
-          null;
-
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              "Não foi possível salvar os volumes do envio.",
-          },
-          {
-            status: 500,
-          }
-        );
-      }
-
-      /*
-       * order_items e endereço usam
+       * O pedido ainda não possui
+       * preferência no Mercado Pago.
+       *
+       * Ao apagar o pedido, seus
+       * snapshots são removidos por
        * ON DELETE CASCADE.
        */
       await supabaseAdmin
@@ -883,7 +774,128 @@ export async function POST(
     }
 
     /*
-     * 16. Cria o snapshot do endereço.
+     * 16. Salva o snapshot dos pacotes
+     * calculados pelo Melhor Envio para
+     * a modalidade escolhida.
+     *
+     * Esses pacotes serão utilizados
+     * posteriormente na criação da
+     * etiqueta, sem depender de um novo
+     * cálculo de empacotamento.
+     */
+    const orderShippingPackages =
+      selectedShipping.packages.map(
+        (
+          shippingPackage,
+          index
+        ) => ({
+          order_id:
+            order.id,
+
+          package_index:
+            index,
+
+          weight:
+            shippingPackage.weight,
+
+          width:
+            shippingPackage.width,
+
+          height:
+            shippingPackage.height,
+
+          length:
+            shippingPackage.length,
+
+          insurance_value:
+            shippingPackage.insuranceValue,
+
+          products:
+            shippingPackage.products,
+        })
+      );
+
+    if (
+      orderShippingPackages.length === 0
+    ) {
+      console.error(
+        "Nenhum pacote foi retornado para o serviço de frete selecionado."
+      );
+
+      await supabaseAdmin
+        .from("orders")
+        .delete()
+        .eq(
+          "id",
+          order.id
+        );
+
+      createdOrderId =
+        null;
+
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Não foi possível identificar os volumes do envio.",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    const {
+      error:
+        shippingPackagesError,
+    } = await supabaseAdmin
+      .from(
+        "order_shipping_packages"
+      )
+      .insert(
+        orderShippingPackages
+      );
+
+    if (shippingPackagesError) {
+      console.error(
+        "Erro ao salvar pacotes do pedido:",
+        shippingPackagesError
+      );
+
+      /*
+       * A preferência do Mercado Pago
+       * ainda não foi criada.
+       *
+       * Ao apagar o pedido,
+       * order_items e
+       * order_shipping_packages são
+       * removidos por cascade.
+       */
+      await supabaseAdmin
+        .from("orders")
+        .delete()
+        .eq(
+          "id",
+          order.id
+        );
+
+      createdOrderId =
+        null;
+
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Não foi possível salvar os volumes do envio.",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    /*
+     * 17. Cria o snapshot do endereço.
      *
      * Mesmo que o cliente altere ou
      * exclua o endereço posteriormente,
@@ -895,7 +907,7 @@ export async function POST(
      */
     const {
       error:
-      shippingAddressError,
+        shippingAddressError,
     } = await supabaseAdmin
       .from(
         "order_shipping_addresses"
@@ -943,7 +955,8 @@ export async function POST(
 
       /*
        * O delete do pedido também
-       * remove order_items por cascade.
+       * remove os snapshots por
+       * ON DELETE CASCADE.
        */
       await supabaseAdmin
         .from("orders")
@@ -969,7 +982,7 @@ export async function POST(
     }
 
     /*
-     * 17. Itens enviados ao
+     * 18. Itens enviados ao
      * Mercado Pago.
      */
     const preferenceItems =
@@ -1021,7 +1034,7 @@ export async function POST(
     }
 
     /*
-     * 18. Origem usada nas URLs
+     * 19. Origem usada nas URLs
      * de retorno do Mercado Pago.
      */
     const origin =
@@ -1035,7 +1048,7 @@ export async function POST(
       );
 
     /*
-     * 19. Cria a preferência.
+     * 20. Cria a preferência.
      *
      * external_reference = order.id
      *
@@ -1112,12 +1125,12 @@ export async function POST(
       true;
 
     /*
-     * 20. Salva o ID da preferência
+     * 21. Salva o ID da preferência
      * no pedido.
      */
     const {
       error:
-      preferenceUpdateError,
+        preferenceUpdateError,
     } = await supabaseAdmin
       .from("orders")
       .update({
@@ -1159,7 +1172,7 @@ export async function POST(
     }
 
     /*
-     * 21. Retorna os dados necessários
+     * 22. Retorna os dados necessários
      * para o navegador abrir o
      * Mercado Pago.
      */
@@ -1226,6 +1239,7 @@ export async function POST(
      * O CASCADE remove também:
      * - order_items
      * - order_shipping_addresses
+     * - order_shipping_packages
      */
     if (
       createdOrderId &&
