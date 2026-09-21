@@ -5,18 +5,25 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { supabase } from "@/src/lib/supabase/client";
+import {
+  formatCpf,
+  isValidCpf,
+  normalizeCpf,
+} from "@/src/lib/validation/cpf";
 
 export default function MinhaContaDadosPage() {
   const router = useRouter();
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [cpf, setCpf] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const [message, setMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] =
+    useState("");
 
   useEffect(() => {
     async function loadProfile() {
@@ -29,14 +36,12 @@ export default function MinhaContaDadosPage() {
         return;
       }
 
-      const {
-        data,
-        error,
-      } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select(`
           full_name,
-          phone
+          phone,
+          cpf
         `)
         .eq("id", user.id)
         .maybeSingle();
@@ -63,6 +68,10 @@ export default function MinhaContaDadosPage() {
         data?.phone ?? ""
       );
 
+      setCpf(
+        formatCpf(data?.cpf ?? "")
+      );
+
       setLoading(false);
     }
 
@@ -83,6 +92,9 @@ export default function MinhaContaDadosPage() {
     const normalizedPhone =
       phone.trim();
 
+    const normalizedCpf =
+      normalizeCpf(cpf);
+
     if (!normalizedName) {
       setErrorMessage(
         "Informe seu nome."
@@ -94,6 +106,22 @@ export default function MinhaContaDadosPage() {
     if (!normalizedPhone) {
       setErrorMessage(
         "Informe seu telefone."
+      );
+
+      return;
+    }
+
+    if (!normalizedCpf) {
+      setErrorMessage(
+        "Informe seu CPF."
+      );
+
+      return;
+    }
+
+    if (!isValidCpf(normalizedCpf)) {
+      setErrorMessage(
+        "Informe um CPF válido."
       );
 
       return;
@@ -116,6 +144,7 @@ export default function MinhaContaDadosPage() {
         .update({
           full_name: normalizedName,
           phone: normalizedPhone,
+          cpf: normalizedCpf,
           updated_at:
             new Date().toISOString(),
         })
@@ -133,6 +162,10 @@ export default function MinhaContaDadosPage() {
 
         return;
       }
+
+      setCpf(
+        formatCpf(normalizedCpf)
+      );
 
       setMessage(
         "Dados atualizados com sucesso."
@@ -173,8 +206,8 @@ export default function MinhaContaDadosPage() {
         </h1>
 
         <p className="mt-2 text-neutral-500">
-          Essas informações serão usadas nos seus pedidos
-          e entregas.
+          Essas informações serão usadas nos seus
+          pedidos e entregas.
         </p>
       </div>
 
@@ -198,8 +231,39 @@ export default function MinhaContaDadosPage() {
             onChange={(event) =>
               setFullName(event.target.value)
             }
+            autoComplete="name"
             className="w-full border border-neutral-300 px-4 py-3 outline-none transition focus:border-neutral-950"
           />
+        </div>
+
+        <div>
+          <label
+            htmlFor="cpf"
+            className="mb-2 block text-sm font-medium"
+          >
+            CPF
+          </label>
+
+          <input
+            id="cpf"
+            type="text"
+            required
+            inputMode="numeric"
+            maxLength={14}
+            value={cpf}
+            onChange={(event) =>
+              setCpf(
+                formatCpf(event.target.value)
+              )
+            }
+            placeholder="000.000.000-00"
+            className="w-full border border-neutral-300 px-4 py-3 outline-none transition focus:border-neutral-950"
+          />
+
+          <p className="mt-2 text-xs text-neutral-500">
+            O CPF será utilizado nos dados do pedido
+            e da entrega.
+          </p>
         </div>
 
         <div>
@@ -219,6 +283,7 @@ export default function MinhaContaDadosPage() {
               setPhone(event.target.value)
             }
             placeholder="(11) 99999-9999"
+            autoComplete="tel"
             className="w-full border border-neutral-300 px-4 py-3 outline-none transition focus:border-neutral-950"
           />
 

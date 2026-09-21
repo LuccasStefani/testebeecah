@@ -17,6 +17,10 @@ import {
   createSupabaseServerClient,
 } from "@/src/lib/supabase/server";
 
+import {
+  isValidCpf,
+} from "@/src/lib/validation/cpf";
+
 type CheckoutRequestBody = {
   addressId?: unknown;
   shippingServiceId?: unknown;
@@ -69,6 +73,64 @@ export async function POST(
     }
 
     /*
+ * 2. Valida os dados pessoais
+ * diretamente no servidor.
+ *
+ * A validação do navegador melhora a
+ * experiência, mas não é considerada
+ * uma barreira de segurança.
+ */
+    const {
+      data: profile,
+      error: profileError,
+    } = await supabaseAdmin
+      .from("profiles")
+      .select(`
+    full_name,
+    phone,
+    cpf
+  `)
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error(
+        "Erro ao carregar perfil no checkout:",
+        profileError
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Não foi possível validar seus dados pessoais.",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    const profileComplete =
+      Boolean(profile?.full_name?.trim()) &&
+      Boolean(profile?.phone?.trim()) &&
+      Boolean(profile?.cpf?.trim()) &&
+      isValidCpf(profile?.cpf ?? "");
+
+    if (!profileComplete || !profile) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Complete seus dados pessoais, incluindo um CPF válido, antes de finalizar a compra.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /*
      * 2. Recebe somente:
      *
      * - addressId
@@ -79,7 +141,7 @@ export async function POST(
      */
     const body =
       (await request.json()) as
-        CheckoutRequestBody;
+      CheckoutRequestBody;
 
     const addressId =
       typeof body.addressId === "string"
@@ -304,7 +366,7 @@ export async function POST(
     if (
       !products ||
       products.length !==
-        productIds.length
+      productIds.length
     ) {
       return NextResponse.json(
         {
@@ -355,8 +417,8 @@ export async function POST(
         const promotionalPrice =
           product.promo_price !== null
             ? Number(
-                product.promo_price
-              )
+              product.promo_price
+            )
             : null;
 
         const unitPrice =
@@ -484,7 +546,7 @@ export async function POST(
     const total =
       money(
         subtotal +
-          shippingPrice
+        shippingPrice
       );
 
     if (
@@ -503,7 +565,7 @@ export async function POST(
     const expirationDate =
       new Date(
         Date.now() +
-          24 * 60 * 60 * 1000
+        24 * 60 * 60 * 1000
       );
 
     const expirationDateIso =
@@ -667,7 +729,7 @@ export async function POST(
      */
     const {
       error:
-        shippingAddressError,
+      shippingAddressError,
     } = await supabaseAdmin
       .from(
         "order_shipping_addresses"
@@ -678,6 +740,9 @@ export async function POST(
 
         recipient_name:
           address.recipient_name,
+
+        recipient_document:
+          profile.cpf,
 
         phone:
           address.phone,
@@ -886,7 +951,7 @@ export async function POST(
      */
     const {
       error:
-        preferenceUpdateError,
+      preferenceUpdateError,
     } = await supabaseAdmin
       .from("orders")
       .update({

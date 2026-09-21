@@ -1,11 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useCart } from "@/src/contexts/CartContext";
@@ -56,49 +52,28 @@ type CheckoutResponse = {
 };
 
 function formatPrice(value: number) {
-  return new Intl.NumberFormat(
-    "pt-BR",
-    {
-      style: "currency",
-      currency: "BRL",
-    }
-  ).format(value);
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
 }
 
-function getDeliveryText(
-  quote: ShippingQuote
-) {
-  const min =
-    quote.deliveryRange?.min ??
-    quote.deliveryTime;
+function getDeliveryText(quote: ShippingQuote) {
+  const min = quote.deliveryRange?.min ?? quote.deliveryTime;
 
-  const max =
-    quote.deliveryRange?.max ??
-    quote.deliveryTime;
+  const max = quote.deliveryRange?.max ?? quote.deliveryTime;
 
-  if (
-    typeof min === "number" &&
-    typeof max === "number"
-  ) {
+  if (typeof min === "number" && typeof max === "number") {
     if (min === max) {
-      return `${min} ${
-        min === 1
-          ? "dia útil"
-          : "dias úteis"
-      }`;
+      return `${min} ${min === 1 ? "dia útil" : "dias úteis"}`;
     }
 
     return `${min} a ${max} dias úteis`;
   }
 
-  if (
-    typeof quote.deliveryTime ===
-    "number"
-  ) {
+  if (typeof quote.deliveryTime === "number") {
     return `${quote.deliveryTime} ${
-      quote.deliveryTime === 1
-        ? "dia útil"
-        : "dias úteis"
+      quote.deliveryTime === 1 ? "dia útil" : "dias úteis"
     }`;
   }
 
@@ -108,86 +83,47 @@ function getDeliveryText(
 export default function CheckoutSummary() {
   const router = useRouter();
 
-  const {
-    items,
-    totalPrice,
-  } = useCart();
+  const { items, totalPrice } = useCart();
 
-  const [userId, setUserId] =
-    useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  const [
-    profileComplete,
-    setProfileComplete,
-  ] = useState(false);
+  const [profileComplete, setProfileComplete] = useState(false);
 
-  const [addresses, setAddresses] =
-    useState<Address[]>([]);
+  const [addresses, setAddresses] = useState<Address[]>([]);
 
-  const [
-    selectedAddressId,
-    setSelectedAddressId,
-  ] = useState<string | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+    null
+  );
 
-  const [
-    changingAddress,
-    setChangingAddress,
-  ] = useState(false);
+  const [changingAddress, setChangingAddress] = useState(false);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [
-    shippingQuotes,
-    setShippingQuotes,
-  ] = useState<ShippingQuote[]>([]);
+  const [shippingQuotes, setShippingQuotes] = useState<ShippingQuote[]>([]);
 
-  const [
-    selectedShippingId,
-    setSelectedShippingId,
-  ] = useState<number | null>(null);
+  const [selectedShippingId, setSelectedShippingId] = useState<number | null>(
+    null
+  );
 
-  const [
-    calculatingShipping,
-    setCalculatingShipping,
-  ] = useState(false);
+  const [calculatingShipping, setCalculatingShipping] = useState(false);
 
-  const [
-    processingCheckout,
-    setProcessingCheckout,
-  ] = useState(false);
+  const [processingCheckout, setProcessingCheckout] = useState(false);
 
-  const [
-    shippingError,
-    setShippingError,
-  ] = useState<string | null>(null);
+  const [shippingError, setShippingError] = useState<string | null>(null);
 
   const selectedAddress = useMemo(
-    () =>
-      addresses.find(
-        (address) =>
-          address.id ===
-          selectedAddressId
-      ) ?? null,
+    () => addresses.find((address) => address.id === selectedAddressId) ?? null,
     [addresses, selectedAddressId]
   );
 
   const selectedShipping = useMemo(
     () =>
-      shippingQuotes.find(
-        (quote) =>
-          quote.serviceId ===
-          selectedShippingId
-      ) ?? null,
-    [
-      shippingQuotes,
-      selectedShippingId,
-    ]
+      shippingQuotes.find((quote) => quote.serviceId === selectedShippingId) ??
+      null,
+    [shippingQuotes, selectedShippingId]
   );
 
-  const finalTotal =
-    totalPrice +
-    (selectedShipping?.price ?? 0);
+  const finalTotal = totalPrice + (selectedShipping?.price ?? 0);
 
   useEffect(() => {
     async function loadCheckoutData() {
@@ -203,22 +139,23 @@ export default function CheckoutSummary() {
 
       setUserId(user.id);
 
-      const [
-        { data: profile },
-        { data: addressData },
-      ] = await Promise.all([
+      const [{ data: profile }, { data: addressData }] = await Promise.all([
         supabase
           .from("profiles")
-          .select(`
+          .select(
+            `
             full_name,
-            phone
-          `)
+            phone,
+            cpf
+          `
+          )
           .eq("id", user.id)
           .maybeSingle(),
 
         supabase
           .from("addresses")
-          .select(`
+          .select(
+            `
             id,
             label,
             recipient_name,
@@ -231,7 +168,8 @@ export default function CheckoutSummary() {
             city,
             state,
             is_default
-          `)
+          `
+          )
           .eq("user_id", user.id)
           .order("is_default", {
             ascending: false,
@@ -242,33 +180,22 @@ export default function CheckoutSummary() {
       ]);
 
       const hasProfile =
-        Boolean(
-          profile?.full_name?.trim()
-        ) &&
-        Boolean(
-          profile?.phone?.trim()
-        );
+        Boolean(profile?.full_name?.trim()) &&
+        Boolean(profile?.phone?.trim()) &&
+        Boolean(profile?.cpf?.trim());
 
       setProfileComplete(hasProfile);
 
-      const loadedAddresses =
-        addressData ?? [];
+      const loadedAddresses = addressData ?? [];
 
-      setAddresses(
-        loadedAddresses
-      );
+      setAddresses(loadedAddresses);
 
       const defaultAddress =
-        loadedAddresses.find(
-          (address) =>
-            address.is_default
-        ) ??
+        loadedAddresses.find((address) => address.is_default) ??
         loadedAddresses[0] ??
         null;
 
-      setSelectedAddressId(
-        defaultAddress?.id ?? null
-      );
+      setSelectedAddressId(defaultAddress?.id ?? null);
 
       setLoading(false);
     }
@@ -282,9 +209,7 @@ export default function CheckoutSummary() {
     setShippingError(null);
   }
 
-  function handleAddressChange(
-    addressId: string
-  ) {
+  function handleAddressChange(addressId: string) {
     setSelectedAddressId(addressId);
 
     /*
@@ -308,41 +233,25 @@ export default function CheckoutSummary() {
     setSelectedShippingId(null);
 
     try {
-      const response = await fetch(
-        "/api/shipping/quote",
-        {
-          method: "POST",
+      const response = await fetch("/api/shipping/quote", {
+        method: "POST",
 
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-          body: JSON.stringify({
-            addressId:
-              selectedAddress.id,
-          }),
-        }
-      );
+        body: JSON.stringify({
+          addressId: selectedAddress.id,
+        }),
+      });
 
-      const data =
-        (await response.json()) as
-          QuoteResponse;
+      const data = (await response.json()) as QuoteResponse;
 
-      if (
-        !response.ok ||
-        !data.success
-      ) {
-        throw new Error(
-          data.message ||
-            "Não foi possível calcular o frete."
-        );
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Não foi possível calcular o frete.");
       }
 
-      const quotes =
-        Array.isArray(data.quotes)
-          ? data.quotes
-          : [];
+      const quotes = Array.isArray(data.quotes) ? data.quotes : [];
 
       if (quotes.length === 0) {
         throw new Error(
@@ -357,10 +266,7 @@ export default function CheckoutSummary() {
        * O cliente escolhe a modalidade.
        */
     } catch (error) {
-      console.error(
-        "Erro ao calcular frete:",
-        error
-      );
+      console.error("Erro ao calcular frete:", error);
 
       setShippingError(
         error instanceof Error
@@ -379,30 +285,22 @@ export default function CheckoutSummary() {
     }
 
     if (!profileComplete) {
-      router.push(
-        "/minha-conta/dados"
-      );
+      router.push("/minha-conta/dados");
       return;
     }
 
     if (!selectedAddress) {
-      router.push(
-        "/minha-conta/enderecos/novo"
-      );
+      router.push("/minha-conta/enderecos/novo");
       return;
     }
 
-    if (
-      shippingQuotes.length === 0
-    ) {
+    if (shippingQuotes.length === 0) {
       await calculateShipping();
       return;
     }
 
     if (!selectedShipping) {
-      setShippingError(
-        "Selecione uma modalidade de frete para continuar."
-      );
+      setShippingError("Selecione uma modalidade de frete para continuar.");
       return;
     }
 
@@ -428,34 +326,23 @@ export default function CheckoutSummary() {
        * estoque e valor do frete serão
        * recalculados no servidor.
        */
-      const response = await fetch(
-        "/api/checkout",
-        {
-          method: "POST",
+      const response = await fetch("/api/checkout", {
+        method: "POST",
 
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-          body: JSON.stringify({
-            addressId:
-              selectedAddress.id,
+        body: JSON.stringify({
+          addressId: selectedAddress.id,
 
-            shippingServiceId:
-              selectedShipping.serviceId,
-          }),
-        }
-      );
+          shippingServiceId: selectedShipping.serviceId,
+        }),
+      });
 
-      const data =
-        (await response.json()) as
-          CheckoutResponse;
+      const data = (await response.json()) as CheckoutResponse;
 
-      if (
-        !response.ok ||
-        !data.success
-      ) {
+      if (!response.ok || !data.success) {
         /*
          * 409 significa que o serviço
          * selecionado deixou de estar
@@ -468,8 +355,7 @@ export default function CheckoutSummary() {
         }
 
         throw new Error(
-          data.message ||
-            "Não foi possível preparar o pagamento."
+          data.message || "Não foi possível preparar o pagamento."
         );
       }
 
@@ -480,9 +366,7 @@ export default function CheckoutSummary() {
        * o checkout.
        */
       if (!data.initPoint) {
-        throw new Error(
-          "O Mercado Pago não retornou a URL de pagamento."
-        );
+        throw new Error("O Mercado Pago não retornou a URL de pagamento.");
       }
 
       /*
@@ -492,14 +376,9 @@ export default function CheckoutSummary() {
        * A confirmação definitiva será
        * tratada pelo webhook.
        */
-      window.location.assign(
-        data.initPoint
-      );
+      window.location.assign(data.initPoint);
     } catch (error) {
-      console.error(
-        "Erro ao finalizar compra:",
-        error
-      );
+      console.error("Erro ao finalizar compra:", error);
 
       setShippingError(
         error instanceof Error
@@ -514,148 +393,103 @@ export default function CheckoutSummary() {
   if (loading) {
     return (
       <aside className="h-fit border border-neutral-200 p-6">
-        <p className="text-sm text-neutral-500">
-          Carregando resumo...
-        </p>
+        <p className="text-sm text-neutral-500">Carregando resumo...</p>
       </aside>
     );
   }
 
   return (
     <aside className="h-fit border border-neutral-200 bg-white p-6">
-      <h2 className="text-xl font-semibold">
-        Resumo da compra
-      </h2>
+      <h2 className="text-xl font-semibold">Resumo da compra</h2>
 
       <div className="mt-6 flex items-center justify-between border-b border-neutral-200 pb-5 text-sm">
         <span>
-          {items.length}{" "}
-          {items.length === 1
-            ? "item"
-            : "itens"}
+          {items.length} {items.length === 1 ? "item" : "itens"}
         </span>
 
-        <span className="font-medium">
-          {formatPrice(totalPrice)}
-        </span>
+        <span className="font-medium">{formatPrice(totalPrice)}</span>
       </div>
 
       <div className="border-b border-neutral-200 py-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium">
-              Entrega
-            </p>
+            <p className="text-sm font-medium">Entrega</p>
 
             {!userId ? (
               <p className="mt-2 text-sm text-neutral-500">
-                Entre na sua conta para
-                continuar.
+                Entre na sua conta para continuar.
               </p>
             ) : !profileComplete ? (
               <p className="mt-2 text-sm text-neutral-500">
-                Complete seus dados
-                pessoais.
+                Complete seus dados pessoais.
               </p>
             ) : selectedAddress ? (
               <div className="mt-2 text-sm leading-6 text-neutral-600">
                 <p className="font-medium text-neutral-950">
-                  {selectedAddress.label ||
-                    "Endereço"}
+                  {selectedAddress.label || "Endereço"}
                 </p>
 
                 <p>
-                  {selectedAddress.street},{" "}
-                  {selectedAddress.number}
+                  {selectedAddress.street}, {selectedAddress.number}
                 </p>
 
                 <p>
-                  {selectedAddress.city} -{" "}
-                  {selectedAddress.state}
+                  {selectedAddress.city} - {selectedAddress.state}
                 </p>
 
-                <p>
-                  CEP{" "}
-                  {selectedAddress.zip_code}
-                </p>
+                <p>CEP {selectedAddress.zip_code}</p>
               </div>
             ) : (
               <p className="mt-2 text-sm text-neutral-500">
-                Nenhum endereço
-                cadastrado.
+                Nenhum endereço cadastrado.
               </p>
             )}
           </div>
 
-          {userId &&
-            profileComplete &&
-            addresses.length > 0 && (
-              <button
-                type="button"
-                onClick={() =>
-                  setChangingAddress(
-                    (current) =>
-                      !current
-                  )
-                }
-                disabled={
-                  processingCheckout
-                }
-                className="text-sm font-medium underline underline-offset-4 disabled:opacity-50"
-              >
-                Alterar
-              </button>
-            )}
+          {userId && profileComplete && addresses.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setChangingAddress((current) => !current)}
+              disabled={processingCheckout}
+              className="text-sm font-medium underline underline-offset-4 disabled:opacity-50"
+            >
+              Alterar
+            </button>
+          )}
         </div>
 
         {changingAddress && (
           <div className="mt-5 space-y-3">
-            {addresses.map(
-              (address) => (
-                <label
-                  key={address.id}
-                  className="flex cursor-pointer gap-3 border border-neutral-200 p-4"
-                >
-                  <input
-                    type="radio"
-                    name="checkout-address"
-                    checked={
-                      selectedAddressId ===
-                      address.id
-                    }
-                    disabled={
-                      processingCheckout
-                    }
-                    onChange={() =>
-                      handleAddressChange(
-                        address.id
-                      )
-                    }
-                  />
+            {addresses.map((address) => (
+              <label
+                key={address.id}
+                className="flex cursor-pointer gap-3 border border-neutral-200 p-4"
+              >
+                <input
+                  type="radio"
+                  name="checkout-address"
+                  checked={selectedAddressId === address.id}
+                  disabled={processingCheckout}
+                  onChange={() => handleAddressChange(address.id)}
+                />
 
-                  <div className="text-sm">
-                    <p className="font-medium">
-                      {address.label ||
-                        "Endereço"}
+                <div className="text-sm">
+                  <p className="font-medium">
+                    {address.label || "Endereço"}
 
-                      {address.is_default
-                        ? " · Principal"
-                        : ""}
-                    </p>
+                    {address.is_default ? " · Principal" : ""}
+                  </p>
 
-                    <p className="mt-1 text-neutral-500">
-                      {address.street},{" "}
-                      {address.number}
-                    </p>
+                  <p className="mt-1 text-neutral-500">
+                    {address.street}, {address.number}
+                  </p>
 
-                    <p className="text-neutral-500">
-                      {address.city} -{" "}
-                      {address.state}
-                    </p>
-                  </div>
-                </label>
-              )
-            )}
+                  <p className="text-neutral-500">
+                    {address.city} - {address.state}
+                  </p>
+                </div>
+              </label>
+            ))}
 
             <Link
               href="/minha-conta/enderecos/novo"
@@ -666,12 +500,8 @@ export default function CheckoutSummary() {
 
             <button
               type="button"
-              onClick={() =>
-                setChangingAddress(false)
-              }
-              disabled={
-                processingCheckout
-              }
+              onClick={() => setChangingAddress(false)}
+              disabled={processingCheckout}
               className="block w-full bg-neutral-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Confirmar endereço
@@ -682,133 +512,92 @@ export default function CheckoutSummary() {
 
       <div className="border-b border-neutral-200 py-5">
         <div className="flex items-center justify-between gap-4">
-          <span className="text-sm font-medium">
-            Frete
-          </span>
+          <span className="text-sm font-medium">Frete</span>
 
           {selectedShipping && (
             <span className="text-sm font-medium">
-              {formatPrice(
-                selectedShipping.price
-              )}
+              {formatPrice(selectedShipping.price)}
             </span>
           )}
         </div>
 
-        {!userId ||
-        !profileComplete ||
-        !selectedAddress ? (
+        {!userId || !profileComplete || !selectedAddress ? (
           <p className="mt-2 text-xs leading-5 text-neutral-500">
-            Informe seus dados e endereço
-            para calcular o frete.
+            Informe seus dados e endereço para calcular o frete.
           </p>
-        ) : shippingQuotes.length ===
-          0 ? (
+        ) : shippingQuotes.length === 0 ? (
           <div className="mt-3">
             <p className="text-xs leading-5 text-neutral-500">
-              Calcule as modalidades de
-              entrega disponíveis para este
-              endereço.
+              Calcule as modalidades de entrega disponíveis para este endereço.
             </p>
 
             <button
               type="button"
               onClick={calculateShipping}
               disabled={
-                calculatingShipping ||
-                processingCheckout ||
-                items.length === 0
+                calculatingShipping || processingCheckout || items.length === 0
               }
               className="mt-3 w-full border border-neutral-950 px-4 py-3 text-sm font-medium transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {calculatingShipping
-                ? "Calculando frete..."
-                : "Calcular frete"}
+              {calculatingShipping ? "Calculando frete..." : "Calcular frete"}
             </button>
           </div>
         ) : (
           <div className="mt-4 space-y-3">
-            {shippingQuotes.map(
-              (quote) => {
-                const selected =
-                  selectedShippingId ===
-                  quote.serviceId;
+            {shippingQuotes.map((quote) => {
+              const selected = selectedShippingId === quote.serviceId;
 
-                return (
-                  <label
-                    key={
-                      quote.serviceId
-                    }
-                    className={`flex cursor-pointer items-start gap-3 border p-4 transition ${
-                      selected
-                        ? "border-neutral-950"
-                        : "border-neutral-200"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="shipping-service"
-                      checked={selected}
-                      disabled={
-                        processingCheckout
-                      }
-                      onChange={() => {
-                        setSelectedShippingId(
-                          quote.serviceId
-                        );
+              return (
+                <label
+                  key={quote.serviceId}
+                  className={`flex cursor-pointer items-start gap-3 border p-4 transition ${
+                    selected ? "border-neutral-950" : "border-neutral-200"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="shipping-service"
+                    checked={selected}
+                    disabled={processingCheckout}
+                    onChange={() => {
+                      setSelectedShippingId(quote.serviceId);
 
-                        setShippingError(
-                          null
-                        );
-                      }}
-                    />
+                      setShippingError(null);
+                    }}
+                  />
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-medium">
-                            {
-                              quote.serviceName
-                            }
-                          </p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-medium">
+                          {quote.serviceName}
+                        </p>
 
-                          <p className="mt-1 text-xs text-neutral-500">
-                            {
-                              quote.companyName
-                            }
-                          </p>
-                        </div>
-
-                        <p className="shrink-0 text-sm font-medium">
-                          {formatPrice(
-                            quote.price
-                          )}
+                        <p className="mt-1 text-xs text-neutral-500">
+                          {quote.companyName}
                         </p>
                       </div>
 
-                      <p className="mt-2 text-xs text-neutral-500">
-                        {getDeliveryText(
-                          quote
-                        )}
+                      <p className="shrink-0 text-sm font-medium">
+                        {formatPrice(quote.price)}
                       </p>
                     </div>
-                  </label>
-                );
-              }
-            )}
+
+                    <p className="mt-2 text-xs text-neutral-500">
+                      {getDeliveryText(quote)}
+                    </p>
+                  </div>
+                </label>
+              );
+            })}
 
             <button
               type="button"
               onClick={calculateShipping}
-              disabled={
-                calculatingShipping ||
-                processingCheckout
-              }
+              disabled={calculatingShipping || processingCheckout}
               className="text-xs font-medium underline underline-offset-4 disabled:opacity-50"
             >
-              {calculatingShipping
-                ? "Atualizando..."
-                : "Recalcular frete"}
+              {calculatingShipping ? "Atualizando..." : "Recalcular frete"}
             </button>
           </div>
         )}
@@ -822,33 +611,21 @@ export default function CheckoutSummary() {
 
       <div className="space-y-3 pt-5">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-neutral-600">
-            Produtos
-          </span>
+          <span className="text-neutral-600">Produtos</span>
 
-          <span>
-            {formatPrice(totalPrice)}
-          </span>
+          <span>{formatPrice(totalPrice)}</span>
         </div>
 
         <div className="flex items-center justify-between text-sm">
-          <span className="text-neutral-600">
-            Frete
-          </span>
+          <span className="text-neutral-600">Frete</span>
 
           <span>
-            {selectedShipping
-              ? formatPrice(
-                  selectedShipping.price
-                )
-              : "—"}
+            {selectedShipping ? formatPrice(selectedShipping.price) : "—"}
           </span>
         </div>
 
         <div className="flex items-center justify-between border-t border-neutral-200 pt-4">
-          <span className="font-medium">
-            Total
-          </span>
+          <span className="font-medium">Total</span>
 
           <span className="text-2xl font-semibold">
             {formatPrice(finalTotal)}
@@ -860,26 +637,23 @@ export default function CheckoutSummary() {
         type="button"
         onClick={handleContinue}
         disabled={
-          calculatingShipping ||
-          processingCheckout ||
-          items.length === 0
+          calculatingShipping || processingCheckout || items.length === 0
         }
         className="mt-6 w-full bg-neutral-950 px-6 py-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {processingCheckout
           ? "Preparando pagamento..."
           : !userId
-            ? "Entrar para continuar"
-            : !profileComplete
-              ? "Completar dados"
-              : !selectedAddress
-                ? "Adicionar endereço"
-                : shippingQuotes.length ===
-                    0
-                  ? "Calcular frete"
-                  : !selectedShipping
-                    ? "Selecione o frete"
-                    : "Finalizar compra"}
+          ? "Entrar para continuar"
+          : !profileComplete
+          ? "Completar dados"
+          : !selectedAddress
+          ? "Adicionar endereço"
+          : shippingQuotes.length === 0
+          ? "Calcular frete"
+          : !selectedShipping
+          ? "Selecione o frete"
+          : "Finalizar compra"}
       </button>
     </aside>
   );
