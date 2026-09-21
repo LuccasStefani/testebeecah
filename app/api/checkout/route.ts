@@ -127,7 +127,7 @@ export async function POST(
      */
     const body =
       (await request.json()) as
-        CheckoutRequestBody;
+      CheckoutRequestBody;
 
     const addressId =
       typeof body.addressId === "string"
@@ -356,7 +356,7 @@ export async function POST(
     if (
       !products ||
       products.length !==
-        productIds.length
+      productIds.length
     ) {
       return NextResponse.json(
         {
@@ -408,8 +408,8 @@ export async function POST(
         const promotionalPrice =
           product.promo_price !== null
             ? Number(
-                product.promo_price
-              )
+              product.promo_price
+            )
             : null;
 
         const unitPrice =
@@ -580,7 +580,7 @@ export async function POST(
     const total =
       money(
         subtotal +
-          shippingPrice
+        shippingPrice
       );
 
     if (
@@ -599,7 +599,7 @@ export async function POST(
     const expirationDate =
       new Date(
         Date.now() +
-          24 * 60 * 60 * 1000
+        24 * 60 * 60 * 1000
       );
 
     const expirationDateIso =
@@ -743,6 +743,119 @@ export async function POST(
       );
 
       /*
+ * Salva o snapshot dos pacotes
+ * calculados pelo Melhor Envio para
+ * a modalidade escolhida.
+ *
+ * Esses pacotes serão utilizados
+ * posteriormente na criação da
+ * etiqueta, sem depender de um novo
+ * cálculo de empacotamento.
+ */
+      const orderShippingPackages =
+        selectedShipping.packages.map(
+          (shippingPackage, index) => ({
+            order_id:
+              order.id,
+
+            package_index:
+              index,
+
+            weight:
+              shippingPackage.weight,
+
+            width:
+              shippingPackage.width,
+
+            height:
+              shippingPackage.height,
+
+            length:
+              shippingPackage.length,
+
+            insurance_value:
+              shippingPackage.insuranceValue,
+
+            products:
+              shippingPackage.products,
+          })
+        );
+
+      if (
+        orderShippingPackages.length === 0
+      ) {
+        await supabaseAdmin
+          .from("orders")
+          .delete()
+          .eq(
+            "id",
+            order.id
+          );
+
+        createdOrderId =
+          null;
+
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "Não foi possível identificar os volumes do envio.",
+          },
+          {
+            status: 500,
+          }
+        );
+      }
+
+      const {
+        error:
+        shippingPackagesError,
+      } = await supabaseAdmin
+        .from(
+          "order_shipping_packages"
+        )
+        .insert(
+          orderShippingPackages
+        );
+
+      if (shippingPackagesError) {
+        console.error(
+          "Erro ao salvar pacotes do pedido:",
+          shippingPackagesError
+        );
+
+        /*
+         * O pedido ainda não possui
+         * preferência no Mercado Pago.
+         *
+         * Ao apagar o pedido, os snapshots
+         * relacionados são removidos por
+         * ON DELETE CASCADE.
+         */
+        await supabaseAdmin
+          .from("orders")
+          .delete()
+          .eq(
+            "id",
+            order.id
+          );
+
+        createdOrderId =
+          null;
+
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "Não foi possível salvar os volumes do envio.",
+          },
+          {
+            status: 500,
+          }
+        );
+      }
+
+      /*
        * order_items e endereço usam
        * ON DELETE CASCADE.
        */
@@ -782,7 +895,7 @@ export async function POST(
      */
     const {
       error:
-        shippingAddressError,
+      shippingAddressError,
     } = await supabaseAdmin
       .from(
         "order_shipping_addresses"
@@ -1004,7 +1117,7 @@ export async function POST(
      */
     const {
       error:
-        preferenceUpdateError,
+      preferenceUpdateError,
     } = await supabaseAdmin
       .from("orders")
       .update({

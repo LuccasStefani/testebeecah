@@ -12,6 +12,32 @@ type MelhorEnvioCompany = {
   picture?: string;
 };
 
+type MelhorEnvioPackageProduct = {
+  id?: string | number;
+  quantity?: number;
+};
+
+type MelhorEnvioPackage = {
+  price?: string;
+  discount?: string;
+  format?: string;
+
+  weight?: string | number;
+
+  insurance_value?:
+    | string
+    | number;
+
+  dimensions?: {
+    height?: number;
+    width?: number;
+    length?: number;
+  };
+
+  products?:
+    MelhorEnvioPackageProduct[];
+};
+
 type MelhorEnvioQuote = {
   id?: number;
   name?: string;
@@ -34,7 +60,27 @@ type MelhorEnvioQuote = {
 
   company?: MelhorEnvioCompany;
 
+  packages?: MelhorEnvioPackage[];
+
   error?: string;
+};
+
+export type ShippingPackageProduct = {
+  id: string;
+  quantity: number;
+};
+
+export type ShippingPackage = {
+  weight: number;
+
+  width: number;
+  height: number;
+  length: number;
+
+  insuranceValue: number | null;
+
+  products:
+    ShippingPackageProduct[];
 };
 
 export type ShippingQuote = {
@@ -53,6 +99,16 @@ export type ShippingQuote = {
     min: number | null;
     max: number | null;
   };
+
+  /*
+   * Pacotes calculados pelo Melhor
+   * Envio para este serviço.
+   *
+   * Estes dados serão congelados no
+   * pedido e posteriormente usados
+   * como volumes na criação do envio.
+   */
+  packages: ShippingPackage[];
 };
 
 export type ShippingQuoteResult = {
@@ -66,7 +122,9 @@ export type ShippingQuoteResult = {
   quotes: ShippingQuote[];
 };
 
-function onlyDigits(value: unknown) {
+function onlyDigits(
+  value: unknown
+) {
   return String(value ?? "").replace(
     /\D/g,
     ""
@@ -88,8 +146,35 @@ function positiveNumber(
   return number;
 }
 
-function money(value: number) {
-  return Number(value.toFixed(2));
+function nonNegativeNumber(
+  value: unknown
+) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
+  const number = Number(value);
+
+  if (
+    !Number.isFinite(number) ||
+    number < 0
+  ) {
+    return null;
+  }
+
+  return number;
+}
+
+function money(
+  value: number
+) {
+  return Number(
+    value.toFixed(2)
+  );
 }
 
 async function requestQuote(
@@ -114,7 +199,8 @@ async function requestQuote(
       method: "POST",
 
       headers: {
-        Accept: "application/json",
+        Accept:
+          "application/json",
 
         "Content-Type":
           "application/json",
@@ -122,12 +208,15 @@ async function requestQuote(
         Authorization:
           `Bearer ${accessToken}`,
 
-        "User-Agent": userAgent,
+        "User-Agent":
+          userAgent,
       },
 
-      body: JSON.stringify(payload),
+      body:
+        JSON.stringify(payload),
 
-      cache: "no-store",
+      cache:
+        "no-store",
     }
   );
 }
@@ -148,6 +237,10 @@ async function requestQuote(
  * - peso;
  * - dimensões;
  * - CEP de origem.
+ *
+ * Também preservamos os pacotes
+ * calculados pelo Melhor Envio para
+ * cada serviço disponível.
  */
 export async function calculateShippingForUser(
   userId: string,
@@ -402,7 +495,8 @@ export async function calculateShippingForUser(
       }
 
       return {
-        id: product.id,
+        id:
+          product.id,
 
         width,
         height,
@@ -449,8 +543,11 @@ export async function calculateShippingForUser(
       shippingProducts,
 
     options: {
-      receipt: false,
-      own_hand: false,
+      receipt:
+        false,
+
+      own_hand:
+        false,
     },
   };
 
@@ -519,6 +616,10 @@ export async function calculateShippingForUser(
 
   /*
    * 9. Normaliza os serviços válidos.
+   *
+   * Além de preço e prazo, preservamos
+   * os packages retornados para cada
+   * modalidade de frete.
    */
   const quotes =
     (
@@ -555,6 +656,145 @@ export async function calculateShippingForUser(
           quote.delivery_range ??
           null;
 
+        /*
+         * Uma cotação válida para nosso
+         * fluxo precisa possuir pelo
+         * menos um pacote utilizável.
+         */
+        if (
+          !Array.isArray(
+            quote.packages
+          ) ||
+          quote.packages.length === 0
+        ) {
+          return null;
+        }
+
+        const packages =
+          quote.packages.map(
+            (
+              currentPackage
+            ): ShippingPackage | null => {
+              const weight =
+                positiveNumber(
+                  currentPackage.weight
+                );
+
+              const width =
+                positiveNumber(
+                  currentPackage
+                    .dimensions
+                    ?.width
+                );
+
+              const height =
+                positiveNumber(
+                  currentPackage
+                    .dimensions
+                    ?.height
+                );
+
+              const length =
+                positiveNumber(
+                  currentPackage
+                    .dimensions
+                    ?.length
+                );
+
+              if (
+                weight === null ||
+                width === null ||
+                height === null ||
+                length === null
+              ) {
+                return null;
+              }
+
+              const insuranceValue =
+                nonNegativeNumber(
+                  currentPackage
+                    .insurance_value
+                );
+
+              const packageProducts =
+                Array.isArray(
+                  currentPackage.products
+                )
+                  ? currentPackage.products
+                      .map(
+                        (
+                          packageProduct
+                        ): ShippingPackageProduct | null => {
+                          const id =
+                            String(
+                              packageProduct
+                                .id ??
+                                ""
+                            ).trim();
+
+                          const quantity =
+                            Number(
+                              packageProduct
+                                .quantity
+                            );
+
+                          if (
+                            !id ||
+                            !Number.isInteger(
+                              quantity
+                            ) ||
+                            quantity <= 0
+                          ) {
+                            return null;
+                          }
+
+                          return {
+                            id,
+                            quantity,
+                          };
+                        }
+                      )
+                      .filter(
+                        (
+                          product
+                        ): product is ShippingPackageProduct =>
+                          product !==
+                          null
+                      )
+                  : [];
+
+              return {
+                weight,
+                width,
+                height,
+                length,
+
+                insuranceValue,
+
+                products:
+                  packageProducts,
+              };
+            }
+          );
+
+        /*
+         * Se qualquer pacote retornado
+         * estiver inválido, descartamos
+         * esta modalidade em vez de
+         * salvar um snapshot incompleto.
+         */
+        if (
+          packages.some(
+            (currentPackage) =>
+              currentPackage === null
+          )
+        ) {
+          return null;
+        }
+
+        const normalizedPackages =
+          packages as ShippingPackage[];
+
         return {
           serviceId:
             Number(quote.id),
@@ -589,6 +829,9 @@ export async function calculateShippingForUser(
               deliveryRange?.max ??
               deliveryTime,
           },
+
+          packages:
+            normalizedPackages,
         };
       })
       .filter(
@@ -610,11 +853,15 @@ export async function calculateShippingForUser(
   }
 
   return {
-    addressId: address.id,
+    addressId:
+      address.id,
 
     destination: {
-      city: address.city,
-      state: address.state,
+      city:
+        address.city,
+
+      state:
+        address.state,
     },
 
     quotes,
