@@ -1,25 +1,11 @@
 import { Preference } from "mercadopago";
 import { NextResponse } from "next/server";
 
-import {
-  calculateShippingForUser,
-} from "@/src/lib/melhor-envio/shipping";
-
-import {
-  mercadoPagoClient,
-} from "@/src/lib/mercadopago/client";
-
-import {
-  supabaseAdmin,
-} from "@/src/lib/supabase/admin";
-
-import {
-  createSupabaseServerClient,
-} from "@/src/lib/supabase/server";
-
-import {
-  isValidCpf,
-} from "@/src/lib/validation/cpf";
+import { calculateShippingForUser } from "@/src/lib/melhor-envio/shipping";
+import { mercadoPagoClient } from "@/src/lib/mercadopago/client";
+import { supabaseAdmin } from "@/src/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/src/lib/supabase/server";
+import { isValidCpf } from "@/src/lib/validation/cpf";
 
 type CheckoutRequestBody = {
   addressId?: unknown;
@@ -73,23 +59,23 @@ export async function POST(
     }
 
     /*
- * 2. Valida os dados pessoais
- * diretamente no servidor.
- *
- * A validação do navegador melhora a
- * experiência, mas não é considerada
- * uma barreira de segurança.
- */
+     * 2. Valida os dados pessoais
+     * diretamente no servidor.
+     *
+     * A validação do navegador melhora a
+     * experiência, mas não é considerada
+     * uma barreira de segurança.
+     */
     const {
       data: profile,
       error: profileError,
     } = await supabaseAdmin
       .from("profiles")
       .select(`
-    full_name,
-    phone,
-    cpf
-  `)
+        full_name,
+        phone,
+        cpf
+      `)
       .eq("id", user.id)
       .maybeSingle();
 
@@ -131,7 +117,7 @@ export async function POST(
     }
 
     /*
-     * 2. Recebe somente:
+     * 3. Recebe somente:
      *
      * - addressId
      * - shippingServiceId
@@ -141,7 +127,7 @@ export async function POST(
      */
     const body =
       (await request.json()) as
-      CheckoutRequestBody;
+        CheckoutRequestBody;
 
     const addressId =
       typeof body.addressId === "string"
@@ -183,7 +169,7 @@ export async function POST(
     }
 
     /*
-     * 3. Carrega o endereço completo
+     * 4. Carrega o endereço completo
      * diretamente do banco e confirma
      * que pertence ao usuário.
      *
@@ -244,7 +230,7 @@ export async function POST(
     }
 
     /*
-     * 4. Carrega o carrinho diretamente
+     * 5. Carrega o carrinho diretamente
      * do Supabase.
      */
     const {
@@ -293,7 +279,7 @@ export async function POST(
     }
 
     /*
-     * 5. Valida as quantidades do
+     * 6. Valida as quantidades do
      * carrinho salvo.
      */
     const invalidCartItem =
@@ -324,10 +310,10 @@ export async function POST(
       );
 
     /*
-     * 6. Busca os produtos atuais.
+     * 7. Busca os produtos atuais.
      *
-     * Preço e estoque vêm sempre
-     * do servidor.
+     * Preço, estoque e dados físicos
+     * vêm sempre do servidor.
      */
     const {
       data: products,
@@ -340,7 +326,11 @@ export async function POST(
         price,
         promo_price,
         stock,
-        active
+        active,
+        weight,
+        width,
+        height,
+        length
       `)
       .in("id", productIds)
       .eq("active", true);
@@ -366,7 +356,7 @@ export async function POST(
     if (
       !products ||
       products.length !==
-      productIds.length
+        productIds.length
     ) {
       return NextResponse.json(
         {
@@ -381,8 +371,9 @@ export async function POST(
     }
 
     /*
-     * 7. Recalcula cada item usando
-     * preço e estoque atuais.
+     * 8. Recalcula cada item usando
+     * preço, estoque e dados físicos
+     * atuais.
      */
     const checkoutItems =
       cartItems.map((cartItem) => {
@@ -417,8 +408,8 @@ export async function POST(
         const promotionalPrice =
           product.promo_price !== null
             ? Number(
-              product.promo_price
-            )
+                product.promo_price
+              )
             : null;
 
         const unitPrice =
@@ -432,6 +423,41 @@ export async function POST(
         ) {
           throw new Error(
             `Preço inválido para ${product.name}.`
+          );
+        }
+
+        /*
+         * Dados físicos usados no frete
+         * e congelados no pedido.
+         *
+         * weight = kg
+         * width/height/length = cm
+         */
+        const weight =
+          Number(product.weight);
+
+        const width =
+          Number(product.width);
+
+        const height =
+          Number(product.height);
+
+        const length =
+          Number(product.length);
+
+        const invalidShippingData =
+          !Number.isFinite(weight) ||
+          weight <= 0 ||
+          !Number.isFinite(width) ||
+          width <= 0 ||
+          !Number.isFinite(height) ||
+          height <= 0 ||
+          !Number.isFinite(length) ||
+          length <= 0;
+
+        if (invalidShippingData) {
+          throw new Error(
+            `Dados de envio inválidos para ${product.name}.`
           );
         }
 
@@ -454,11 +480,19 @@ export async function POST(
 
           subtotal:
             itemSubtotal,
+
+          weight,
+
+          width,
+
+          height,
+
+          length,
         };
       });
 
     /*
-     * 8. Calcula o subtotal dos
+     * 9. Calcula o subtotal dos
      * produtos no servidor.
      */
     const subtotal =
@@ -487,7 +521,7 @@ export async function POST(
     }
 
     /*
-     * 9. Recalcula o frete diretamente
+     * 10. Recalcula o frete diretamente
      * no Melhor Envio.
      *
      * Não usamos o preço exibido no
@@ -500,7 +534,7 @@ export async function POST(
       );
 
     /*
-     * 10. Localiza, na nova cotação,
+     * 11. Localiza, na nova cotação,
      * exatamente o serviço escolhido
      * pelo cliente.
      */
@@ -541,12 +575,12 @@ export async function POST(
     }
 
     /*
-     * 11. Total financeiro definitivo.
+     * 12. Total financeiro definitivo.
      */
     const total =
       money(
         subtotal +
-        shippingPrice
+          shippingPrice
       );
 
     if (
@@ -559,20 +593,20 @@ export async function POST(
     }
 
     /*
-     * 12. Define expiração da
+     * 13. Define expiração da
      * preferência em 24 horas.
      */
     const expirationDate =
       new Date(
         Date.now() +
-        24 * 60 * 60 * 1000
+          24 * 60 * 60 * 1000
       );
 
     const expirationDateIso =
       expirationDate.toISOString();
 
     /*
-     * 13. Cria o pedido com o snapshot
+     * 14. Cria o pedido com o snapshot
      * comercial do frete.
      */
     const {
@@ -654,8 +688,12 @@ export async function POST(
       order.id;
 
     /*
-     * 14. Salva o snapshot dos
+     * 15. Salva o snapshot dos
      * produtos comprados.
+     *
+     * Além de preço e quantidade,
+     * também congelamos peso e
+     * dimensões para o envio.
      */
     const orderItems =
       checkoutItems.map(
@@ -677,6 +715,18 @@ export async function POST(
 
           subtotal:
             item.subtotal,
+
+          weight:
+            item.weight,
+
+          width:
+            item.width,
+
+          height:
+            item.height,
+
+          length:
+            item.length,
         })
       );
 
@@ -720,16 +770,19 @@ export async function POST(
     }
 
     /*
-     * 15. Cria o snapshot do endereço.
+     * 16. Cria o snapshot do endereço.
      *
      * Mesmo que o cliente altere ou
      * exclua o endereço posteriormente,
      * o pedido mantém exatamente os
      * dados usados na compra.
+     *
+     * O CPF também fica congelado
+     * neste pedido.
      */
     const {
       error:
-      shippingAddressError,
+        shippingAddressError,
     } = await supabaseAdmin
       .from(
         "order_shipping_addresses"
@@ -803,7 +856,7 @@ export async function POST(
     }
 
     /*
-     * 16. Itens enviados ao
+     * 17. Itens enviados ao
      * Mercado Pago.
      */
     const preferenceItems =
@@ -855,7 +908,7 @@ export async function POST(
     }
 
     /*
-     * 17. Origem usada nas URLs
+     * 18. Origem usada nas URLs
      * de retorno do Mercado Pago.
      */
     const origin =
@@ -869,7 +922,7 @@ export async function POST(
       );
 
     /*
-     * 18. Cria a preferência.
+     * 19. Cria a preferência.
      *
      * external_reference = order.id
      *
@@ -946,12 +999,12 @@ export async function POST(
       true;
 
     /*
-     * 19. Salva o ID da preferência
+     * 20. Salva o ID da preferência
      * no pedido.
      */
     const {
       error:
-      preferenceUpdateError,
+        preferenceUpdateError,
     } = await supabaseAdmin
       .from("orders")
       .update({
@@ -993,7 +1046,7 @@ export async function POST(
     }
 
     /*
-     * 20. Retorna os dados necessários
+     * 21. Retorna os dados necessários
      * para o navegador abrir o
      * Mercado Pago.
      */
