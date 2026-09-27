@@ -97,10 +97,14 @@ export async function POST(
       );
     }
 
+    const customerEmail =
+      user.email?.trim() ?? "";
+
     const profileComplete =
       Boolean(profile?.full_name?.trim()) &&
       Boolean(profile?.phone?.trim()) &&
       Boolean(profile?.cpf?.trim()) &&
+      Boolean(customerEmail) &&
       isValidCpf(profile?.cpf ?? "");
 
     if (!profileComplete || !profile) {
@@ -108,7 +112,7 @@ export async function POST(
         {
           success: false,
           message:
-            "Complete seus dados pessoais, incluindo um CPF válido, antes de finalizar a compra.",
+            "Complete seus dados pessoais, incluindo e-mail e um CPF válido, antes de finalizar a compra.",
         },
         {
           status: 400,
@@ -902,8 +906,8 @@ export async function POST(
      * o pedido mantém exatamente os
      * dados usados na compra.
      *
-     * O CPF também fica congelado
-     * neste pedido.
+     * O CPF e o e-mail também ficam
+     * congelados neste pedido.
      */
     const {
       error:
@@ -921,6 +925,9 @@ export async function POST(
 
         recipient_document:
           profile.cpf,
+
+        recipient_email:
+          customerEmail,
 
         phone:
           address.phone,
