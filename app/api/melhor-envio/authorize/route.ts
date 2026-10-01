@@ -2,48 +2,32 @@ import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const clientId =
-    process.env.MELHOR_ENVIO_CLIENT_ID;
+  const clientId = process.env.MELHOR_ENVIO_CLIENT_ID;
 
-  const redirectUri =
-    process.env.MELHOR_ENVIO_REDIRECT_URI;
+  const redirectUri = process.env.MELHOR_ENVIO_REDIRECT_URI;
 
-  const baseUrl =
-    process.env.MELHOR_ENVIO_BASE_URL;
+  const baseUrl = process.env.MELHOR_ENVIO_BASE_URL;
 
   if (!clientId || !redirectUri || !baseUrl) {
     return NextResponse.json(
       {
-        error:
-          "Configuração do Melhor Envio incompleta.",
+        error: "Configuração do Melhor Envio incompleta.",
       },
       {
         status: 500,
-      }
+      },
     );
   }
 
   const state = randomBytes(32).toString("hex");
 
-  const authorizationUrl = new URL(
-    "/oauth/authorize",
-    baseUrl
-  );
+  const authorizationUrl = new URL("/oauth/authorize", baseUrl);
 
-  authorizationUrl.searchParams.set(
-    "client_id",
-    clientId
-  );
+  authorizationUrl.searchParams.set("client_id", clientId);
 
-  authorizationUrl.searchParams.set(
-    "redirect_uri",
-    redirectUri
-  );
+  authorizationUrl.searchParams.set("redirect_uri", redirectUri);
 
-  authorizationUrl.searchParams.set(
-    "response_type",
-    "code"
-  );
+  authorizationUrl.searchParams.set("response_type", "code");
 
   authorizationUrl.searchParams.set(
     "scope",
@@ -56,30 +40,20 @@ export async function GET() {
       "shipping-generate",
       "shipping-print",
       "shipping-tracking",
-    ].join(" ")
+    ].join(" "),
   );
 
-  authorizationUrl.searchParams.set(
-    "state",
-    state
-  );
+  authorizationUrl.searchParams.set("state", state);
 
-  const response = NextResponse.redirect(
-    authorizationUrl
-  );
+  const response = NextResponse.redirect(authorizationUrl);
 
-  response.cookies.set(
-    "melhor_envio_oauth_state",
-    state,
-    {
-      httpOnly: true,
-      secure:
-        process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 10,
-      path: "/",
-    }
-  );
+  response.cookies.set("melhor_envio_oauth_state", state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 10,
+    path: "/",
+  });
 
   return response;
 }

@@ -1,14 +1,10 @@
 import { NextResponse } from "next/server";
 
-import {
-  getMelhorEnvioAccessToken,
-} from "@/src/lib/melhor-envio/client";
+import { getMelhorEnvioAccessToken } from "@/src/lib/melhor-envio/client";
 
 import { supabaseAdmin } from "@/src/lib/supabase/admin";
 
-import {
-  createSupabaseServerClient,
-} from "@/src/lib/supabase/server";
+import { createSupabaseServerClient } from "@/src/lib/supabase/server";
 
 type QuoteRequestBody = {
   addressId?: unknown;
@@ -46,21 +42,13 @@ type MelhorEnvioQuote = {
 };
 
 function onlyDigits(value: unknown) {
-  return String(value ?? "").replace(
-    /\D/g,
-    ""
-  );
+  return String(value ?? "").replace(/\D/g, "");
 }
 
-function positiveNumber(
-  value: unknown
-) {
+function positiveNumber(value: unknown) {
   const number = Number(value);
 
-  if (
-    !Number.isFinite(number) ||
-    number <= 0
-  ) {
+  if (!Number.isFinite(number) || number <= 0) {
     return null;
   }
 
@@ -71,56 +59,40 @@ function money(value: number) {
   return Number(value.toFixed(2));
 }
 
-async function requestQuote(
-  accessToken: string,
-  payload: unknown
-) {
-  const baseUrl =
-    process.env.MELHOR_ENVIO_BASE_URL;
+async function requestQuote(accessToken: string, payload: unknown) {
+  const baseUrl = process.env.MELHOR_ENVIO_BASE_URL;
 
-  const userAgent =
-    process.env.MELHOR_ENVIO_USER_AGENT;
+  const userAgent = process.env.MELHOR_ENVIO_USER_AGENT;
 
   if (!baseUrl || !userAgent) {
-    throw new Error(
-      "Configuração do Melhor Envio incompleta."
-    );
+    throw new Error("Configuração do Melhor Envio incompleta.");
   }
 
-  return fetch(
-    `${baseUrl}/api/v2/me/shipment/calculate`,
-    {
-      method: "POST",
+  return fetch(`${baseUrl}/api/v2/me/shipment/calculate`, {
+    method: "POST",
 
-      headers: {
-        Accept: "application/json",
+    headers: {
+      Accept: "application/json",
 
-        "Content-Type":
-          "application/json",
+      "Content-Type": "application/json",
 
-        Authorization:
-          `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
 
-        "User-Agent":
-          userAgent,
-      },
+      "User-Agent": userAgent,
+    },
 
-      body: JSON.stringify(payload),
+    body: JSON.stringify(payload),
 
-      cache: "no-store",
-    }
-  );
+    cache: "no-store",
+  });
 }
 
-export async function POST(
-  request: Request
-) {
+export async function POST(request: Request) {
   try {
     /*
      * 1. Identifica o usuário no servidor.
      */
-    const supabase =
-      await createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
 
     const {
       data: { user },
@@ -131,12 +103,11 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Você precisa estar logado para calcular o frete.",
+          message: "Você precisa estar logado para calcular o frete.",
         },
         {
           status: 401,
-        }
+        },
       );
     }
 
@@ -146,25 +117,19 @@ export async function POST(
      * Não recebemos CEP, preço, peso,
      * dimensões ou produtos do navegador.
      */
-    const body =
-      (await request.json()) as
-        QuoteRequestBody;
+    const body = (await request.json()) as QuoteRequestBody;
 
-    const addressId =
-      typeof body.addressId === "string"
-        ? body.addressId.trim()
-        : "";
+    const addressId = typeof body.addressId === "string" ? body.addressId.trim() : "";
 
     if (!addressId) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Selecione um endereço de entrega.",
+          message: "Selecione um endereço de entrega.",
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -172,37 +137,32 @@ export async function POST(
      * 3. Carrega o endereço e confirma
      * que ele pertence ao usuário.
      */
-    const {
-      data: address,
-      error: addressError,
-    } = await supabaseAdmin
+    const { data: address, error: addressError } = await supabaseAdmin
       .from("addresses")
-      .select(`
+      .select(
+        `
         id,
         user_id,
         zip_code,
         city,
         state
-      `)
+      `,
+      )
       .eq("id", addressId)
       .eq("user_id", user.id)
       .maybeSingle();
 
     if (addressError) {
-      console.error(
-        "Erro ao carregar endereço para cotação:",
-        addressError
-      );
+      console.error("Erro ao carregar endereço para cotação:", addressError);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível carregar o endereço de entrega.",
+          message: "Não foi possível carregar o endereço de entrega.",
         },
         {
           status: 500,
-        }
+        },
       );
     }
 
@@ -210,30 +170,25 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Endereço de entrega não encontrado.",
+          message: "Endereço de entrega não encontrado.",
         },
         {
           status: 404,
-        }
+        },
       );
     }
 
-    const destinationPostalCode =
-      onlyDigits(address.zip_code);
+    const destinationPostalCode = onlyDigits(address.zip_code);
 
-    if (
-      destinationPostalCode.length !== 8
-    ) {
+    if (destinationPostalCode.length !== 8) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "O CEP do endereço de entrega é inválido.",
+          message: "O CEP do endereço de entrega é inválido.",
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -241,48 +196,39 @@ export async function POST(
      * 4. Carrega o carrinho diretamente
      * do Supabase.
      */
-    const {
-      data: cartItems,
-      error: cartError,
-    } = await supabaseAdmin
+    const { data: cartItems, error: cartError } = await supabaseAdmin
       .from("cart_items")
-      .select(`
+      .select(
+        `
         product_id,
         quantity
-      `)
+      `,
+      )
       .eq("user_id", user.id);
 
     if (cartError) {
-      console.error(
-        "Erro ao carregar carrinho para cotação:",
-        cartError
-      );
+      console.error("Erro ao carregar carrinho para cotação:", cartError);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível carregar o carrinho.",
+          message: "Não foi possível carregar o carrinho.",
         },
         {
           status: 500,
-        }
+        },
       );
     }
 
-    if (
-      !cartItems ||
-      cartItems.length === 0
-    ) {
+    if (!cartItems || cartItems.length === 0) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Seu carrinho está vazio.",
+          message: "Seu carrinho está vazio.",
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -290,44 +236,33 @@ export async function POST(
      * 5. Valida as quantidades salvas
      * no carrinho.
      */
-    const invalidCartItem =
-      cartItems.find(
-        (item) =>
-          !Number.isInteger(
-            Number(item.quantity)
-          ) ||
-          Number(item.quantity) <= 0
-      );
+    const invalidCartItem = cartItems.find(
+      (item) => !Number.isInteger(Number(item.quantity)) || Number(item.quantity) <= 0,
+    );
 
     if (invalidCartItem) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "O carrinho possui uma quantidade inválida.",
+          message: "O carrinho possui uma quantidade inválida.",
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
-    const productIds =
-      cartItems.map(
-        (item) => item.product_id
-      );
+    const productIds = cartItems.map((item) => item.product_id);
 
     /*
      * 6. Carrega produtos diretamente
      * do banco, incluindo os dados
      * físicos usados no frete.
      */
-    const {
-      data: products,
-      error: productsError,
-    } = await supabaseAdmin
+    const { data: products, error: productsError } = await supabaseAdmin
       .from("products")
-      .select(`
+      .select(
+        `
         id,
         name,
         price,
@@ -338,42 +273,34 @@ export async function POST(
         width,
         height,
         length
-      `)
+      `,
+      )
       .in("id", productIds)
       .eq("active", true);
 
     if (productsError) {
-      console.error(
-        "Erro ao carregar produtos para cotação:",
-        productsError
-      );
+      console.error("Erro ao carregar produtos para cotação:", productsError);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível validar os produtos do carrinho.",
+          message: "Não foi possível validar os produtos do carrinho.",
         },
         {
           status: 500,
-        }
+        },
       );
     }
 
-    if (
-      !products ||
-      products.length !==
-        productIds.length
-    ) {
+    if (!products || products.length !== productIds.length) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Um ou mais produtos do carrinho não estão disponíveis.",
+          message: "Um ou mais produtos do carrinho não estão disponíveis.",
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -381,134 +308,80 @@ export async function POST(
      * 7. Monta os produtos no formato
      * esperado pelo Melhor Envio.
      */
-    const shippingProducts =
-      cartItems.map((cartItem) => {
-        const product =
-          products.find(
-            (currentProduct) =>
-              currentProduct.id ===
-              cartItem.product_id
-          );
+    const shippingProducts = cartItems.map((cartItem) => {
+      const product = products.find(
+        (currentProduct) => currentProduct.id === cartItem.product_id,
+      );
 
-        if (!product) {
-          throw new Error(
-            "Produto do carrinho não encontrado."
-          );
-        }
+      if (!product) {
+        throw new Error("Produto do carrinho não encontrado.");
+      }
 
-        const quantity =
-          Number(cartItem.quantity);
+      const quantity = Number(cartItem.quantity);
 
-        if (
-          quantity >
-          Number(product.stock)
-        ) {
-          throw new Error(
-            `Estoque insuficiente para ${product.name}.`
-          );
-        }
+      if (quantity > Number(product.stock)) {
+        throw new Error(`Estoque insuficiente para ${product.name}.`);
+      }
 
-        const weight =
-          positiveNumber(
-            product.weight
-          );
+      const weight = positiveNumber(product.weight);
 
-        const width =
-          positiveNumber(
-            product.width
-          );
+      const width = positiveNumber(product.width);
 
-        const height =
-          positiveNumber(
-            product.height
-          );
+      const height = positiveNumber(product.height);
 
-        const length =
-          positiveNumber(
-            product.length
-          );
+      const length = positiveNumber(product.length);
 
-        if (
-          weight === null ||
-          width === null ||
-          height === null ||
-          length === null
-        ) {
-          throw new Error(
-            `O produto "${product.name}" ainda não possui peso e dimensões válidos para calcular o frete.`
-          );
-        }
+      if (weight === null || width === null || height === null || length === null) {
+        throw new Error(
+          `O produto "${product.name}" ainda não possui peso e dimensões válidos para calcular o frete.`,
+        );
+      }
 
-        const regularPrice =
-          Number(product.price);
+      const regularPrice = Number(product.price);
 
-        const promotionalPrice =
-          product.promo_price !== null
-            ? Number(
-                product.promo_price
-              )
-            : null;
+      const promotionalPrice =
+        product.promo_price !== null ? Number(product.promo_price) : null;
 
-        const unitPrice =
-          promotionalPrice !== null
-            ? promotionalPrice
-            : regularPrice;
+      const unitPrice = promotionalPrice !== null ? promotionalPrice : regularPrice;
 
-        if (
-          !Number.isFinite(unitPrice) ||
-          unitPrice <= 0
-        ) {
-          throw new Error(
-            `O produto "${product.name}" possui preço inválido.`
-          );
-        }
+      if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+        throw new Error(`O produto "${product.name}" possui preço inválido.`);
+      }
 
-        return {
-          id: product.id,
+      return {
+        id: product.id,
 
-          width,
-          height,
-          length,
-          weight,
+        width,
+        height,
+        length,
+        weight,
 
-          insurance_value:
-            money(unitPrice),
+        insurance_value: money(unitPrice),
 
-          quantity,
-        };
-      });
+        quantity,
+      };
+    });
 
     /*
      * 8. CEP de origem vem somente
      * da configuração do servidor.
      */
-    const originPostalCode =
-      onlyDigits(
-        process.env
-          .MELHOR_ENVIO_ORIGIN_POSTAL_CODE
-      );
+    const originPostalCode = onlyDigits(process.env.MELHOR_ENVIO_ORIGIN_POSTAL_CODE);
 
-    if (
-      originPostalCode.length !== 8
-    ) {
-      throw new Error(
-        "CEP de origem do Melhor Envio não está configurado corretamente."
-      );
+    if (originPostalCode.length !== 8) {
+      throw new Error("CEP de origem do Melhor Envio não está configurado corretamente.");
     }
 
     const quotePayload = {
       from: {
-        postal_code:
-          originPostalCode,
+        postal_code: originPostalCode,
       },
 
       to: {
-        postal_code:
-          destinationPostalCode,
+        postal_code: destinationPostalCode,
       },
 
-      products:
-        shippingProducts,
+      products: shippingProducts,
 
       options: {
         receipt: false,
@@ -519,17 +392,12 @@ export async function POST(
     /*
      * 9. Obtém token válido.
      */
-    let accessToken =
-      await getMelhorEnvioAccessToken();
+    let accessToken = await getMelhorEnvioAccessToken();
 
     /*
      * 10. Faz a cotação.
      */
-    let response =
-      await requestQuote(
-        accessToken,
-        quotePayload
-      );
+    let response = await requestQuote(accessToken, quotePayload);
 
     /*
      * Se o token tiver sido invalidado
@@ -537,61 +405,40 @@ export async function POST(
      * força uma renovação e tenta
      * exatamente mais uma vez.
      */
-    if (
-      response.status === 401 ||
-      response.status === 403
-    ) {
-      accessToken =
-        await getMelhorEnvioAccessToken(
-          true
-        );
+    if (response.status === 401 || response.status === 403) {
+      accessToken = await getMelhorEnvioAccessToken(true);
 
-      response =
-        await requestQuote(
-          accessToken,
-          quotePayload
-        );
+      response = await requestQuote(accessToken, quotePayload);
     }
 
-    const responseData =
-      await response.json();
+    const responseData = await response.json();
 
     if (!response.ok) {
-      console.error(
-        "Erro do Melhor Envio ao calcular frete:",
-        responseData
-      );
+      console.error("Erro do Melhor Envio ao calcular frete:", responseData);
 
       return NextResponse.json(
         {
           success: false,
 
-          message:
-            "Não foi possível calcular o frete neste momento.",
+          message: "Não foi possível calcular o frete neste momento.",
         },
         {
           status: response.status,
-        }
+        },
       );
     }
 
-    if (
-      !Array.isArray(responseData)
-    ) {
-      console.error(
-        "Resposta inesperada do Melhor Envio:",
-        responseData
-      );
+    if (!Array.isArray(responseData)) {
+      console.error("Resposta inesperada do Melhor Envio:", responseData);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "O Melhor Envio retornou uma resposta inválida.",
+          message: "O Melhor Envio retornou uma resposta inválida.",
         },
         {
           status: 502,
-        }
+        },
       );
     }
 
@@ -604,108 +451,63 @@ export async function POST(
      * prioridade sobre os valores
      * originais.
      */
-    const quotes =
-      (
-        responseData as
-          MelhorEnvioQuote[]
-      )
-        .filter(
-          (quote) =>
-            !quote.error &&
-            quote.id !== undefined
-        )
-        .map((quote) => {
-          const rawPrice =
-            quote.custom_price ??
-            quote.price;
+    const quotes = (responseData as MelhorEnvioQuote[])
+      .filter((quote) => !quote.error && quote.id !== undefined)
+      .map((quote) => {
+        const rawPrice = quote.custom_price ?? quote.price;
 
-          const price =
-            Number(rawPrice);
+        const price = Number(rawPrice);
 
-          if (
-            !Number.isFinite(price) ||
-            price < 0
-          ) {
-            return null;
-          }
+        if (!Number.isFinite(price) || price < 0) {
+          return null;
+        }
 
-          const deliveryTime =
-            quote.custom_delivery_time ??
-            quote.delivery_time ??
-            null;
+        const deliveryTime = quote.custom_delivery_time ?? quote.delivery_time ?? null;
 
-          const deliveryRange =
-            quote.custom_delivery_range ??
-            quote.delivery_range ??
-            null;
+        const deliveryRange = quote.custom_delivery_range ?? quote.delivery_range ?? null;
 
-          return {
-            serviceId:
-              Number(quote.id),
+        return {
+          serviceId: Number(quote.id),
 
-            serviceName:
-              quote.name ??
-              "Serviço de entrega",
+          serviceName: quote.name ?? "Serviço de entrega",
 
-            companyId:
-              quote.company?.id ??
-              null,
+          companyId: quote.company?.id ?? null,
 
-            companyName:
-              quote.company?.name ??
-              "Transportadora",
+          companyName: quote.company?.name ?? "Transportadora",
 
-            companyPicture:
-              quote.company?.picture ??
-              null,
+          companyPicture: quote.company?.picture ?? null,
 
-            price:
-              money(price),
+          price: money(price),
 
-            deliveryTime,
+          deliveryTime,
 
-            deliveryRange: {
-              min:
-                deliveryRange?.min ??
-                deliveryTime,
+          deliveryRange: {
+            min: deliveryRange?.min ?? deliveryTime,
 
-              max:
-                deliveryRange?.max ??
-                deliveryTime,
-            },
-          };
-        })
-        .filter(
-          (
-            quote
-          ): quote is NonNullable<
-            typeof quote
-          > => quote !== null
-        )
-        .sort(
-          (a, b) =>
-            a.price - b.price
-        );
+            max: deliveryRange?.max ?? deliveryTime,
+          },
+        };
+      })
+      .filter((quote): quote is NonNullable<typeof quote> => quote !== null)
+      .sort((a, b) => a.price - b.price);
 
     if (quotes.length === 0) {
       return NextResponse.json(
         {
           success: false,
 
-          message:
-            "Nenhuma modalidade de frete está disponível para este endereço.",
+          message: "Nenhuma modalidade de frete está disponível para este endereço.",
         },
         {
           status: 422,
-        }
+        },
       );
     }
 
     return NextResponse.json({
       success: true,
 
-      addressId:
-        address.id,
+      addressId: address.id,
 
       destination: {
         city: address.city,
@@ -715,15 +517,10 @@ export async function POST(
       quotes,
     });
   } catch (error) {
-    console.error(
-      "Erro ao calcular frete:",
-      error
-    );
+    console.error("Erro ao calcular frete:", error);
 
     const message =
-      error instanceof Error
-        ? error.message
-        : "Erro interno ao calcular frete.";
+      error instanceof Error ? error.message : "Erro interno ao calcular frete.";
 
     return NextResponse.json(
       {
@@ -732,7 +529,7 @@ export async function POST(
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }

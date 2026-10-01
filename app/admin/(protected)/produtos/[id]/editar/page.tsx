@@ -1,7 +1,4 @@
-import {
-  notFound,
-  redirect,
-} from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { requireAdmin } from "@/src/lib/auth/require-admin";
 import { supabaseAdmin } from "@/src/lib/supabase/admin";
@@ -14,9 +11,7 @@ type PageProps = {
   }>;
 };
 
-export default async function EditProductPage({
-  params,
-}: PageProps) {
+export default async function EditProductPage({ params }: PageProps) {
   const auth = await requireAdmin();
 
   if (!auth.authorized) {
@@ -25,38 +20,11 @@ export default async function EditProductPage({
 
   const { id } = await params;
 
-  const {
-    data: product,
-    error,
-  } = await supabaseAdmin
+  const { data: product, error } = await supabaseAdmin
     .from("products")
-    .select(`
-      id,
-      name,
-      brand,
-      description,
-      price,
-      promo_price,
-      stock,
-      weight,
-      width,
-      height,
-      length,
-      category,
-      volume,
-      fragrance_family,
-      top_notes,
-      heart_notes,
-      base_notes,
-      featured,
-      active,
-      product_images (
-        id,
-        image_url,
-        position,
-        is_cover
-      )
-    `)
+    .select(
+      "\n      id,\n      name,\n      brand,\n      description,\n      price,\n      promo_price,\n      stock,\n      weight,\n      width,\n      height,\n      length,\n      category,\n      is_arabian,\n      is_new,\n      volume,\n      fragrance_family,\n      top_notes,\n      heart_notes,\n      base_notes,\n      featured,\n      active,\n      product_images (\n        id,\n        image_url,\n        position,\n        is_cover\n      )\n    ",
+    )
     .eq("id", id)
     .single();
 
@@ -64,12 +32,8 @@ export default async function EditProductPage({
     notFound();
   }
 
-  const images = [
-    ...(product.product_images ?? []),
-  ].sort(
-    (a, b) =>
-      Number(a.position) -
-      Number(b.position)
+  const images = [...(product.product_images ?? [])].sort(
+    (a, b) => Number(a.position) - Number(b.position),
   );
 
   return (
@@ -78,89 +42,46 @@ export default async function EditProductPage({
         id: product.id,
         name: product.name,
         brand: product.brand,
-        description:
-          product.description,
+        description: product.description,
 
-        price: Number(
-          product.price
-        ),
+        price: Number(product.price),
 
-        promoPrice:
-          product.promo_price !== null
-            ? Number(
-                product.promo_price
-              )
-            : null,
+        promoPrice: product.promo_price !== null ? Number(product.promo_price) : null,
 
         stock: product.stock,
+        isArabian: product.is_arabian,
+        isNew: product.is_new,
 
-        weight:
-          product.weight !== null
-            ? Number(
-                product.weight
-              )
-            : null,
+        weight: product.weight !== null ? Number(product.weight) : null,
 
-        width:
-          product.width !== null
-            ? Number(
-                product.width
-              )
-            : null,
+        width: product.width !== null ? Number(product.width) : null,
 
-        height:
-          product.height !== null
-            ? Number(
-                product.height
-              )
-            : null,
+        height: product.height !== null ? Number(product.height) : null,
 
-        length:
-          product.length !== null
-            ? Number(
-                product.length
-              )
-            : null,
+        length: product.length !== null ? Number(product.length) : null,
 
-        category:
-          product.category,
+        category: product.category,
 
-        volume:
-          product.volume ?? "",
+        volume: product.volume ?? "",
 
-        fragranceFamily:
-          product.fragrance_family ??
-          "",
+        fragranceFamily: product.fragrance_family ?? "",
 
-        topNotes:
-          (product.top_notes ??
-            []) as string[],
+        topNotes: (product.top_notes ?? []) as string[],
 
-        heartNotes:
-          (product.heart_notes ??
-            []) as string[],
+        heartNotes: (product.heart_notes ?? []) as string[],
 
-        baseNotes:
-          (product.base_notes ??
-            []) as string[],
+        baseNotes: (product.base_notes ?? []) as string[],
 
-        featured:
-          product.featured,
+        featured: product.featured,
 
-        active:
-          product.active,
+        active: product.active,
 
-        images: images.map(
-          (image) => ({
-            id: image.id,
-            imageUrl:
-              image.image_url,
-            position:
-              image.position,
-            isCover:
-              image.is_cover,
-          })
-        ),
+        images: images.map((image) => ({
+          id: image.id,
+          imageUrl: image.image_url,
+          position: image.position,
+          isCover: image.is_cover,
+        })),
       }}
     />
   );

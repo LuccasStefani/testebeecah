@@ -1,3 +1,4 @@
+import { catalogContent } from "@/src/content/catalog";
 import { redirect } from "next/navigation";
 
 import FavoritesGrid from "@/src/components/products/FavoritesGrid";
@@ -5,8 +6,7 @@ import { createSupabaseServerClient } from "@/src/lib/supabase/server";
 import { Product } from "@/src/types/product";
 
 export default async function FavoritosPage() {
-  const supabase =
-    await createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const {
     data: { user },
@@ -16,78 +16,47 @@ export default async function FavoritosPage() {
     redirect("/login");
   }
 
-  const {
-    data: favorites,
-    error: favoritesError,
-  } = await supabase
+  const { data: favorites, error: favoritesError } = await supabase
     .from("favorites")
     .select("product_id")
     .eq("user_id", user.id);
 
   if (favoritesError) {
-    console.error(
-      "Erro ao carregar favoritos:",
-      favoritesError
-    );
+    console.error(catalogContent.erroAoCarregarFavoritos, favoritesError);
   }
 
-  const productIds =
-    favorites?.map(
-      (favorite) => favorite.product_id
-    ) ?? [];
+  const productIds = favorites?.map((favorite) => favorite.product_id) ?? [];
 
   let products: Product[] = [];
 
   if (productIds.length > 0) {
-    const {
-      data: productsData,
-      error: productsError,
-    } = await supabase
+    const { data: productsData, error: productsError } = await supabase
       .from("products")
-      .select(`
-        id,
-        name,
-        slug,
-        brand,
-        description,
-        price,
-        promo_price,
-        stock,
-        category,
-        product_images (
-          image_url,
-          position,
-          is_cover
-        )
-      `)
+      .select(
+        "\n        id,\n        name,\n        slug,\n        brand,\n        description,\n        price,\n        promo_price,\n        stock,\n        category,\n        product_images (\n          image_url,\n          position,\n          is_cover\n        )\n      ",
+      )
       .in("id", productIds)
       .eq("active", true);
 
     if (productsError) {
-      console.error(
-        "Erro ao carregar produtos favoritos:",
-        productsError
-      );
+      console.error(catalogContent.erroAoCarregarProdutosFavoritos, productsError);
     }
 
     products =
       productsData?.map((product) => {
-        const images =
-          product.product_images ?? [];
+        const images = product.product_images ?? [];
 
-        const sortedImages = [...images].sort(
-          (a, b) => {
-            if (a.is_cover && !b.is_cover) {
-              return -1;
-            }
-
-            if (!a.is_cover && b.is_cover) {
-              return 1;
-            }
-
-            return a.position - b.position;
+        const sortedImages = [...images].sort((a, b) => {
+          if (a.is_cover && !b.is_cover) {
+            return -1;
           }
-        );
+
+          if (!a.is_cover && b.is_cover) {
+            return 1;
+          }
+
+          return a.position - b.position;
+        });
 
         return {
           id: product.id,
@@ -97,13 +66,10 @@ export default async function FavoritosPage() {
           description: product.description,
           price: Number(product.price),
           promoPrice:
-            product.promo_price !== null
-              ? Number(product.promo_price)
-              : undefined,
+            product.promo_price !== null ? Number(product.promo_price) : undefined,
           stock: product.stock,
           category: product.category,
-          imageUrl:
-            sortedImages[0]?.image_url ?? "",
+          imageUrl: sortedImages[0]?.image_url ?? "",
         };
       }) ?? [];
   }
@@ -112,15 +78,15 @@ export default async function FavoritosPage() {
     <section className="mx-auto max-w-7xl px-6 py-12">
       <div>
         <p className="text-sm uppercase tracking-[0.2em] text-neutral-500">
-          Minha conta
+          {catalogContent.minhaConta}
         </p>
 
         <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-          Meus favoritos
+          {catalogContent.meusFavoritos}
         </h1>
 
         <p className="mt-2 text-neutral-500">
-          Perfumes que você salvou para ver depois.
+          {catalogContent.perfumesQueVoceSalvouParaVerDepois}
         </p>
       </div>
 

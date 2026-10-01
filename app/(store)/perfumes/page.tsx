@@ -1,142 +1,67 @@
-import ProductCard from "@/src/components/products/ProductCard";
-import { supabase } from "@/src/lib/supabase/client";
-
-export const metadata = {
-  title: "Perfumes",
-};
-
-export default async function PerfumesPage() {
-  const { data, error } = await supabase
-    .from("products")
-    .select(`
-      id,
-      name,
-      slug,
-      brand,
-      description,
-      price,
-      promo_price,
-      stock,
-      category,
-      volume,
-      fragrance_family,
-      top_notes,
-      heart_notes,
-      base_notes,
-      featured,
-      active,
-      product_images (
-        id,
-        image_url,
-        position,
-        is_cover
-      )
-    `)
-    .eq("active", true)
-    .order("created_at", {
-      ascending: false,
-    });
-
-  if (error) {
-    console.error("Erro ao buscar produtos:", error);
-
-    return (
-      <section className="mx-auto max-w-7xl px-6 py-12">
-        <h1 className="text-3xl font-semibold">
-          Perfumes
-        </h1>
-
-        <p className="mt-6 text-red-600">
-          Não foi possível carregar os produtos.
-        </p>
-      </section>
-    );
-  }
-
-  const products = (data ?? []).map((product) => {
-    const sortedImages = [
-      ...(product.product_images ?? []),
-    ].sort((a, b) => a.position - b.position);
-
-    const coverImage =
-      sortedImages.find((image) => image.is_cover) ??
-      sortedImages[0];
-
-    return {
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      brand: product.brand,
-      description: product.description,
-
-      price: Number(product.price),
-
-      promoPrice:
-        product.promo_price !== null
-          ? Number(product.promo_price)
-          : undefined,
-
-      stock: product.stock,
-      category: product.category,
-
-      volume: product.volume ?? undefined,
-
-      fragranceFamily:
-        product.fragrance_family ?? undefined,
-
-      topNotes: product.top_notes ?? [],
-      heartNotes: product.heart_notes ?? [],
-      baseNotes: product.base_notes ?? [],
-
-      featured: product.featured,
-      active: product.active,
-
-      imageUrl:
-        coverImage?.image_url ??
-        "/images/products/placeholder.webp",
-
-      images: sortedImages.map(
-        (image) => image.image_url
-      ),
-    };
-  });
-
+import { catalogContent } from "@/src/content/catalog";
+import Link from "next/link";
+import CollectionLinks from "@/src/components/products/CollectionLinks";
+import Catalog from "@/src/components/products/Catalog";
+import { getCatalog } from "@/src/lib/catalog";
+export const metadata = { title: catalogContent.perfumes };
+export default async function PerfumesPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const { products, failed } = await getCatalog();
+  const category =
+    typeof params.categoria === "string" &&
+    ["Feminino", "Masculino", "Unissex"].includes(params.categoria)
+      ? params.categoria
+      : catalogContent.todas;
+  const search = typeof params.q === "string" ? params.q : "";
   return (
-    <section className="mx-auto max-w-7xl px-6 py-12">
-      <div className="flex flex-wrap items-end justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-semibold">
-            Perfumes
-          </h1>
-
-          <p className="mt-2 text-neutral-500">
-            Encontre sua próxima fragrância.
-          </p>
-        </div>
-
-        <p className="text-sm text-neutral-500">
-          {products.length}{" "}
-          {products.length === 1
-            ? "produto"
-            : "produtos"}
+    <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
+      <nav
+        aria-label={catalogContent.caminhoDeNavegacao}
+        className="mb-8 text-xs text-neutral-500"
+      >
+        <Link href="/" className="hover:text-black">
+          {catalogContent.inicio}
+        </Link>
+        <span className="mx-3">{"/"}</span>
+        {catalogContent.perfumes}
+      </nav>
+      <div className="rounded-3xl bg-[#f2f4f8] px-6 py-10 sm:px-10">
+        <p className="text-xs uppercase tracking-[0.25em] text-beecah-blue">
+          {catalogContent.aColecaoBeecah}
+        </p>
+        <h1 className="mt-3 text-4xl tracking-tight sm:text-6xl">
+          {catalogContent.seuProximo}
+          <span className="font-haerins text-beecah-blue">{catalogContent.perfume}</span>
+        </h1>
+        <p className="mt-4 max-w-xl text-sm leading-6 text-neutral-600">
+          {catalogContent.encontreAFragranciaQueCombinaComVoceExplore}
         </p>
       </div>
-
-      {products.length > 0 ? (
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-            />
-          ))}
+      <CollectionLinks />
+      {failed ? (
+        <div role="alert" className="mt-8 rounded-2xl border p-8">
+          <h2 className="text-xl font-medium">
+            {catalogContent.naoFoiPossivelCarregarAColecao}
+          </h2>
+          <p className="mt-2 text-neutral-500">
+            {catalogContent.tenteNovamenteEmInstantes}
+          </p>
+          <Link href="/perfumes" className="mt-4 inline-block underline">
+            {catalogContent.tentarNovamente}
+          </Link>
         </div>
       ) : (
-        <div className="mt-16 border border-neutral-200 py-16 text-center">
-          <p className="text-neutral-500">
-            Nenhum perfume disponível.
-          </p>
-        </div>
+        <Catalog
+          key={JSON.stringify(params)}
+          products={products}
+          initialCategory={category}
+          initialSearch={search}
+          initialOffers={params.ofertas === "true"}
+        />
       )}
     </section>
   );

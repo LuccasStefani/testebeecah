@@ -13,23 +13,14 @@ function createSlug(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-function parseOptionalPositiveNumber(
-  value: unknown
-): number | null {
-  if (
-    value === undefined ||
-    value === null ||
-    value === ""
-  ) {
+function parseOptionalPositiveNumber(value: unknown): number | null {
+  if (value === undefined || value === null || value === "") {
     return null;
   }
 
   const parsed = Number(value);
 
-  if (
-    !Number.isFinite(parsed) ||
-    parsed <= 0
-  ) {
+  if (!Number.isFinite(parsed) || parsed <= 0) {
     return null;
   }
 
@@ -48,7 +39,7 @@ export async function POST(request: Request) {
         },
         {
           status: auth.status,
-        }
+        },
       );
     }
 
@@ -62,6 +53,8 @@ export async function POST(request: Request) {
       promoPrice,
       stock,
       category,
+      isArabian,
+      isNew,
       volume,
       fragranceFamily,
       topNotes,
@@ -87,96 +80,74 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Nome, marca e categoria são obrigatórios.",
+          message: "Nome, marca e categoria são obrigatórios.",
         },
-        { status: 400 }
+        { status: 400 },
+      );
+    }
+
+    if (
+      (isArabian !== undefined && typeof isArabian !== "boolean") ||
+      (isNew !== undefined && typeof isNew !== "boolean")
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Classificação do perfume inválida." },
+        { status: 400 },
       );
     }
 
     const parsedPrice = Number(price);
     const parsedStock = Number(stock);
 
-    if (
-      !Number.isFinite(parsedPrice) ||
-      parsedPrice < 0
-    ) {
+    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
       return NextResponse.json(
         {
           success: false,
           message: "Preço inválido.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    if (
-      !Number.isInteger(parsedStock) ||
-      parsedStock < 0
-    ) {
+    if (!Number.isInteger(parsedStock) || parsedStock < 0) {
       return NextResponse.json(
         {
           success: false,
           message: "Estoque inválido.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    let parsedPromoPrice: number | null =
-      null;
+    let parsedPromoPrice: number | null = null;
 
-    if (
-      promoPrice !== undefined &&
-      promoPrice !== null &&
-      promoPrice !== ""
-    ) {
-      parsedPromoPrice =
-        Number(promoPrice);
+    if (promoPrice !== undefined && promoPrice !== null && promoPrice !== "") {
+      parsedPromoPrice = Number(promoPrice);
 
-      if (
-        !Number.isFinite(
-          parsedPromoPrice
-        ) ||
-        parsedPromoPrice < 0
-      ) {
+      if (!Number.isFinite(parsedPromoPrice) || parsedPromoPrice < 0) {
         return NextResponse.json(
           {
             success: false,
-            message:
-              "Preço promocional inválido.",
+            message: "Preço promocional inválido.",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
-    const parsedWeight =
-      parseOptionalPositiveNumber(weight);
+    const parsedWeight = parseOptionalPositiveNumber(weight);
 
-    const parsedWidth =
-      parseOptionalPositiveNumber(width);
+    const parsedWidth = parseOptionalPositiveNumber(width);
 
-    const parsedHeight =
-      parseOptionalPositiveNumber(height);
+    const parsedHeight = parseOptionalPositiveNumber(height);
 
-    const parsedLength =
-      parseOptionalPositiveNumber(length);
+    const parsedLength = parseOptionalPositiveNumber(length);
 
-    const shippingValues = [
-      weight,
-      width,
-      height,
-      length,
-    ];
+    const shippingValues = [weight, width, height, length];
 
-    const hasAnyShippingValue =
-      shippingValues.some(
-        (value) =>
-          value !== undefined &&
-          value !== null &&
-          value !== ""
-      );
+    const hasAnyShippingValue = shippingValues.some(
+      (value) => value !== undefined && value !== null && value !== "",
+    );
 
     const hasAllValidShippingValues =
       parsedWeight !== null &&
@@ -184,17 +155,14 @@ export async function POST(request: Request) {
       parsedHeight !== null &&
       parsedLength !== null;
 
-    if (
-      hasAnyShippingValue &&
-      !hasAllValidShippingValues
-    ) {
+    if (hasAnyShippingValue && !hasAllValidShippingValues) {
       return NextResponse.json(
         {
           success: false,
           message:
             "Para configurar o frete, informe peso, largura, altura e comprimento com valores maiores que zero.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -204,16 +172,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível gerar o slug do produto.",
+          message: "Não foi possível gerar o slug do produto.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const {
-      data: existingProduct,
-    } = await supabaseAdmin
+    const { data: existingProduct } = await supabaseAdmin
       .from("products")
       .select("id")
       .eq("slug", slug)
@@ -223,116 +188,83 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Já existe um produto com esse nome.",
+          message: "Já existe um produto com esse nome.",
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
-    const { data, error } =
-      await supabaseAdmin
-        .from("products")
-        .insert({
-          name: name.trim(),
-          slug,
-          brand: brand.trim(),
+    const { data, error } = await supabaseAdmin
+      .from("products")
+      .insert({
+        name: name.trim(),
+        slug,
+        brand: brand.trim(),
 
-          description:
-            typeof description ===
-            "string"
-              ? description.trim()
-              : "",
+        description: typeof description === "string" ? description.trim() : "",
 
-          price: parsedPrice,
-          promo_price:
-            parsedPromoPrice,
-          stock: parsedStock,
+        price: parsedPrice,
+        promo_price: parsedPromoPrice,
+        stock: parsedStock,
 
-          category:
-            category.trim(),
+        category: category.trim(),
+        ...(isArabian !== undefined ? { is_arabian: isArabian } : {}),
+        ...(isNew !== undefined ? { is_new: isNew } : {}),
 
-          volume:
-            typeof volume ===
-              "string" &&
-            volume.trim()
-              ? volume.trim()
-              : null,
+        volume: typeof volume === "string" && volume.trim() ? volume.trim() : null,
 
-          fragrance_family:
-            typeof fragranceFamily ===
-              "string" &&
-            fragranceFamily.trim()
-              ? fragranceFamily.trim()
-              : null,
+        fragrance_family:
+          typeof fragranceFamily === "string" && fragranceFamily.trim()
+            ? fragranceFamily.trim()
+            : null,
 
-          top_notes:
-            Array.isArray(topNotes)
-              ? topNotes
-              : [],
+        top_notes: Array.isArray(topNotes) ? topNotes : [],
 
-          heart_notes:
-            Array.isArray(heartNotes)
-              ? heartNotes
-              : [],
+        heart_notes: Array.isArray(heartNotes) ? heartNotes : [],
 
-          base_notes:
-            Array.isArray(baseNotes)
-              ? baseNotes
-              : [],
+        base_notes: Array.isArray(baseNotes) ? baseNotes : [],
 
-          weight: parsedWeight,
-          width: parsedWidth,
-          height: parsedHeight,
-          length: parsedLength,
+        weight: parsedWeight,
+        width: parsedWidth,
+        height: parsedHeight,
+        length: parsedLength,
 
-          featured:
-            featured === true,
+        featured: featured === true,
 
-          active:
-            active !== false,
-        })
-        .select()
-        .single();
+        active: active !== false,
+      })
+      .select()
+      .single();
 
     if (error) {
-      console.error(
-        "Erro ao cadastrar produto:",
-        error
-      );
+      console.error("Erro ao cadastrar produto:", error);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível cadastrar o produto.",
+          message: "Não foi possível cadastrar o produto.",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     return NextResponse.json(
       {
         success: true,
-        message:
-          "Produto cadastrado com sucesso.",
+        message: "Produto cadastrado com sucesso.",
         product: data,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
-    console.error(
-      "Erro na criação do produto:",
-      error
-    );
+    console.error("Erro na criação do produto:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message:
-          "Erro interno ao cadastrar produto.",
+        message: "Erro interno ao cadastrar produto.",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

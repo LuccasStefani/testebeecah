@@ -1,15 +1,14 @@
 "use client";
 
+import { accountContent } from "@/src/content/account";
+import { accountStyles } from "@/src/styles/account";
+
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { supabase } from "@/src/lib/supabase/client";
-import {
-  formatCpf,
-  isValidCpf,
-  normalizeCpf,
-} from "@/src/lib/validation/cpf";
+import { formatCpf, isValidCpf, normalizeCpf } from "@/src/lib/validation/cpf";
 
 export default function MinhaContaDadosPage() {
   const router = useRouter();
@@ -22,8 +21,7 @@ export default function MinhaContaDadosPage() {
   const [saving, setSaving] = useState(false);
 
   const [message, setMessage] = useState("");
-  const [errorMessage, setErrorMessage] =
-    useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     async function loadProfile() {
@@ -38,91 +36,66 @@ export default function MinhaContaDadosPage() {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select(`
-          full_name,
-          phone,
-          cpf
-        `)
+        .select(accountContent.fullNamePhoneCpf)
         .eq("id", user.id)
         .maybeSingle();
 
       if (error) {
-        console.error(
-          "Erro ao carregar perfil:",
-          error
-        );
+        console.error(accountContent.erroAoCarregarPerfil, error);
 
-        setErrorMessage(
-          "Não foi possível carregar seus dados."
-        );
+        setErrorMessage(accountContent.naoFoiPossivelCarregarSeusDados);
 
         setLoading(false);
         return;
       }
 
-      setFullName(
-        data?.full_name ?? ""
-      );
+      setFullName(data?.full_name ?? "");
 
-      setPhone(
-        data?.phone ?? ""
-      );
+      setPhone(data?.phone ?? "");
 
-      setCpf(
-        formatCpf(data?.cpf ?? "")
-      );
+      setCpf(formatCpf(data?.cpf ?? ""));
 
       setLoading(false);
     }
 
-    loadProfile();
+    loadProfile().catch(() => {
+      setErrorMessage(accountContent.naoFoiPossivelCarregarOsDadosAtualizeA);
+      setLoading(false);
+    });
   }, [router]);
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
-  ) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setMessage("");
     setErrorMessage("");
 
-    const normalizedName =
-      fullName.trim();
+    const normalizedName = fullName.trim();
 
-    const normalizedPhone =
-      phone.trim();
+    const normalizedPhone = phone.trim();
 
-    const normalizedCpf =
-      normalizeCpf(cpf);
+    const normalizedCpf = normalizeCpf(cpf);
 
     if (!normalizedName) {
-      setErrorMessage(
-        "Informe seu nome."
-      );
+      setErrorMessage(accountContent.informeSeuNome);
 
       return;
     }
 
     if (!normalizedPhone) {
-      setErrorMessage(
-        "Informe seu telefone."
-      );
+      setErrorMessage(accountContent.informeSeuTelefone);
 
       return;
     }
 
     if (!normalizedCpf) {
-      setErrorMessage(
-        "Informe seu CPF."
-      );
+      setErrorMessage(accountContent.informeSeuCpf);
 
       return;
     }
 
     if (!isValidCpf(normalizedCpf)) {
-      setErrorMessage(
-        "Informe um CPF válido."
-      );
+      setErrorMessage(accountContent.informeUmCpfValido);
 
       return;
     }
@@ -145,33 +118,25 @@ export default function MinhaContaDadosPage() {
           full_name: normalizedName,
           phone: normalizedPhone,
           cpf: normalizedCpf,
-          updated_at:
-            new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
 
       if (error) {
-        console.error(
-          "Erro ao atualizar perfil:",
-          error
-        );
+        console.error(accountContent.erroAoAtualizarPerfil, error);
 
-        setErrorMessage(
-          "Não foi possível salvar seus dados."
-        );
+        setErrorMessage(accountContent.naoFoiPossivelSalvarSeusDados);
 
         return;
       }
 
-      setCpf(
-        formatCpf(normalizedCpf)
-      );
+      setCpf(formatCpf(normalizedCpf));
 
-      setMessage(
-        "Dados atualizados com sucesso."
-      );
+      setMessage(accountContent.dadosAtualizadosComSucesso);
 
       router.refresh();
+    } catch {
+      setErrorMessage(accountContent.naoFoiPossivelSalvarVerifiqueSuaConexaoE);
     } finally {
       setSaving(false);
     }
@@ -179,48 +144,41 @@ export default function MinhaContaDadosPage() {
 
   if (loading) {
     return (
-      <section className="mx-auto max-w-2xl px-6 py-12">
-        <p className="text-neutral-500">
-          Carregando...
-        </p>
+      <section className={accountStyles.accountFormPage}>
+        <p className="text-neutral-500">{accountContent.carregandoSuasInformacoes}</p>
       </section>
     );
   }
 
   return (
-    <section className="mx-auto max-w-2xl px-6 py-12">
+    <section className={accountStyles.accountFormPage}>
       <Link
         href="/minha-conta"
         className="text-sm text-neutral-500 transition hover:text-neutral-950"
       >
-        ← Minha conta
+        {accountContent.minhaConta}
       </Link>
 
       <div className="mt-6">
         <p className="text-sm uppercase tracking-[0.2em] text-neutral-500">
-          Minha conta
+          {accountContent.minhaConta2}
         </p>
 
-        <h1 className="mt-3 text-3xl font-semibold">
-          Dados pessoais
-        </h1>
+        <h1 className="mt-3 text-3xl font-semibold">{accountContent.dadosPessoais}</h1>
 
         <p className="mt-2 text-neutral-500">
-          Essas informações serão usadas nos seus
-          pedidos e entregas.
+          {accountContent.essasInformacoesSeraoUsadasNosSeusPedidosE}
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="mt-10 space-y-6 border border-neutral-200 p-6"
+        aria-busy={saving}
+        className={[accountStyles.accountForm, "space-y-6"].join(" ")}
       >
         <div>
-          <label
-            htmlFor="fullName"
-            className="mb-2 block text-sm font-medium"
-          >
-            Nome completo
+          <label htmlFor="fullName" className="mb-2 block text-sm font-medium">
+            {accountContent.nomeCompleto}
           </label>
 
           <input
@@ -228,20 +186,15 @@ export default function MinhaContaDadosPage() {
             type="text"
             required
             value={fullName}
-            onChange={(event) =>
-              setFullName(event.target.value)
-            }
+            onChange={(event) => setFullName(event.target.value)}
             autoComplete="name"
             className="w-full border border-neutral-300 px-4 py-3 outline-none transition focus:border-neutral-950"
           />
         </div>
 
         <div>
-          <label
-            htmlFor="cpf"
-            className="mb-2 block text-sm font-medium"
-          >
-            CPF
+          <label htmlFor="cpf" className="mb-2 block text-sm font-medium">
+            {accountContent.cpf}
           </label>
 
           <input
@@ -251,27 +204,19 @@ export default function MinhaContaDadosPage() {
             inputMode="numeric"
             maxLength={14}
             value={cpf}
-            onChange={(event) =>
-              setCpf(
-                formatCpf(event.target.value)
-              )
-            }
-            placeholder="000.000.000-00"
+            onChange={(event) => setCpf(formatCpf(event.target.value))}
+            placeholder={"000.000.000-00"}
             className="w-full border border-neutral-300 px-4 py-3 outline-none transition focus:border-neutral-950"
           />
 
           <p className="mt-2 text-xs text-neutral-500">
-            O CPF será utilizado nos dados do pedido
-            e da entrega.
+            {accountContent.oCpfSeraUtilizadoNosDadosDoPedido}
           </p>
         </div>
 
         <div>
-          <label
-            htmlFor="phone"
-            className="mb-2 block text-sm font-medium"
-          >
-            Telefone
+          <label htmlFor="phone" className="mb-2 block text-sm font-medium">
+            {accountContent.telefone}
           </label>
 
           <input
@@ -279,27 +224,25 @@ export default function MinhaContaDadosPage() {
             type="tel"
             required
             value={phone}
-            onChange={(event) =>
-              setPhone(event.target.value)
-            }
-            placeholder="(11) 99999-9999"
+            onChange={(event) => setPhone(event.target.value)}
+            placeholder={"(11) 99999-9999"}
             autoComplete="tel"
             className="w-full border border-neutral-300 px-4 py-3 outline-none transition focus:border-neutral-950"
           />
 
           <p className="mt-2 text-xs text-neutral-500">
-            Informe um número com DDD.
+            {accountContent.informeUmNumeroComDdd}
           </p>
         </div>
 
         {errorMessage && (
-          <p className="text-sm text-red-600">
+          <p role="alert" className={accountStyles.accountNotice}>
             {errorMessage}
           </p>
         )}
 
         {message && (
-          <p className="text-sm text-green-700">
+          <p role="status" className={accountStyles.accountSuccess}>
             {message}
           </p>
         )}
@@ -310,16 +253,14 @@ export default function MinhaContaDadosPage() {
             disabled={saving}
             className="bg-neutral-950 px-6 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {saving
-              ? "Salvando..."
-              : "Salvar dados"}
+            {saving ? accountContent.salvando : accountContent.salvarDados}
           </button>
 
           <Link
             href="/minha-conta"
             className="border border-neutral-300 px-6 py-3 text-sm font-medium transition hover:border-neutral-950"
           >
-            Cancelar
+            {accountContent.cancelar}
           </Link>
         </div>
       </form>

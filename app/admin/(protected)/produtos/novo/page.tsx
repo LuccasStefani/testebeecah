@@ -1,5 +1,6 @@
 "use client";
 
+import { adminContent } from "@/src/content/admin";
 import { FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -38,7 +39,7 @@ export default function NewProductPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message ?? "Erro ao enviar imagem.");
+        throw new Error(data.message ?? adminContent.erroAoEnviarImagem);
       }
     }
   }
@@ -67,6 +68,8 @@ export default function NewProductPage() {
         length: form.get("length"),
 
         category: form.get("category"),
+        isArabian: form.get("isArabian") === "on",
+        isNew: form.get("isNew") === "on",
         volume: form.get("volume"),
 
         fragranceFamily: form.get("fragranceFamily"),
@@ -93,14 +96,14 @@ export default function NewProductPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.message ?? "Não foi possível cadastrar.");
+        setMessage(data.message ?? adminContent.naoFoiPossivelCadastrar);
         return;
       }
 
       const productId = data.product?.id;
 
       if (!productId) {
-        setMessage("Produto criado, mas o ID não foi retornado.");
+        setMessage(adminContent.produtoCriadoMasOIdNaoFoiRetornado);
         return;
       }
 
@@ -116,7 +119,7 @@ export default function NewProductPage() {
       setMessage(
         error instanceof Error
           ? error.message
-          : "Não foi possível cadastrar o produto."
+          : adminContent.naoFoiPossivelCadastrarOProduto,
       );
     } finally {
       setLoading(false);
@@ -129,42 +132,39 @@ export default function NewProductPage() {
         href="/admin/produtos"
         className="text-sm text-neutral-500 hover:text-neutral-950"
       >
-        ← Produtos
+        {adminContent.produtos2}
       </Link>
 
       <div className="mt-4">
-        <h1 className="text-3xl font-semibold">Novo produto</h1>
+        <h1 className="text-3xl font-semibold">{adminContent.novoProduto}</h1>
 
         <p className="mt-2 text-neutral-500">
-          Cadastre um novo perfume na Beecah.
+          {adminContent.cadastreUmNovoPerfumeNaBeecah}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="mt-10 space-y-10">
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">Informações básicas</h2>
+          <h2 className="text-lg font-semibold">{adminContent.informacoesBasicas}</h2>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
             <Field
-              label="Nome do perfume"
+              label={adminContent.nomeDoPerfume}
               name="name"
               required
-              placeholder="Ex: Khamrah Qahwa"
+              placeholder={adminContent.exKhamrahQahwa}
             />
 
             <Field
-              label="Marca"
+              label={adminContent.marca}
               name="brand"
               required
-              placeholder="Ex: Lattafa"
+              placeholder={adminContent.exLattafa}
             />
 
             <div>
-              <label
-                htmlFor="category"
-                className="mb-2 block text-sm font-medium"
-              >
-                Categoria
+              <label htmlFor="category" className="mb-2 block text-sm font-medium">
+                {adminContent.generoDoPerfume}
               </label>
 
               <select
@@ -175,69 +175,86 @@ export default function NewProductPage() {
                 className="w-full border border-neutral-300 bg-white px-4 py-3"
               >
                 <option value="" disabled>
-                  Selecione
+                  {adminContent.selecione}
                 </option>
 
-                <option value="Feminino">Feminino</option>
+                <option value="Feminino">{adminContent.feminino}</option>
 
-                <option value="Masculino">Masculino</option>
+                <option value="Masculino">{adminContent.masculino}</option>
 
-                <option value="Unissex">Unissex</option>
+                <option value="Unissex">{adminContent.unissex}</option>
               </select>
+              <p className="mt-2 text-xs text-neutral-500">
+                {adminContent.oGeneroEAsSelecoesAbaixoSaoIndependentes}
+              </p>
+              <div className="mt-4 space-y-3 text-sm">
+                <label className="flex items-center gap-3">
+                  <input type="checkbox" name="isArabian" className="size-4" />
+                  {adminContent.perfumeArabe}
+                </label>
+                <label className="flex items-center gap-3">
+                  <input type="checkbox" name="isNew" className="size-4" />
+                  {adminContent.exibirEmNovos}
+                </label>
+                <p className="text-xs leading-5 text-neutral-500">
+                  {adminContent.umPerfumeFemininoEArabeApareceNasDuas}
+                </p>
+              </div>
             </div>
 
-            <Field label="Volume" name="volume" placeholder="Ex: 100ml" />
+            <Field
+              label={adminContent.volume}
+              name="volume"
+              placeholder={adminContent.ex100ml}
+            />
 
             <Field
-              label="Família olfativa"
+              label={adminContent.familiaOlfativa}
               name="fragranceFamily"
-              placeholder="Ex: Gourmand"
+              placeholder={adminContent.exGourmand}
             />
           </div>
 
           <div className="mt-5">
-            <label
-              htmlFor="description"
-              className="mb-2 block text-sm font-medium"
-            >
-              Descrição
+            <label htmlFor="description" className="mb-2 block text-sm font-medium">
+              {adminContent.descricao}
             </label>
 
             <textarea
               id="description"
               name="description"
               rows={5}
-              placeholder="Descrição do perfume..."
+              placeholder={adminContent.descricaoDoPerfume}
               className="w-full resize-y border border-neutral-300 px-4 py-3"
             />
           </div>
         </div>
 
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">Preço e estoque</h2>
+          <h2 className="text-lg font-semibold">{adminContent.precoEEstoque}</h2>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-3">
             <Field
-              label="Preço"
+              label={adminContent.preco}
               name="price"
               type="number"
               required
               min="0"
               step="0.01"
-              placeholder="249.90"
+              placeholder={"249.90"}
             />
 
             <Field
-              label="Preço promocional"
+              label={adminContent.precoPromocional}
               name="promoPrice"
               type="number"
               min="0"
               step="0.01"
-              placeholder="219.90"
+              placeholder={"219.90"}
             />
 
             <Field
-              label="Estoque"
+              label={adminContent.estoque}
               name="stock"
               type="number"
               required
@@ -249,90 +266,90 @@ export default function NewProductPage() {
         </div>
 
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">Peso e dimensões para envio</h2>
+          <h2 className="text-lg font-semibold">
+            {adminContent.pesoEDimensoesParaEnvio}
+          </h2>
 
           <p className="mt-2 text-sm text-neutral-500">
-            Informe o peso e as dimensões do produto já considerando a embalagem
-            usada para envio.
+            {adminContent.informeOPesoEAsDimensoesDoProduto}
           </p>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <Field
-              label="Peso (kg)"
+              label={adminContent.pesoKg}
               name="weight"
               type="number"
               min="0.001"
               step="0.001"
-              placeholder="0.650"
+              placeholder={"0.650"}
             />
 
             <Field
-              label="Largura (cm)"
+              label={adminContent.larguraCm}
               name="width"
               type="number"
               min="0.1"
               step="0.1"
-              placeholder="12"
+              placeholder={"12"}
             />
 
             <Field
-              label="Altura (cm)"
+              label={adminContent.alturaCm}
               name="height"
               type="number"
               min="0.1"
               step="0.1"
-              placeholder="18"
+              placeholder={"18"}
             />
 
             <Field
-              label="Comprimento (cm)"
+              label={adminContent.comprimentoCm}
               name="length"
               type="number"
               min="0.1"
               step="0.1"
-              placeholder="10"
+              placeholder={"10"}
             />
           </div>
 
           <p className="mt-4 text-xs leading-5 text-neutral-500">
-            Esses dados serão utilizados para calcular o frete no checkout. Se
-            preencher um deles, preencha os quatro.
+            {adminContent.essesDadosSeraoUtilizadosParaCalcularOFrete}
           </p>
         </div>
 
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">Pirâmide olfativa</h2>
+          <h2 className="text-lg font-semibold">{adminContent.piramideOlfativa}</h2>
 
           <p className="mt-2 text-sm text-neutral-500">
-            Separe cada nota por vírgula.
+            {adminContent.separeCadaNotaPorVirgula}
           </p>
 
           <div className="mt-6 space-y-5">
             <Field
-              label="Notas de saída"
+              label={adminContent.notasDeSaida}
               name="topNotes"
-              placeholder="Bergamota, Limão, Lavanda"
+              placeholder={adminContent.bergamotaLimaoLavanda}
             />
 
             <Field
-              label="Notas de coração"
+              label={adminContent.notasDeCoracao}
               name="heartNotes"
-              placeholder="Canela, Pralinê"
+              placeholder={adminContent.canelaPraline}
             />
 
             <Field
-              label="Notas de fundo"
+              label={adminContent.notasDeFundo}
               name="baseNotes"
-              placeholder="Baunilha, Âmbar, Almíscar"
+              placeholder={adminContent.baunilhaAmbarAlmiscar}
             />
           </div>
         </div>
 
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">Imagens</h2>
+          <h2 className="text-lg font-semibold">{adminContent.imagens}</h2>
 
           <p className="mt-2 text-sm text-neutral-500">
-            A primeira imagem será usada como capa.
+            {adminContent.aPrimeiraImagemSeraUsadaComoCapa}
           </p>
 
           <input
@@ -353,10 +370,10 @@ export default function NewProductPage() {
             onClick={() => inputRef.current?.click()}
             className="mt-6 w-full border-2 border-dashed border-neutral-300 px-6 py-10 transition hover:border-neutral-950"
           >
-            <span className="block font-medium">Selecionar imagens</span>
+            <span className="block font-medium">{adminContent.selecionarImagens}</span>
 
             <span className="mt-2 block text-sm text-neutral-500">
-              JPG, PNG ou WEBP
+              {adminContent.jpgPngOuWebp}
             </span>
           </button>
 
@@ -371,12 +388,13 @@ export default function NewProductPage() {
                     <p className="text-sm font-medium">{file.name}</p>
 
                     <p className="mt-1 text-xs text-neutral-500">
-                      {index === 0 ? "Imagem principal" : `Imagem ${index + 1}`}
+                      {index === 0 ? adminContent.imagemPrincipal : `Imagem ${index + 1}`}
                     </p>
                   </div>
 
                   <p className="text-xs text-neutral-400">
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                    {(file.size / 1024 / 1024).toFixed(2)}
+                    {adminContent.mb}
                   </p>
                 </div>
               ))}
@@ -385,19 +403,19 @@ export default function NewProductPage() {
         </div>
 
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">Publicação</h2>
+          <h2 className="text-lg font-semibold">{adminContent.publicacao}</h2>
 
           <div className="mt-5 space-y-4">
             <label className="flex items-center gap-3">
               <input type="checkbox" name="active" defaultChecked />
 
-              <span className="text-sm">Produto ativo na loja</span>
+              <span className="text-sm">{adminContent.produtoAtivoNaLoja}</span>
             </label>
 
             <label className="flex items-center gap-3">
               <input type="checkbox" name="featured" />
 
-              <span className="text-sm">Produto em destaque</span>
+              <span className="text-sm">{adminContent.produtoEmDestaque}</span>
             </label>
           </div>
         </div>
@@ -413,7 +431,7 @@ export default function NewProductPage() {
             href="/admin/produtos"
             className="border border-neutral-300 px-6 py-3 text-sm font-medium"
           >
-            Cancelar
+            {adminContent.cancelar}
           </Link>
 
           <button
@@ -421,7 +439,7 @@ export default function NewProductPage() {
             disabled={loading}
             className="bg-neutral-950 px-6 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Cadastrando..." : "Cadastrar produto"}
+            {loading ? adminContent.cadastrando : adminContent.cadastrarProduto}
           </button>
         </div>
       </form>

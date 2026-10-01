@@ -1,4 +1,7 @@
+import { accountContent } from "@/src/content/account";
+import { accountStyles } from "@/src/styles/account";
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import { createSupabaseServerClient } from "@/src/lib/supabase/server";
@@ -20,22 +23,22 @@ function formatDate(value: string) {
 function getStatusLabel(status: string) {
   switch (status) {
     case "approved":
-      return "Aprovado";
+      return accountContent.aprovado;
 
     case "pending":
-      return "Pendente";
+      return accountContent.pendente;
 
     case "rejected":
-      return "Recusado";
+      return accountContent.recusado;
 
     case "cancelled":
-      return "Cancelado";
+      return accountContent.cancelado;
 
     case "refunded":
-      return "Reembolsado";
+      return accountContent.reembolsado;
 
     case "expired":
-      return "Expirado";
+      return accountContent.expirado;
 
     default:
       return status;
@@ -43,8 +46,7 @@ function getStatusLabel(status: string) {
 }
 
 export default async function MinhaContaPage() {
-  const supabase =
-    await createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const {
     data: { user },
@@ -61,29 +63,15 @@ export default async function MinhaContaPage() {
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select(`
-        full_name,
-        phone
-      `)
+      .select(accountContent.fullNamePhone2)
       .eq("id", user.id)
       .maybeSingle(),
 
     supabase
       .from("addresses")
-      .select(`
-        id,
-        label,
-        recipient_name,
-        phone,
-        zip_code,
-        street,
-        number,
-        complement,
-        neighborhood,
-        city,
-        state,
-        is_default
-      `)
+      .select(
+        "\n        id,\n        label,\n        recipient_name,\n        phone,\n        zip_code,\n        street,\n        number,\n        complement,\n        neighborhood,\n        city,\n        state,\n        is_default\n      ",
+      )
       .eq("user_id", user.id)
       .order("is_default", {
         ascending: false,
@@ -94,12 +82,9 @@ export default async function MinhaContaPage() {
 
     supabase
       .from("orders")
-      .select(`
-        id,
-        status,
-        total,
-        created_at
-      `)
+      .select(
+        "\n        id,\n        status,\n        total,\n        created_at\n      ",
+      )
       .eq("user_id", user.id)
       .order("created_at", {
         ascending: false,
@@ -107,270 +92,218 @@ export default async function MinhaContaPage() {
   ]);
 
   if (profileError) {
-    console.error(
-      "Erro ao carregar perfil:",
-      profileError
-    );
+    console.error(accountContent.erroAoCarregarPerfil, profileError);
   }
 
   if (addressesError) {
-    console.error(
-      "Erro ao carregar endereços:",
-      addressesError
-    );
+    console.error(accountContent.erroAoCarregarEnderecos, addressesError);
   }
 
   if (ordersError) {
-    console.error(
-      "Erro ao carregar pedidos:",
-      ordersError
-    );
+    console.error(accountContent.erroAoCarregarPedidos, ordersError);
   }
 
   return (
-    <section className="mx-auto max-w-5xl px-6 py-12">
-      <div>
-        <p className="text-sm uppercase tracking-[0.2em] text-neutral-500">
-          Minha conta
-        </p>
-
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-          Olá
-          {profile?.full_name
-            ? `, ${profile.full_name}`
-            : ""}
-        </h1>
-
-        <p className="mt-2 text-neutral-500">
-          {user.email}
-        </p>
-      </div>
-
-      <div className="mt-10 grid gap-4 sm:grid-cols-2">
-        <Link
-          href="/favoritos"
-          className="border border-neutral-200 p-6 transition hover:border-neutral-950"
-        >
-          <h2 className="font-semibold">
-            Favoritos
-          </h2>
-
-          <p className="mt-2 text-sm text-neutral-500">
-            Veja os perfumes que você salvou.
+    <section className={accountStyles.accountOverview}>
+      <header className={accountStyles.accountIntro}>
+        <div className={accountStyles.accountIntroImage}>
+          <Image
+            src="/images/banners/bghero2.jpg"
+            alt={""}
+            fill
+            sizes="(max-width: 767px) 100vw, 800px"
+            className="object-cover object-[65%_center]"
+            priority
+          />
+        </div>
+        <div className={accountStyles.accountIntroCopy}>
+          <p className={accountStyles.accountEyebrow}>
+            {accountContent.seuEspacoNaBeecah}
           </p>
-        </Link>
-
-        <Link
-          href="/carrinho"
-          className="border border-neutral-200 p-6 transition hover:border-neutral-950"
-        >
-          <h2 className="font-semibold">
-            Carrinho
-          </h2>
-
-          <p className="mt-2 text-sm text-neutral-500">
-            Confira os produtos adicionados.
+          <h1>
+            {accountContent.ola}
+            {profile?.full_name ? ", " + profile.full_name.split(" ")[0] : ""}
+            {"."}
+          </h1>
+          <p>{accountContent.tudoSobreSeusPedidosEmUmSoLugar}</p>
+        </div>
+      </header>
+      <section id="pedidos" className={accountStyles.accountPanel}>
+        <div className={accountStyles.accountSectionTitle}>
+          <div>
+            <p className={accountStyles.accountEyebrow}>
+              {accountContent.historicoDeCompras}
+            </p>
+            <h2>{accountContent.meusPedidos}</h2>
+          </div>
+          <span className={accountStyles.accountCount}>
+            {ordersError ? "—" : (orders ?? []).length}
+          </span>
+        </div>
+        {ordersError ? (
+          <p role="alert" className={accountStyles.accountNotice}>
+            {accountContent.naoFoiPossivelCarregarSeusPedidosAtualizeA}
           </p>
-        </Link>
-
-        <div className="border border-neutral-200 p-6 sm:col-span-2">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 className="font-semibold">
-                Dados da conta
-              </h2>
-
-              <p className="mt-2 text-sm text-neutral-500">
-                Informações usadas nos seus pedidos.
-              </p>
-            </div>
-
-            <Link
-              href="/minha-conta/dados"
-              className="border border-neutral-300 px-4 py-2 text-sm font-medium transition hover:border-neutral-950"
-            >
-              Editar dados
+        ) : !orders?.length ? (
+          <div className={accountStyles.accountEmpty}>
+            <h3>{accountContent.aindaNaoHaPedidosPorAqui}</h3>
+            <p>{accountContent.encontreSeuProximoPerfumeDepoisDaCompraAcompanhe}</p>
+            <Link className={accountStyles.accountPrimary} href="/perfumes">
+              {accountContent.explorarPerfumes}
+              <span aria-hidden="true">{"↗"}</span>
             </Link>
           </div>
-
-          <div className="mt-5 grid gap-4 sm:grid-cols-3">
-            <div>
-              <p className="text-xs uppercase tracking-wider text-neutral-400">
-                Nome
-              </p>
-
-              <p className="mt-1 text-sm font-medium">
-                {profile?.full_name ??
-                  "Não informado"}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs uppercase tracking-wider text-neutral-400">
-                Telefone
-              </p>
-
-              <p className="mt-1 text-sm font-medium">
-                {profile?.phone ??
-                  "Não informado"}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs uppercase tracking-wider text-neutral-400">
-                E-mail
-              </p>
-
-              <p className="mt-1 text-sm font-medium">
-                {user.email}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="border border-neutral-200 p-6 sm:col-span-2">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 className="font-semibold">
-                Endereços
-              </h2>
-
-              <p className="mt-2 text-sm text-neutral-500">
-                Endereços disponíveis para entrega.
-              </p>
-            </div>
-
-            <Link
-              href="/minha-conta/enderecos/novo"
-              className="bg-neutral-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800"
-            >
-              Adicionar endereço
-            </Link>
-          </div>
-
-          {(addresses ?? []).length === 0 ? (
-            <p className="mt-5 text-sm text-neutral-500">
-              Você ainda não cadastrou nenhum endereço.
-            </p>
-          ) : (
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              {(addresses ?? []).map(
-                (address) => (
-                  <div
-                    key={address.id}
-                    className="border border-neutral-200 p-5"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="font-medium">
-                          {address.label ||
-                            "Endereço"}
-                        </p>
-
-                        {address.is_default && (
-                          <p className="mt-1 text-xs font-medium uppercase tracking-wider text-green-700">
-                            Principal
-                          </p>
-                        )}
-                      </div>
-
-                      <Link
-                        href={`/minha-conta/enderecos/${address.id}/editar`}
-                        className="text-sm underline underline-offset-4"
-                      >
-                        Editar
-                      </Link>
-                    </div>
-
-                    <div className="mt-4 space-y-1 text-sm text-neutral-600">
-                      <p>
-                        {address.recipient_name}
-                      </p>
-
-                      <p>
-                        {address.street},{" "}
-                        {address.number}
-                        {address.complement
-                          ? ` - ${address.complement}`
-                          : ""}
-                      </p>
-
-                      <p>
-                        {address.neighborhood}
-                      </p>
-
-                      <p>
-                        {address.city} -{" "}
-                        {address.state}
-                      </p>
-
-                      <p>
-                        CEP {address.zip_code}
-                      </p>
-
-                      <p>
-                        {address.phone}
-                      </p>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="border border-neutral-200 p-6 sm:col-span-2">
-          <h2 className="font-semibold">
-            Pedidos
-          </h2>
-
-          {(orders ?? []).length === 0 ? (
-            <p className="mt-2 text-sm text-neutral-500">
-              Você ainda não realizou nenhum pedido.
-            </p>
-          ) : (
-            <div className="mt-5 space-y-3">
-              {(orders ?? []).map((order) => (
-                <Link
-                  key={order.id}
-                  href={`/minha-conta/pedidos/${order.id}`}
-                  className="flex flex-col gap-3 border border-neutral-200 p-4 transition hover:border-neutral-950 sm:flex-row sm:items-center sm:justify-between"
+        ) : (
+          <div className={accountStyles.accountOrders}>
+            {orders.map((order) => (
+              <Link
+                key={order.id}
+                href={"/minha-conta/pedidos/" + order.id}
+                className={accountStyles.accountOrder}
+              >
+                <div>
+                  <strong>
+                    {accountContent.pedido}
+                    {order.id.slice(0, 8)}
+                  </strong>
+                  <p>{formatDate(order.created_at)}</p>
+                </div>
+                <span
+                  className={
+                    [accountStyles.accountStatus, "status-"].join(" ") + order.status
+                  }
                 >
-                  <div>
-                    <p className="text-sm font-medium">
-                      Pedido #
-                      {order.id.slice(0, 8)}
-                    </p>
-
-                    <p className="mt-1 text-xs text-neutral-500">
-                      {formatDate(
-                        order.created_at
-                      )}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-4">
-                    <span className="text-sm">
-                      {getStatusLabel(
-                        order.status
-                      )}
-                    </span>
-
-                    <span className="font-medium">
-                      {formatPrice(
-                        Number(order.total)
-                      )}
-                    </span>
-
-                    <span className="text-sm text-neutral-400">
-                      Ver detalhes →
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+                  {accountContent.pagamento}
+                  {getStatusLabel(order.status)}
+                </span>
+                <strong>{formatPrice(Number(order.total))}</strong>
+                <span className={accountStyles.accountOrderAction}>
+                  {accountContent.verDetalhes}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+      <section className={accountStyles.accountPanel}>
+        <div className={accountStyles.accountSectionTitle}>
+          <div>
+            <p className={accountStyles.accountEyebrow}>
+              {accountContent.informacoesPessoais}
+            </p>
+            <h2>{accountContent.dadosDaConta}</h2>
+          </div>
+          <Link className={accountStyles.accountTextLink} href="/minha-conta/dados">
+            {accountContent.editarDados}
+          </Link>
         </div>
+        {profileError ? (
+          <p role="alert" className={accountStyles.accountNotice}>
+            {accountContent.naoFoiPossivelCarregarSeusDadosAtualizeA}
+          </p>
+        ) : (
+          <dl className={accountStyles.accountDetails}>
+            <div>
+              <dt>{accountContent.nomeCompleto}</dt>
+              <dd>{profile?.full_name || accountContent.naoInformado}</dd>
+            </div>
+            <div>
+              <dt>{accountContent.eMail}</dt>
+              <dd>{user.email}</dd>
+            </div>
+            <div>
+              <dt>{accountContent.telefone}</dt>
+              <dd>{profile?.phone || accountContent.naoInformado}</dd>
+            </div>
+          </dl>
+        )}
+      </section>
+      <section id="enderecos" className={accountStyles.accountPanel}>
+        <div className={accountStyles.accountSectionTitle}>
+          <div>
+            <p className={accountStyles.accountEyebrow}>
+              {accountContent.paraReceberSeusPerfumes}
+            </p>
+            <h2>{accountContent.enderecos}</h2>
+          </div>
+          <Link
+            className={accountStyles.accountTextLink}
+            href="/minha-conta/enderecos/novo"
+          >
+            {accountContent.adicionarEndereco2}
+          </Link>
+        </div>
+        {addressesError ? (
+          <p role="alert" className={accountStyles.accountNotice}>
+            {accountContent.naoFoiPossivelCarregarSeusEnderecosAtualizeA}
+          </p>
+        ) : !addresses?.length ? (
+          <div
+            className={[accountStyles.accountEmpty, accountStyles.accountEmptySmall].join(
+              " ",
+            )}
+          >
+            <h3>{accountContent.ondeVamosEntregar}</h3>
+            <p>{accountContent.salveSeuEnderecoEAgilizeSuaProximaCompra}</p>
+            <Link
+              className={accountStyles.accountTextLink}
+              href="/minha-conta/enderecos/novo"
+            >
+              {accountContent.cadastrarMeuEndereco}
+            </Link>
+          </div>
+        ) : (
+          <div className={accountStyles.accountAddresses}>
+            {addresses.map((address) => (
+              <article key={address.id} className={accountStyles.accountAddress}>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3>{address.label || accountContent.endereco}</h3>
+                  {address.is_default && (
+                    <span className={accountStyles.accountStatus}>
+                      {accountContent.principal}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-5 font-medium">{address.recipient_name}</p>
+                <p>
+                  {address.street}
+                  {", "}
+                  {address.number}
+                  {address.complement ? " — " + address.complement : ""}
+                </p>
+                <p>
+                  {address.neighborhood}
+                  {" · "}
+                  {address.city}
+                  {"/"}
+                  {address.state}
+                </p>
+                <p>
+                  {accountContent.cep2}
+                  {address.zip_code}
+                </p>
+                <p>{address.phone}</p>
+                <Link
+                  className={[accountStyles.accountTextLink, "mt-5", "inline-flex"].join(
+                    " ",
+                  )}
+                  aria-label={
+                    accountContent.editarEndereco2 + (address.label || address.street)
+                  }
+                  href={"/minha-conta/enderecos/" + address.id + "/editar"}
+                >
+                  {accountContent.editarEndereco3}
+                </Link>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+      <div className={accountStyles.accountHelp}>
+        <p>{accountContent.precisaDeAjudaComUmPedido}</p>
+        <Link className={accountStyles.accountTextLink} href="/atendimento">
+          {accountContent.faleComABeecah}
+        </Link>
       </div>
     </section>
   );

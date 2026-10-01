@@ -1,14 +1,9 @@
-export function normalizeCpf(
-  value: string
-) {
+export function normalizeCpf(value: string) {
   return value.replace(/\D/g, "");
 }
 
-export function formatCpf(
-  value: string
-) {
-  const digits =
-    normalizeCpf(value).slice(0, 11);
+export function formatCpf(value: string) {
+  const digits = normalizeCpf(value).slice(0, 11);
 
   if (digits.length <= 3) {
     return digits;
@@ -19,21 +14,16 @@ export function formatCpf(
   }
 
   if (digits.length <= 9) {
-    return `${digits.slice(0, 3)}.${digits.slice(
-      3,
-      6
-    )}.${digits.slice(6)}`;
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
   }
 
   return `${digits.slice(0, 3)}.${digits.slice(
     3,
-    6
+    6,
   )}.${digits.slice(6, 9)}-${digits.slice(9)}`;
 }
 
-export function isValidCpf(
-  value: string
-) {
+export function isValidCpf(value: string) {
   const cpf = normalizeCpf(value);
 
   if (cpf.length !== 11) {
@@ -48,49 +38,25 @@ export function isValidCpf(
     return false;
   }
 
-  function calculateDigit(
-    base: string,
-    initialWeight: number
-  ) {
+  function calculateDigit(base: string, initialWeight: number) {
     let sum = 0;
 
-    for (
-      let index = 0;
-      index < base.length;
-      index += 1
-    ) {
-      sum +=
-        Number(base[index]) *
-        (initialWeight - index);
+    for (let index = 0; index < base.length; index += 1) {
+      sum += Number(base[index]) * (initialWeight - index);
     }
 
-    const remainder =
-      (sum * 10) % 11;
+    const remainder = (sum * 10) % 11;
 
-    return remainder === 10
-      ? 0
-      : remainder;
+    return remainder === 10 ? 0 : remainder;
   }
 
-  const firstDigit =
-    calculateDigit(
-      cpf.slice(0, 9),
-      10
-    );
+  const firstDigit = calculateDigit(cpf.slice(0, 9), 10);
 
-  if (
-    firstDigit !== Number(cpf[9])
-  ) {
+  if (firstDigit !== Number(cpf[9])) {
     return false;
   }
 
-  const secondDigit =
-    calculateDigit(
-      cpf.slice(0, 10),
-      11
-    );
+  const secondDigit = calculateDigit(cpf.slice(0, 10), 11);
 
-  return (
-    secondDigit === Number(cpf[10])
-  );
+  return secondDigit === Number(cpf[10]);
 }

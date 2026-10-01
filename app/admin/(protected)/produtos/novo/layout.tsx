@@ -6,9 +6,7 @@ type NewProductLayoutProps = {
   children: React.ReactNode;
 };
 
-export default async function NewProductLayout({
-  children,
-}: NewProductLayoutProps) {
+export default async function NewProductLayout({ children }: NewProductLayoutProps) {
   const auth = await requireAdmin();
 
   if (!auth.authorized) {

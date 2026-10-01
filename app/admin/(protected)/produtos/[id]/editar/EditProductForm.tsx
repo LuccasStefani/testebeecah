@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  ChangeEvent,
-  FormEvent,
-  useRef,
-  useState,
-} from "react";
+import { adminContent } from "@/src/content/admin";
+import { ChangeEvent, FormEvent, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -31,6 +27,8 @@ type Product = {
   length: number | null;
 
   category: string;
+  isArabian: boolean;
+  isNew: boolean;
   volume: string;
   fragranceFamily: string;
   topNotes: string[];
@@ -52,65 +50,41 @@ function notesToArray(value: string) {
     .filter(Boolean);
 }
 
-export default function EditProductForm({
-  product,
-}: Props) {
+export default function EditProductForm({ product }: Props) {
   const router = useRouter();
 
-  const fileInputRef =
-    useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [
-    changingCoverId,
-    setChangingCoverId,
-  ] = useState<string | null>(null);
+  const [changingCoverId, setChangingCoverId] = useState<string | null>(null);
 
-  const [
-    deletingImageId,
-    setDeletingImageId,
-  ] = useState<string | null>(null);
+  const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
 
-  const [
-    uploadingImages,
-    setUploadingImages,
-  ] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
-  const [
-    deletingProduct,
-    setDeletingProduct,
-  ] = useState(false);
+  const [deletingProduct, setDeletingProduct] = useState(false);
 
-  const [selectedFiles, setSelectedFiles] =
-    useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  const [message, setMessage] =
-    useState("");
+  const [message, setMessage] = useState("");
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
-  ) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     try {
       setLoading(true);
       setMessage("");
 
-      const form = new FormData(
-        event.currentTarget
-      );
+      const form = new FormData(event.currentTarget);
 
       const payload = {
         name: form.get("name"),
         brand: form.get("brand"),
-        description:
-          form.get("description"),
+        description: form.get("description"),
 
         price: form.get("price"),
-        promoPrice:
-          form.get("promoPrice"),
+        promoPrice: form.get("promoPrice"),
         stock: form.get("stock"),
 
         weight: form.get("weight"),
@@ -119,122 +93,82 @@ export default function EditProductForm({
         length: form.get("length"),
 
         category: form.get("category"),
+        isArabian: form.get("isArabian") === "on",
+        isNew: form.get("isNew") === "on",
         volume: form.get("volume"),
 
-        fragranceFamily:
-          form.get("fragranceFamily"),
+        fragranceFamily: form.get("fragranceFamily"),
 
-        topNotes: notesToArray(
-          String(
-            form.get("topNotes") ?? ""
-          )
-        ),
+        topNotes: notesToArray(String(form.get("topNotes") ?? "")),
 
-        heartNotes: notesToArray(
-          String(
-            form.get("heartNotes") ?? ""
-          )
-        ),
+        heartNotes: notesToArray(String(form.get("heartNotes") ?? "")),
 
-        baseNotes: notesToArray(
-          String(
-            form.get("baseNotes") ?? ""
-          )
-        ),
+        baseNotes: notesToArray(String(form.get("baseNotes") ?? "")),
 
-        featured:
-          form.get("featured") === "on",
+        featured: form.get("featured") === "on",
 
-        active:
-          form.get("active") === "on",
+        active: form.get("active") === "on",
       };
 
-      const response = await fetch(
-        `/api/admin/products/${product.id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch(`/api/admin/products/${product.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(
-          data.message ??
-            "Não foi possível atualizar o produto."
-        );
+        setMessage(data.message ?? adminContent.naoFoiPossivelAtualizarOProduto);
 
         return;
       }
 
-      setMessage(
-        "Produto atualizado com sucesso!"
-      );
+      setMessage(adminContent.produtoAtualizadoComSucesso);
 
       router.refresh();
     } catch (error) {
       console.error(error);
 
-      setMessage(
-        "Não foi possível atualizar o produto."
-      );
+      setMessage(adminContent.naoFoiPossivelAtualizarOProduto);
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleSetCover(
-    imageId: string
-  ) {
+  async function handleSetCover(imageId: string) {
     try {
       setChangingCoverId(imageId);
       setMessage("");
 
-      const response = await fetch(
-        `/api/admin/product-images/${imageId}/cover`,
-        {
-          method: "PATCH",
-        }
-      );
+      const response = await fetch(`/api/admin/product-images/${imageId}/cover`, {
+        method: "PATCH",
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(
-          data.message ??
-            "Não foi possível alterar a capa."
-        );
+        setMessage(data.message ?? adminContent.naoFoiPossivelAlterarACapa);
 
         return;
       }
 
-      setMessage(
-        "Imagem principal alterada com sucesso!"
-      );
+      setMessage(adminContent.imagemPrincipalAlteradaComSucesso);
 
       router.refresh();
     } catch (error) {
       console.error(error);
 
-      setMessage(
-        "Não foi possível alterar a capa."
-      );
+      setMessage(adminContent.naoFoiPossivelAlterarACapa);
     } finally {
       setChangingCoverId(null);
     }
   }
 
-  async function handleDeleteImage(
-    imageId: string
-  ) {
-    const confirmed = window.confirm(
-      "Tem certeza que deseja excluir esta imagem?"
-    );
+  async function handleDeleteImage(imageId: string) {
+    const confirmed = window.confirm(adminContent.temCertezaQueDesejaExcluirEstaImagem);
 
     if (!confirmed) {
       return;
@@ -244,20 +178,14 @@ export default function EditProductForm({
       setDeletingImageId(imageId);
       setMessage("");
 
-      const response = await fetch(
-        `/api/admin/product-images/${imageId}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`/api/admin/product-images/${imageId}`, {
+        method: "DELETE",
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(
-          data.message ??
-            "Não foi possível excluir a imagem."
-        );
+        setMessage(data.message ?? adminContent.naoFoiPossivelExcluirAImagem);
 
         return;
       }
@@ -265,51 +193,35 @@ export default function EditProductForm({
       if (data.warning) {
         setMessage(data.warning);
       } else {
-        setMessage(
-          "Imagem excluída com sucesso!"
-        );
+        setMessage(adminContent.imagemExcluidaComSucesso);
       }
 
       router.refresh();
     } catch (error) {
       console.error(error);
 
-      setMessage(
-        "Não foi possível excluir a imagem."
-      );
+      setMessage(adminContent.naoFoiPossivelExcluirAImagem);
     } finally {
       setDeletingImageId(null);
     }
   }
 
-  function handleSelectFiles(
-    event: ChangeEvent<HTMLInputElement>
-  ) {
-    const files = Array.from(
-      event.target.files ?? []
-    );
+  function handleSelectFiles(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
 
     setSelectedFiles(files);
     setMessage("");
   }
 
-  function handleRemoveSelectedFile(
-    indexToRemove: number
-  ) {
-    setSelectedFiles(
-      (currentFiles) =>
-        currentFiles.filter(
-          (_, index) =>
-            index !== indexToRemove
-        )
+  function handleRemoveSelectedFile(indexToRemove: number) {
+    setSelectedFiles((currentFiles) =>
+      currentFiles.filter((_, index) => index !== indexToRemove),
     );
   }
 
   async function handleUploadImages() {
     if (selectedFiles.length === 0) {
-      setMessage(
-        "Selecione pelo menos uma imagem."
-      );
+      setMessage(adminContent.selecionePeloMenosUmaImagem);
 
       return;
     }
@@ -318,87 +230,49 @@ export default function EditProductForm({
       setUploadingImages(true);
       setMessage("");
 
-      const positions =
-        product.images.map((image) =>
-          Number(image.position)
-        );
+      const positions = product.images.map((image) => Number(image.position));
 
-      const highestPosition =
-        positions.length > 0
-          ? Math.max(...positions)
-          : -1;
+      const highestPosition = positions.length > 0 ? Math.max(...positions) : -1;
 
-      const shouldCreateCover =
-        product.images.length === 0;
+      const shouldCreateCover = product.images.length === 0;
 
-      for (
-        let index = 0;
-        index < selectedFiles.length;
-        index++
-      ) {
-        const file =
-          selectedFiles[index];
+      for (let index = 0; index < selectedFiles.length; index++) {
+        const file = selectedFiles[index];
 
-        const formData =
-          new FormData();
+        const formData = new FormData();
 
         formData.append("file", file);
 
-        formData.append(
-          "productId",
-          product.id
-        );
+        formData.append("productId", product.id);
 
-        formData.append(
-          "position",
-          String(
-            highestPosition +
-              index +
-              1
-          )
-        );
+        formData.append("position", String(highestPosition + index + 1));
 
-        formData.append(
-          "isCover",
-          String(
-            shouldCreateCover &&
-              index === 0
-          )
-        );
+        formData.append("isCover", String(shouldCreateCover && index === 0));
 
-        const response = await fetch(
-          "/api/upload",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
 
-        const data =
-          await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(
-            data.message ??
-              `Não foi possível enviar ${file.name}.`
-          );
+          throw new Error(data.message ?? `Não foi possível enviar ${file.name}.`);
         }
       }
 
-      const uploadedCount =
-        selectedFiles.length;
+      const uploadedCount = selectedFiles.length;
 
       setSelectedFiles([]);
 
       if (fileInputRef.current) {
-        fileInputRef.current.value =
-          "";
+        fileInputRef.current.value = "";
       }
 
       setMessage(
         uploadedCount === 1
-          ? "Imagem adicionada com sucesso!"
-          : "Imagens adicionadas com sucesso!"
+          ? adminContent.imagemAdicionadaComSucesso
+          : adminContent.imagensAdicionadasComSucesso,
       );
 
       router.refresh();
@@ -408,7 +282,7 @@ export default function EditProductForm({
       setMessage(
         error instanceof Error
           ? error.message
-          : "Não foi possível enviar as imagens."
+          : adminContent.naoFoiPossivelEnviarAsImagens,
       );
 
       router.refresh();
@@ -418,19 +292,17 @@ export default function EditProductForm({
   }
 
   async function handleDeleteProduct() {
-    const firstConfirmation =
-      window.confirm(
-        `Tem certeza que deseja excluir o produto "${product.name}"?\n\nEsta ação excluirá o produto e suas imagens permanentemente.`
-      );
+    const firstConfirmation = window.confirm(
+      `Tem certeza que deseja excluir o produto "${product.name}"?\n\nEsta ação excluirá o produto e suas imagens permanentemente.`,
+    );
 
     if (!firstConfirmation) {
       return;
     }
 
-    const secondConfirmation =
-      window.confirm(
-        "Esta ação não poderá ser desfeita. Deseja realmente continuar?"
-      );
+    const secondConfirmation = window.confirm(
+      adminContent.estaAcaoNaoPoderaSerDesfeitaDesejaRealmente,
+    );
 
     if (!secondConfirmation) {
       return;
@@ -440,20 +312,14 @@ export default function EditProductForm({
       setDeletingProduct(true);
       setMessage("");
 
-      const response = await fetch(
-        `/api/admin/products/${product.id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`/api/admin/products/${product.id}`, {
+        method: "DELETE",
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(
-          data.message ??
-            "Não foi possível excluir o produto."
-        );
+        setMessage(data.message ?? adminContent.naoFoiPossivelExcluirOProduto);
 
         return;
       }
@@ -467,23 +333,16 @@ export default function EditProductForm({
     } catch (error) {
       console.error(error);
 
-      setMessage(
-        "Não foi possível excluir o produto."
-      );
+      setMessage(adminContent.naoFoiPossivelExcluirOProduto);
     } finally {
       setDeletingProduct(false);
     }
   }
 
   const imageActionRunning =
-    changingCoverId !== null ||
-    deletingImageId !== null ||
-    uploadingImages;
+    changingCoverId !== null || deletingImageId !== null || uploadingImages;
 
-  const anyActionRunning =
-    loading ||
-    imageActionRunning ||
-    deletingProduct;
+  const anyActionRunning = loading || imageActionRunning || deletingProduct;
 
   return (
     <section className="mx-auto max-w-4xl px-6 py-12">
@@ -491,108 +350,105 @@ export default function EditProductForm({
         href="/admin/produtos"
         className="text-sm text-neutral-500 transition hover:text-neutral-950"
       >
-        ← Produtos
+        {adminContent.produtos2}
       </Link>
 
       <div className="mt-4">
-        <h1 className="text-3xl font-semibold">
-          Editar produto
-        </h1>
+        <h1 className="text-3xl font-semibold">{adminContent.editarProduto}</h1>
 
-        <p className="mt-2 text-neutral-500">
-          {product.name}
-        </p>
+        <p className="mt-2 text-neutral-500">{product.name}</p>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="mt-10 space-y-10"
-      >
+      <form onSubmit={handleSubmit} className="mt-10 space-y-10">
         {/* INFORMAÇÕES BÁSICAS */}
 
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">
-            Informações básicas
-          </h2>
+          <h2 className="text-lg font-semibold">{adminContent.informacoesBasicas}</h2>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
             <Field
-              label="Nome do perfume"
+              label={adminContent.nomeDoPerfume}
               name="name"
               required
               defaultValue={product.name}
             />
 
             <Field
-              label="Marca"
+              label={adminContent.marca}
               name="brand"
               required
               defaultValue={product.brand}
             />
 
             <div>
-              <label
-                htmlFor="category"
-                className="mb-2 block text-sm font-medium"
-              >
-                Categoria
+              <label htmlFor="category" className="mb-2 block text-sm font-medium">
+                {adminContent.generoDoPerfume}
               </label>
 
               <select
                 id="category"
                 name="category"
                 required
-                defaultValue={
-                  product.category
-                }
+                defaultValue={product.category}
                 className="w-full border border-neutral-300 bg-white px-4 py-3"
               >
-                <option value="Feminino">
-                  Feminino
-                </option>
+                <option value="Feminino">{adminContent.feminino}</option>
 
-                <option value="Masculino">
-                  Masculino
-                </option>
+                <option value="Masculino">{adminContent.masculino}</option>
 
-                <option value="Unissex">
-                  Unissex
-                </option>
+                <option value="Unissex">{adminContent.unissex}</option>
               </select>
+              <p className="mt-2 text-xs text-neutral-500">
+                {adminContent.oGeneroEAsSelecoesAbaixoSaoIndependentes}
+              </p>
+              <div className="mt-4 space-y-3 text-sm">
+                <label className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    name="isArabian"
+                    defaultChecked={product.isArabian}
+                    className="size-4"
+                  />
+                  {adminContent.perfumeArabe}
+                </label>
+                <label className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    name="isNew"
+                    defaultChecked={product.isNew}
+                    className="size-4"
+                  />
+                  {adminContent.exibirEmNovos}
+                </label>
+                <p className="text-xs leading-5 text-neutral-500">
+                  {adminContent.umPerfumeFemininoEArabeApareceNasDuas}
+                </p>
+              </div>
             </div>
 
             <Field
-              label="Volume"
+              label={adminContent.volume}
               name="volume"
-              defaultValue={
-                product.volume
-              }
+              defaultValue={product.volume}
             />
 
             <Field
-              label="Família olfativa"
+              label={adminContent.familiaOlfativa}
               name="fragranceFamily"
-              defaultValue={
-                product.fragranceFamily
-              }
+              defaultValue={product.fragranceFamily}
             />
           </div>
 
           <div className="mt-5">
-            <label
-              htmlFor="description"
-              className="mb-2 block text-sm font-medium"
-            >
-              Descrição
+            <label htmlFor="description" className="mb-2 block text-sm font-medium">
+              {adminContent.descricao}
             </label>
 
             <textarea
               id="description"
               name="description"
               rows={5}
-              defaultValue={
-                product.description
-              }
+              defaultValue={product.description}
               className="w-full resize-y border border-neutral-300 px-4 py-3"
             />
           </div>
@@ -601,48 +457,36 @@ export default function EditProductForm({
         {/* PREÇO E ESTOQUE */}
 
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">
-            Preço e estoque
-          </h2>
+          <h2 className="text-lg font-semibold">{adminContent.precoEEstoque}</h2>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-3">
             <Field
-              label="Preço"
+              label={adminContent.preco}
               name="price"
               type="number"
               required
               min="0"
               step="0.01"
-              defaultValue={String(
-                product.price
-              )}
+              defaultValue={String(product.price)}
             />
 
             <Field
-              label="Preço promocional"
+              label={adminContent.precoPromocional}
               name="promoPrice"
               type="number"
               min="0"
               step="0.01"
-              defaultValue={
-                product.promoPrice !== null
-                  ? String(
-                      product.promoPrice
-                    )
-                  : ""
-              }
+              defaultValue={product.promoPrice !== null ? String(product.promoPrice) : ""}
             />
 
             <Field
-              label="Estoque"
+              label={adminContent.estoque}
               name="stock"
               type="number"
               required
               min="0"
               step="1"
-              defaultValue={String(
-                product.stock
-              )}
+              defaultValue={String(product.stock)}
             />
           </div>
         </div>
@@ -651,17 +495,16 @@ export default function EditProductForm({
 
         <div className="border border-neutral-200 p-6">
           <h2 className="text-lg font-semibold">
-            Peso e dimensões para envio
+            {adminContent.pesoEDimensoesParaEnvio}
           </h2>
 
           <p className="mt-2 text-sm text-neutral-500">
-            Informe o peso e as dimensões do produto já considerando
-            a embalagem usada para envio.
+            {adminContent.informeOPesoEAsDimensoesDoProduto}
           </p>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <Field
-              label="Peso (kg)"
+              label={adminContent.pesoKg}
               name="weight"
               type="number"
               min="0.001"
@@ -670,7 +513,7 @@ export default function EditProductForm({
             />
 
             <Field
-              label="Largura (cm)"
+              label={adminContent.larguraCm}
               name="width"
               type="number"
               min="0.1"
@@ -679,7 +522,7 @@ export default function EditProductForm({
             />
 
             <Field
-              label="Altura (cm)"
+              label={adminContent.alturaCm}
               name="height"
               type="number"
               min="0.1"
@@ -688,7 +531,7 @@ export default function EditProductForm({
             />
 
             <Field
-              label="Comprimento (cm)"
+              label={adminContent.comprimentoCm}
               name="length"
               type="number"
               min="0.1"
@@ -698,45 +541,36 @@ export default function EditProductForm({
           </div>
 
           <p className="mt-4 text-xs leading-5 text-neutral-500">
-            Esses dados serão utilizados para calcular o frete no
-            checkout. Se preencher um deles, preencha os quatro.
+            {adminContent.essesDadosSeraoUtilizadosParaCalcularOFrete}
           </p>
         </div>
 
         {/* PIRÂMIDE OLFATIVA */}
 
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">
-            Pirâmide olfativa
-          </h2>
+          <h2 className="text-lg font-semibold">{adminContent.piramideOlfativa}</h2>
 
           <p className="mt-2 text-sm text-neutral-500">
-            Separe cada nota por vírgula.
+            {adminContent.separeCadaNotaPorVirgula}
           </p>
 
           <div className="mt-6 space-y-5">
             <Field
-              label="Notas de saída"
+              label={adminContent.notasDeSaida}
               name="topNotes"
-              defaultValue={product.topNotes.join(
-                ", "
-              )}
+              defaultValue={product.topNotes.join(", ")}
             />
 
             <Field
-              label="Notas de coração"
+              label={adminContent.notasDeCoracao}
               name="heartNotes"
-              defaultValue={product.heartNotes.join(
-                ", "
-              )}
+              defaultValue={product.heartNotes.join(", ")}
             />
 
             <Field
-              label="Notas de fundo"
+              label={adminContent.notasDeFundo}
               name="baseNotes"
-              defaultValue={product.baseNotes.join(
-                ", "
-              )}
+              defaultValue={product.baseNotes.join(", ")}
             />
           </div>
         </div>
@@ -745,15 +579,13 @@ export default function EditProductForm({
 
         <div className="border border-neutral-200 p-6">
           <div>
-            <h2 className="text-lg font-semibold">
-              Imagens do produto
-            </h2>
+            <h2 className="text-lg font-semibold">{adminContent.imagensDoProduto}</h2>
 
             <p className="mt-2 text-sm text-neutral-500">
               {product.images.length}{" "}
               {product.images.length === 1
-                ? "imagem cadastrada"
-                : "imagens cadastradas"}
+                ? adminContent.imagemCadastrada
+                : adminContent.imagensCadastradas}
             </p>
           </div>
 
@@ -765,12 +597,8 @@ export default function EditProductForm({
               type="file"
               accept="image/jpeg,image/png,image/webp"
               multiple
-              disabled={
-                anyActionRunning
-              }
-              onChange={
-                handleSelectFiles
-              }
+              disabled={anyActionRunning}
+              onChange={handleSelectFiles}
               className="hidden"
               id="new-product-images"
             />
@@ -778,17 +606,15 @@ export default function EditProductForm({
             <label
               htmlFor="new-product-images"
               className={`block text-center ${
-                anyActionRunning
-                  ? "cursor-not-allowed opacity-50"
-                  : "cursor-pointer"
+                anyActionRunning ? "cursor-not-allowed opacity-50" : "cursor-pointer"
               }`}
             >
               <span className="block text-base font-medium">
-                + Adicionar novas imagens
+                {adminContent.adicionarNovasImagens}
               </span>
 
               <span className="mt-2 block text-sm text-neutral-500">
-                JPG, PNG ou WEBP
+                {adminContent.jpgPngOuWebp}
               </span>
             </label>
 
@@ -797,68 +623,46 @@ export default function EditProductForm({
                 <p className="text-sm font-medium">
                   {selectedFiles.length}{" "}
                   {selectedFiles.length === 1
-                    ? "imagem selecionada"
-                    : "imagens selecionadas"}
+                    ? adminContent.imagemSelecionada
+                    : adminContent.imagensSelecionadas}
                 </p>
 
                 <div className="mt-4 space-y-2">
-                  {selectedFiles.map(
-                    (file, index) => (
-                      <div
-                        key={`${file.name}-${index}`}
-                        className="flex items-center justify-between gap-4 border border-neutral-200 px-4 py-3"
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate text-sm">
-                            {file.name}
-                          </p>
+                  {selectedFiles.map((file, index) => (
+                    <div
+                      key={`${file.name}-${index}`}
+                      className="flex items-center justify-between gap-4 border border-neutral-200 px-4 py-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm">{file.name}</p>
 
-                          <p className="mt-1 text-xs text-neutral-500">
-                            {(
-                              file.size /
-                              1024 /
-                              1024
-                            ).toFixed(2)}{" "}
-                            MB
-                          </p>
-                        </div>
-
-                        <button
-                          type="button"
-                          disabled={
-                            anyActionRunning
-                          }
-                          onClick={() =>
-                            handleRemoveSelectedFile(
-                              index
-                            )
-                          }
-                          className="shrink-0 text-xs text-red-600 hover:underline disabled:opacity-50"
-                        >
-                          Remover
-                        </button>
+                        <p className="mt-1 text-xs text-neutral-500">
+                          {(file.size / 1024 / 1024).toFixed(2)} {adminContent.mb2}
+                        </p>
                       </div>
-                    )
-                  )}
+
+                      <button
+                        type="button"
+                        disabled={anyActionRunning}
+                        onClick={() => handleRemoveSelectedFile(index)}
+                        className="shrink-0 text-xs text-red-600 hover:underline disabled:opacity-50"
+                      >
+                        {adminContent.remover}
+                      </button>
+                    </div>
+                  ))}
                 </div>
 
                 <button
                   type="button"
-                  disabled={
-                    anyActionRunning ||
-                    selectedFiles.length ===
-                      0
-                  }
-                  onClick={
-                    handleUploadImages
-                  }
+                  disabled={anyActionRunning || selectedFiles.length === 0}
+                  onClick={handleUploadImages}
                   className="mt-5 w-full bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {uploadingImages
-                    ? "Enviando imagens..."
-                    : selectedFiles.length ===
-                        1
-                      ? "Enviar imagem"
+                    ? adminContent.enviandoImagens
+                    : selectedFiles.length === 1
+                      ? adminContent.enviarImagem
                       : `Enviar ${selectedFiles.length} imagens`}
                 </button>
               </div>
@@ -870,87 +674,62 @@ export default function EditProductForm({
           {product.images.length === 0 ? (
             <div className="mt-6 border border-neutral-200 p-8 text-center">
               <p className="text-sm text-neutral-500">
-                Nenhuma imagem cadastrada para este produto.
+                {adminContent.nenhumaImagemCadastradaParaEsteProduto}
               </p>
             </div>
           ) : (
             <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {product.images.map(
-                (image) => (
-                  <div
-                    key={image.id}
-                    className="overflow-hidden border border-neutral-200"
-                  >
-                    <div className="relative aspect-square bg-neutral-50">
-                      <img
-                        src={
-                          image.imageUrl
-                        }
-                        alt={`${product.name} - imagem ${
-                          image.position +
-                          1
-                        }`}
-                        className="h-full w-full object-contain p-4"
-                      />
+              {product.images.map((image) => (
+                <div key={image.id} className="overflow-hidden border border-neutral-200">
+                  <div className="relative aspect-square bg-neutral-50">
+                    <img
+                      src={image.imageUrl}
+                      alt={`${product.name} - imagem ${image.position + 1}`}
+                      className="h-full w-full object-contain p-4"
+                    />
 
-                      {image.isCover && (
-                        <span className="absolute left-3 top-3 bg-neutral-950 px-3 py-1 text-xs font-medium text-white">
-                          Capa
-                        </span>
-                      )}
-                    </div>
+                    {image.isCover && (
+                      <span className="absolute left-3 top-3 bg-neutral-950 px-3 py-1 text-xs font-medium text-white">
+                        {adminContent.capa}
+                      </span>
+                    )}
+                  </div>
 
-                    <div className="border-t border-neutral-200 p-4">
-                      <p className="text-xs text-neutral-500">
-                        Posição{" "}
-                        {image.position}
+                  <div className="border-t border-neutral-200 p-4">
+                    <p className="text-xs text-neutral-500">
+                      {adminContent.posicao} {image.position}
+                    </p>
+
+                    {image.isCover ? (
+                      <p className="mt-3 text-sm font-medium">
+                        {adminContent.imagemPrincipal}
                       </p>
-
-                      {image.isCover ? (
-                        <p className="mt-3 text-sm font-medium">
-                          Imagem principal
-                        </p>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled={
-                            anyActionRunning
-                          }
-                          onClick={() =>
-                            handleSetCover(
-                              image.id
-                            )
-                          }
-                          className="mt-3 w-full border border-neutral-300 px-3 py-2 text-sm font-medium transition hover:border-neutral-950 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {changingCoverId ===
-                          image.id
-                            ? "Alterando..."
-                            : "Definir como capa"}
-                        </button>
-                      )}
-
+                    ) : (
                       <button
                         type="button"
-                        disabled={
-                          anyActionRunning
-                        }
-                        onClick={() =>
-                          handleDeleteImage(
-                            image.id
-                          )
-                        }
-                        className="mt-3 w-full border border-red-300 px-3 py-2 text-sm font-medium text-red-600 transition hover:border-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={anyActionRunning}
+                        onClick={() => handleSetCover(image.id)}
+                        className="mt-3 w-full border border-neutral-300 px-3 py-2 text-sm font-medium transition hover:border-neutral-950 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {deletingImageId ===
-                        image.id
-                          ? "Excluindo..."
-                          : "Excluir imagem"}
+                        {changingCoverId === image.id
+                          ? adminContent.alterando
+                          : adminContent.definirComoCapa}
                       </button>
-                    </div>
+                    )}
+
+                    <button
+                      type="button"
+                      disabled={anyActionRunning}
+                      onClick={() => handleDeleteImage(image.id)}
+                      className="mt-3 w-full border border-red-300 px-3 py-2 text-sm font-medium text-red-600 transition hover:border-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {deletingImageId === image.id
+                        ? adminContent.excluindo
+                        : adminContent.excluirImagem}
+                    </button>
                   </div>
-                )
-              )}
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -958,37 +737,19 @@ export default function EditProductForm({
         {/* PUBLICAÇÃO */}
 
         <div className="border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold">
-            Publicação
-          </h2>
+          <h2 className="text-lg font-semibold">{adminContent.publicacao}</h2>
 
           <div className="mt-5 space-y-4">
             <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                name="active"
-                defaultChecked={
-                  product.active
-                }
-              />
+              <input type="checkbox" name="active" defaultChecked={product.active} />
 
-              <span className="text-sm">
-                Produto ativo na loja
-              </span>
+              <span className="text-sm">{adminContent.produtoAtivoNaLoja}</span>
             </label>
 
             <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                name="featured"
-                defaultChecked={
-                  product.featured
-                }
-              />
+              <input type="checkbox" name="featured" defaultChecked={product.featured} />
 
-              <span className="text-sm">
-                Produto em destaque
-              </span>
+              <span className="text-sm">{adminContent.produtoEmDestaque}</span>
             </label>
           </div>
         </div>
@@ -997,13 +758,11 @@ export default function EditProductForm({
 
         <div className="border border-red-200 bg-red-50/40 p-6">
           <h2 className="text-lg font-semibold text-red-700">
-            Zona de perigo
+            {adminContent.zonaDePerigo}
           </h2>
 
           <p className="mt-2 text-sm text-red-700/80">
-            A exclusão remove permanentemente
-            o produto da loja e também suas
-            imagens.
+            {adminContent.aExclusaoRemovePermanentementeOProdutoDaLoja}
           </p>
 
           <button
@@ -1013,17 +772,15 @@ export default function EditProductForm({
             className="mt-5 border border-red-600 px-5 py-3 text-sm font-medium text-red-700 transition hover:bg-red-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             {deletingProduct
-              ? "Excluindo produto..."
-              : "Excluir produto"}
+              ? adminContent.excluindoProduto
+              : adminContent.excluirProduto}
           </button>
         </div>
 
         {/* MENSAGEM */}
 
         {message && (
-          <div className="border border-neutral-200 p-4 text-sm">
-            {message}
-          </div>
+          <div className="border border-neutral-200 p-4 text-sm">{message}</div>
         )}
 
         {/* BOTÕES */}
@@ -1033,7 +790,7 @@ export default function EditProductForm({
             href="/admin/produtos"
             className="border border-neutral-300 px-6 py-3 text-sm font-medium"
           >
-            Cancelar
+            {adminContent.cancelar}
           </Link>
 
           <button
@@ -1041,9 +798,7 @@ export default function EditProductForm({
             disabled={anyActionRunning}
             className="bg-neutral-950 px-6 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading
-              ? "Salvando..."
-              : "Salvar alterações"}
+            {loading ? adminContent.salvando2 : adminContent.salvarAlteracoes}
           </button>
         </div>
       </form>
@@ -1072,10 +827,7 @@ function Field({
 }: FieldProps) {
   return (
     <div>
-      <label
-        htmlFor={name}
-        className="mb-2 block text-sm font-medium"
-      >
+      <label htmlFor={name} className="mb-2 block text-sm font-medium">
         {label}
       </label>
 

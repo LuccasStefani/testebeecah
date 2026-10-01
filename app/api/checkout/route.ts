@@ -16,11 +16,8 @@ function money(value: number) {
   return Number(value.toFixed(2));
 }
 
-export async function POST(
-  request: Request
-) {
-  let createdOrderId: string | null =
-    null;
+export async function POST(request: Request) {
+  let createdOrderId: string | null = null;
 
   /*
    * Indica se a preferência já chegou
@@ -30,15 +27,13 @@ export async function POST(
    * automaticamente, pois ele passa a
    * fazer parte do histórico financeiro.
    */
-  let mercadoPagoPreferenceCreated =
-    false;
+  let mercadoPagoPreferenceCreated = false;
 
   try {
     /*
      * 1. Autentica o usuário.
      */
-    const supabase =
-      await createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
 
     const {
       data: { user },
@@ -49,12 +44,11 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Você precisa estar logado para finalizar a compra.",
+          message: "Você precisa estar logado para finalizar a compra.",
         },
         {
           status: 401,
-        }
+        },
       );
     }
 
@@ -66,39 +60,33 @@ export async function POST(
      * experiência, mas não é considerada
      * uma barreira de segurança.
      */
-    const {
-      data: profile,
-      error: profileError,
-    } = await supabaseAdmin
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select(`
+      .select(
+        `
         full_name,
         phone,
         cpf
-      `)
+      `,
+      )
       .eq("id", user.id)
       .maybeSingle();
 
     if (profileError) {
-      console.error(
-        "Erro ao carregar perfil no checkout:",
-        profileError
-      );
+      console.error("Erro ao carregar perfil no checkout:", profileError);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível validar seus dados pessoais.",
+          message: "Não foi possível validar seus dados pessoais.",
         },
         {
           status: 500,
-        }
+        },
       );
     }
 
-    const customerEmail =
-      user.email?.trim() ?? "";
+    const customerEmail = user.email?.trim() ?? "";
 
     const profileComplete =
       Boolean(profile?.full_name?.trim()) &&
@@ -116,7 +104,7 @@ export async function POST(
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -129,46 +117,33 @@ export async function POST(
      * Não recebemos preço, frete,
      * produtos ou total do navegador.
      */
-    const body =
-      (await request.json()) as
-      CheckoutRequestBody;
+    const body = (await request.json()) as CheckoutRequestBody;
 
-    const addressId =
-      typeof body.addressId === "string"
-        ? body.addressId.trim()
-        : "";
+    const addressId = typeof body.addressId === "string" ? body.addressId.trim() : "";
 
-    const shippingServiceId =
-      Number(body.shippingServiceId);
+    const shippingServiceId = Number(body.shippingServiceId);
 
     if (!addressId) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Selecione um endereço de entrega.",
+          message: "Selecione um endereço de entrega.",
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
-    if (
-      !Number.isInteger(
-        shippingServiceId
-      ) ||
-      shippingServiceId <= 0
-    ) {
+    if (!Number.isInteger(shippingServiceId) || shippingServiceId <= 0) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Selecione uma modalidade de frete válida.",
+          message: "Selecione uma modalidade de frete válida.",
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -180,12 +155,10 @@ export async function POST(
      * Estes dados serão copiados para
      * order_shipping_addresses.
      */
-    const {
-      data: address,
-      error: addressError,
-    } = await supabaseAdmin
+    const { data: address, error: addressError } = await supabaseAdmin
       .from("addresses")
-      .select(`
+      .select(
+        `
         id,
         user_id,
         recipient_name,
@@ -197,26 +170,23 @@ export async function POST(
         neighborhood,
         city,
         state
-      `)
+      `,
+      )
       .eq("id", addressId)
       .eq("user_id", user.id)
       .maybeSingle();
 
     if (addressError) {
-      console.error(
-        "Erro ao carregar endereço no checkout:",
-        addressError
-      );
+      console.error("Erro ao carregar endereço no checkout:", addressError);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível carregar o endereço de entrega.",
+          message: "Não foi possível carregar o endereço de entrega.",
         },
         {
           status: 500,
-        }
+        },
       );
     }
 
@@ -224,12 +194,11 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Endereço de entrega não encontrado.",
+          message: "Endereço de entrega não encontrado.",
         },
         {
           status: 404,
-        }
+        },
       );
     }
 
@@ -237,48 +206,39 @@ export async function POST(
      * 5. Carrega o carrinho diretamente
      * do Supabase.
      */
-    const {
-      data: cartItems,
-      error: cartError,
-    } = await supabaseAdmin
+    const { data: cartItems, error: cartError } = await supabaseAdmin
       .from("cart_items")
-      .select(`
+      .select(
+        `
         product_id,
         quantity
-      `)
+      `,
+      )
       .eq("user_id", user.id);
 
     if (cartError) {
-      console.error(
-        "Erro ao carregar carrinho no checkout:",
-        cartError
-      );
+      console.error("Erro ao carregar carrinho no checkout:", cartError);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível carregar o carrinho.",
+          message: "Não foi possível carregar o carrinho.",
         },
         {
           status: 500,
-        }
+        },
       );
     }
 
-    if (
-      !cartItems ||
-      cartItems.length === 0
-    ) {
+    if (!cartItems || cartItems.length === 0) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Seu carrinho está vazio.",
+          message: "Seu carrinho está vazio.",
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -286,32 +246,23 @@ export async function POST(
      * 6. Valida as quantidades do
      * carrinho salvo.
      */
-    const invalidCartItem =
-      cartItems.find(
-        (item) =>
-          !Number.isInteger(
-            Number(item.quantity)
-          ) ||
-          Number(item.quantity) <= 0
-      );
+    const invalidCartItem = cartItems.find(
+      (item) => !Number.isInteger(Number(item.quantity)) || Number(item.quantity) <= 0,
+    );
 
     if (invalidCartItem) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "O carrinho possui uma quantidade inválida.",
+          message: "O carrinho possui uma quantidade inválida.",
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
-    const productIds =
-      cartItems.map(
-        (item) => item.product_id
-      );
+    const productIds = cartItems.map((item) => item.product_id);
 
     /*
      * 7. Busca os produtos atuais.
@@ -319,12 +270,10 @@ export async function POST(
      * Preço, estoque e dados físicos
      * vêm sempre do servidor.
      */
-    const {
-      data: products,
-      error: productsError,
-    } = await supabaseAdmin
+    const { data: products, error: productsError } = await supabaseAdmin
       .from("products")
-      .select(`
+      .select(
+        `
         id,
         name,
         price,
@@ -335,42 +284,34 @@ export async function POST(
         width,
         height,
         length
-      `)
+      `,
+      )
       .in("id", productIds)
       .eq("active", true);
 
     if (productsError) {
-      console.error(
-        "Erro ao carregar produtos no checkout:",
-        productsError
-      );
+      console.error("Erro ao carregar produtos no checkout:", productsError);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível validar os produtos.",
+          message: "Não foi possível validar os produtos.",
         },
         {
           status: 500,
-        }
+        },
       );
     }
 
-    if (
-      !products ||
-      products.length !==
-        productIds.length
-    ) {
+    if (!products || products.length !== productIds.length) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Um ou mais produtos não estão disponíveis.",
+          message: "Um ou mais produtos não estão disponíveis.",
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -379,148 +320,99 @@ export async function POST(
      * preço, estoque e dados físicos
      * atuais.
      */
-    const checkoutItems =
-      cartItems.map((cartItem) => {
-        const product =
-          products.find(
-            (currentProduct) =>
-              currentProduct.id ===
-              cartItem.product_id
-          );
+    const checkoutItems = cartItems.map((cartItem) => {
+      const product = products.find(
+        (currentProduct) => currentProduct.id === cartItem.product_id,
+      );
 
-        if (!product) {
-          throw new Error(
-            "Produto do carrinho não encontrado."
-          );
-        }
+      if (!product) {
+        throw new Error("Produto do carrinho não encontrado.");
+      }
 
-        const quantity =
-          Number(cartItem.quantity);
+      const quantity = Number(cartItem.quantity);
 
-        if (
-          quantity >
-          Number(product.stock)
-        ) {
-          throw new Error(
-            `Estoque insuficiente para ${product.name}.`
-          );
-        }
+      if (quantity > Number(product.stock)) {
+        throw new Error(`Estoque insuficiente para ${product.name}.`);
+      }
 
-        const regularPrice =
-          Number(product.price);
+      const regularPrice = Number(product.price);
 
-        const promotionalPrice =
-          product.promo_price !== null
-            ? Number(
-                product.promo_price
-              )
-            : null;
+      const promotionalPrice =
+        product.promo_price !== null ? Number(product.promo_price) : null;
 
-        const unitPrice =
-          promotionalPrice !== null
-            ? promotionalPrice
-            : regularPrice;
+      const unitPrice = promotionalPrice !== null ? promotionalPrice : regularPrice;
 
-        if (
-          !Number.isFinite(unitPrice) ||
-          unitPrice <= 0
-        ) {
-          throw new Error(
-            `Preço inválido para ${product.name}.`
-          );
-        }
+      if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+        throw new Error(`Preço inválido para ${product.name}.`);
+      }
 
-        /*
-         * Dados físicos usados no frete
-         * e congelados no pedido.
-         *
-         * weight = kg
-         * width/height/length = cm
-         */
-        const weight =
-          Number(product.weight);
+      /*
+       * Dados físicos usados no frete
+       * e congelados no pedido.
+       *
+       * weight = kg
+       * width/height/length = cm
+       */
+      const weight = Number(product.weight);
 
-        const width =
-          Number(product.width);
+      const width = Number(product.width);
 
-        const height =
-          Number(product.height);
+      const height = Number(product.height);
 
-        const length =
-          Number(product.length);
+      const length = Number(product.length);
 
-        const invalidShippingData =
-          !Number.isFinite(weight) ||
-          weight <= 0 ||
-          !Number.isFinite(width) ||
-          width <= 0 ||
-          !Number.isFinite(height) ||
-          height <= 0 ||
-          !Number.isFinite(length) ||
-          length <= 0;
+      const invalidShippingData =
+        !Number.isFinite(weight) ||
+        weight <= 0 ||
+        !Number.isFinite(width) ||
+        width <= 0 ||
+        !Number.isFinite(height) ||
+        height <= 0 ||
+        !Number.isFinite(length) ||
+        length <= 0;
 
-        if (invalidShippingData) {
-          throw new Error(
-            `Dados de envio inválidos para ${product.name}.`
-          );
-        }
+      if (invalidShippingData) {
+        throw new Error(`Dados de envio inválidos para ${product.name}.`);
+      }
 
-        const itemSubtotal =
-          money(
-            unitPrice * quantity
-          );
+      const itemSubtotal = money(unitPrice * quantity);
 
-        return {
-          productId:
-            product.id,
+      return {
+        productId: product.id,
 
-          name:
-            product.name,
+        name: product.name,
 
-          unitPrice:
-            money(unitPrice),
+        unitPrice: money(unitPrice),
 
-          quantity,
+        quantity,
 
-          subtotal:
-            itemSubtotal,
+        subtotal: itemSubtotal,
 
-          weight,
+        weight,
 
-          width,
+        width,
 
-          height,
+        height,
 
-          length,
-        };
-      });
+        length,
+      };
+    });
 
     /*
      * 9. Calcula o subtotal dos
      * produtos no servidor.
      */
-    const subtotal =
-      money(
-        checkoutItems.reduce(
-          (sum, item) =>
-            sum + item.subtotal,
-          0
-        )
-      );
+    const subtotal = money(checkoutItems.reduce((sum, item) => sum + item.subtotal, 0));
 
-    if (
-      !Number.isFinite(subtotal) ||
-      subtotal <= 0
-    ) {
+    if (!Number.isFinite(subtotal) || subtotal <= 0) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "O subtotal do pedido é inválido.",
+          message: "O subtotal do pedido é inválido.",
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -531,23 +423,16 @@ export async function POST(
      * Não usamos o preço exibido no
      * navegador.
      */
-    const shippingResult =
-      await calculateShippingForUser(
-        user.id,
-        addressId
-      );
+    const shippingResult = await calculateShippingForUser(user.id, addressId);
 
     /*
      * 11. Localiza, na nova cotação,
      * exatamente o serviço escolhido
      * pelo cliente.
      */
-    const selectedShipping =
-      shippingResult.quotes.find(
-        (quote) =>
-          quote.serviceId ===
-          shippingServiceId
-      );
+    const selectedShipping = shippingResult.quotes.find(
+      (quote) => quote.serviceId === shippingServiceId,
+    );
 
     if (!selectedShipping) {
       return NextResponse.json(
@@ -558,138 +443,91 @@ export async function POST(
         },
         {
           status: 409,
-        }
+        },
       );
     }
 
-    const shippingPrice =
-      money(
-        selectedShipping.price
-      );
+    const shippingPrice = money(selectedShipping.price);
 
-    if (
-      !Number.isFinite(
-        shippingPrice
-      ) ||
-      shippingPrice < 0
-    ) {
-      throw new Error(
-        "O valor do frete retornado é inválido."
-      );
+    if (!Number.isFinite(shippingPrice) || shippingPrice < 0) {
+      throw new Error("O valor do frete retornado é inválido.");
     }
 
     /*
      * 12. Total financeiro definitivo.
      */
-    const total =
-      money(
-        subtotal +
-          shippingPrice
-      );
+    const total = money(subtotal + shippingPrice);
 
-    if (
-      !Number.isFinite(total) ||
-      total <= 0
-    ) {
-      throw new Error(
-        "O valor total do pedido é inválido."
-      );
+    if (!Number.isFinite(total) || total <= 0) {
+      throw new Error("O valor total do pedido é inválido.");
     }
 
     /*
      * 13. Define expiração da
      * preferência em 24 horas.
      */
-    const expirationDate =
-      new Date(
-        Date.now() +
-          24 * 60 * 60 * 1000
-      );
+    const expirationDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    const expirationDateIso =
-      expirationDate.toISOString();
+    const expirationDateIso = expirationDate.toISOString();
 
     /*
      * 14. Cria o pedido com o snapshot
      * comercial do frete.
      */
-    const {
-      data: order,
-      error: orderError,
-    } = await supabaseAdmin
+    const { data: order, error: orderError } = await supabaseAdmin
       .from("orders")
       .insert({
-        user_id:
-          user.id,
+        user_id: user.id,
 
-        status:
-          "pending",
+        status: "pending",
 
-        expires_at:
-          expirationDateIso,
+        expires_at: expirationDateIso,
 
         subtotal,
 
-        shipping_price:
-          shippingPrice,
+        shipping_price: shippingPrice,
 
-        shipping_service_id:
-          selectedShipping.serviceId,
+        shipping_service_id: selectedShipping.serviceId,
 
-        shipping_service_name:
-          selectedShipping.serviceName,
+        shipping_service_name: selectedShipping.serviceName,
 
-        shipping_company_id:
-          selectedShipping.companyId,
+        shipping_company_id: selectedShipping.companyId,
 
-        shipping_company_name:
-          selectedShipping.companyName,
+        shipping_company_name: selectedShipping.companyName,
 
-        shipping_delivery_min:
-          selectedShipping
-            .deliveryRange
-            .min,
+        shipping_delivery_min: selectedShipping.deliveryRange.min,
 
-        shipping_delivery_max:
-          selectedShipping
-            .deliveryRange
-            .max,
+        shipping_delivery_max: selectedShipping.deliveryRange.max,
 
         total,
       })
-      .select(`
+      .select(
+        `
         id,
         user_id,
         status,
         subtotal,
         shipping_price,
         total
-      `)
+      `,
+      )
       .single();
 
-    if (
-      orderError ||
-      !order
-    ) {
-      console.error(
-        "Erro ao criar pedido:",
-        orderError
-      );
+    if (orderError || !order) {
+      console.error("Erro ao criar pedido:", orderError);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível criar o pedido.",
+          message: "Não foi possível criar o pedido.",
         },
         {
           status: 500,
-        }
+        },
       );
     }
 
-    createdOrderId =
-      order.id;
+    createdOrderId = order.id;
 
     /*
      * 15. Salva o snapshot dos
@@ -699,52 +537,34 @@ export async function POST(
      * também congelamos peso e
      * dimensões para o envio.
      */
-    const orderItems =
-      checkoutItems.map(
-        (item) => ({
-          order_id:
-            order.id,
+    const orderItems = checkoutItems.map((item) => ({
+      order_id: order.id,
 
-          product_id:
-            item.productId,
+      product_id: item.productId,
 
-          product_name:
-            item.name,
+      product_name: item.name,
 
-          unit_price:
-            item.unitPrice,
+      unit_price: item.unitPrice,
 
-          quantity:
-            item.quantity,
+      quantity: item.quantity,
 
-          subtotal:
-            item.subtotal,
+      subtotal: item.subtotal,
 
-          weight:
-            item.weight,
+      weight: item.weight,
 
-          width:
-            item.width,
+      width: item.width,
 
-          height:
-            item.height,
+      height: item.height,
 
-          length:
-            item.length,
-        })
-      );
+      length: item.length,
+    }));
 
-    const {
-      error: orderItemsError,
-    } = await supabaseAdmin
+    const { error: orderItemsError } = await supabaseAdmin
       .from("order_items")
       .insert(orderItems);
 
     if (orderItemsError) {
-      console.error(
-        "Erro ao criar itens do pedido:",
-        orderItemsError
-      );
+      console.error("Erro ao criar itens do pedido:", orderItemsError);
 
       /*
        * O pedido ainda não possui
@@ -754,26 +574,18 @@ export async function POST(
        * snapshots são removidos por
        * ON DELETE CASCADE.
        */
-      await supabaseAdmin
-        .from("orders")
-        .delete()
-        .eq(
-          "id",
-          order.id
-        );
+      await supabaseAdmin.from("orders").delete().eq("id", order.id);
 
-      createdOrderId =
-        null;
+      createdOrderId = null;
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível salvar os itens do pedido.",
+          message: "Não foi possível salvar os itens do pedido.",
         },
         {
           status: 500,
-        }
+        },
       );
     }
 
@@ -787,84 +599,50 @@ export async function POST(
      * etiqueta, sem depender de um novo
      * cálculo de empacotamento.
      */
-    const orderShippingPackages =
-      selectedShipping.packages.map(
-        (
-          shippingPackage,
-          index
-        ) => ({
-          order_id:
-            order.id,
+    const orderShippingPackages = selectedShipping.packages.map(
+      (shippingPackage, index) => ({
+        order_id: order.id,
 
-          package_index:
-            index,
+        package_index: index,
 
-          weight:
-            shippingPackage.weight,
+        weight: shippingPackage.weight,
 
-          width:
-            shippingPackage.width,
+        width: shippingPackage.width,
 
-          height:
-            shippingPackage.height,
+        height: shippingPackage.height,
 
-          length:
-            shippingPackage.length,
+        length: shippingPackage.length,
 
-          insurance_value:
-            shippingPackage.insuranceValue,
+        insurance_value: shippingPackage.insuranceValue,
 
-          products:
-            shippingPackage.products,
-        })
-      );
+        products: shippingPackage.products,
+      }),
+    );
 
-    if (
-      orderShippingPackages.length === 0
-    ) {
-      console.error(
-        "Nenhum pacote foi retornado para o serviço de frete selecionado."
-      );
+    if (orderShippingPackages.length === 0) {
+      console.error("Nenhum pacote foi retornado para o serviço de frete selecionado.");
 
-      await supabaseAdmin
-        .from("orders")
-        .delete()
-        .eq(
-          "id",
-          order.id
-        );
+      await supabaseAdmin.from("orders").delete().eq("id", order.id);
 
-      createdOrderId =
-        null;
+      createdOrderId = null;
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível identificar os volumes do envio.",
+          message: "Não foi possível identificar os volumes do envio.",
         },
         {
           status: 500,
-        }
+        },
       );
     }
 
-    const {
-      error:
-        shippingPackagesError,
-    } = await supabaseAdmin
-      .from(
-        "order_shipping_packages"
-      )
-      .insert(
-        orderShippingPackages
-      );
+    const { error: shippingPackagesError } = await supabaseAdmin
+      .from("order_shipping_packages")
+      .insert(orderShippingPackages);
 
     if (shippingPackagesError) {
-      console.error(
-        "Erro ao salvar pacotes do pedido:",
-        shippingPackagesError
-      );
+      console.error("Erro ao salvar pacotes do pedido:", shippingPackagesError);
 
       /*
        * A preferência do Mercado Pago
@@ -875,26 +653,18 @@ export async function POST(
        * order_shipping_packages são
        * removidos por cascade.
        */
-      await supabaseAdmin
-        .from("orders")
-        .delete()
-        .eq(
-          "id",
-          order.id
-        );
+      await supabaseAdmin.from("orders").delete().eq("id", order.id);
 
-      createdOrderId =
-        null;
+      createdOrderId = null;
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível salvar os volumes do envio.",
+          message: "Não foi possível salvar os volumes do envio.",
         },
         {
           status: 500,
-        }
+        },
       );
     }
 
@@ -909,82 +679,54 @@ export async function POST(
      * O CPF e o e-mail também ficam
      * congelados neste pedido.
      */
-    const {
-      error:
-        shippingAddressError,
-    } = await supabaseAdmin
-      .from(
-        "order_shipping_addresses"
-      )
+    const { error: shippingAddressError } = await supabaseAdmin
+      .from("order_shipping_addresses")
       .insert({
-        order_id:
-          order.id,
+        order_id: order.id,
 
-        recipient_name:
-          address.recipient_name,
+        recipient_name: address.recipient_name,
 
-        recipient_document:
-          profile.cpf,
+        recipient_document: profile.cpf,
 
-        recipient_email:
-          customerEmail,
+        recipient_email: customerEmail,
 
-        phone:
-          address.phone,
+        phone: address.phone,
 
-        zip_code:
-          address.zip_code,
+        zip_code: address.zip_code,
 
-        street:
-          address.street,
+        street: address.street,
 
-        number:
-          address.number,
+        number: address.number,
 
-        complement:
-          address.complement,
+        complement: address.complement,
 
-        neighborhood:
-          address.neighborhood,
+        neighborhood: address.neighborhood,
 
-        city:
-          address.city,
+        city: address.city,
 
-        state:
-          address.state,
+        state: address.state,
       });
 
     if (shippingAddressError) {
-      console.error(
-        "Erro ao salvar endereço do pedido:",
-        shippingAddressError
-      );
+      console.error("Erro ao salvar endereço do pedido:", shippingAddressError);
 
       /*
        * O delete do pedido também
        * remove os snapshots por
        * ON DELETE CASCADE.
        */
-      await supabaseAdmin
-        .from("orders")
-        .delete()
-        .eq(
-          "id",
-          order.id
-        );
+      await supabaseAdmin.from("orders").delete().eq("id", order.id);
 
-      createdOrderId =
-        null;
+      createdOrderId = null;
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível salvar o endereço de entrega do pedido.",
+          message: "Não foi possível salvar o endereço de entrega do pedido.",
         },
         {
           status: 500,
-        }
+        },
       );
     }
 
@@ -992,25 +734,17 @@ export async function POST(
      * 18. Itens enviados ao
      * Mercado Pago.
      */
-    const preferenceItems =
-      checkoutItems.map(
-        (item) => ({
-          id:
-            item.productId,
+    const preferenceItems = checkoutItems.map((item) => ({
+      id: item.productId,
 
-          title:
-            item.name,
+      title: item.name,
 
-          quantity:
-            item.quantity,
+      quantity: item.quantity,
 
-          unit_price:
-            item.unitPrice,
+      unit_price: item.unitPrice,
 
-          currency_id:
-            "BRL",
-        })
-      );
+      currency_id: "BRL",
+    }));
 
     /*
      * O frete entra como um item
@@ -1023,20 +757,15 @@ export async function POST(
      */
     if (shippingPrice > 0) {
       preferenceItems.push({
-        id:
-          `shipping-${selectedShipping.serviceId}`,
+        id: `shipping-${selectedShipping.serviceId}`,
 
-        title:
-          `Frete - ${selectedShipping.companyName} ${selectedShipping.serviceName}`,
+        title: `Frete - ${selectedShipping.companyName} ${selectedShipping.serviceName}`,
 
-        quantity:
-          1,
+        quantity: 1,
 
-        unit_price:
-          shippingPrice,
+        unit_price: shippingPrice,
 
-        currency_id:
-          "BRL",
+        currency_id: "BRL",
       });
     }
 
@@ -1044,15 +773,9 @@ export async function POST(
      * 19. Origem usada nas URLs
      * de retorno do Mercado Pago.
      */
-    const origin =
-      process.env
-        .NEXT_PUBLIC_SITE_URL ??
-      new URL(request.url).origin;
+    const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
 
-    const preference =
-      new Preference(
-        mercadoPagoClient
-      );
+    const preference = new Preference(mercadoPagoClient);
 
     /*
      * 20. Cria a preferência.
@@ -1062,101 +785,69 @@ export async function POST(
      * Isso permite ao webhook encontrar
      * exatamente o pedido correto.
      */
-    const result =
-      await preference.create({
-        body: {
-          items:
-            preferenceItems,
+    const result = await preference.create({
+      body: {
+        items: preferenceItems,
 
-          expires:
-            true,
+        expires: true,
 
-          expiration_date_from:
-            new Date().toISOString(),
+        expiration_date_from: new Date().toISOString(),
 
-          expiration_date_to:
-            expirationDateIso,
+        expiration_date_to: expirationDateIso,
 
-          payer: {
-            email:
-              user.email ??
-              undefined,
-          },
-
-          back_urls: {
-            success:
-              `${origin}/checkout/sucesso`,
-
-            failure:
-              `${origin}/checkout/erro`,
-
-            pending:
-              `${origin}/checkout/pendente`,
-          },
-
-          auto_return:
-            "approved",
-
-          external_reference:
-            order.id,
-
-          metadata: {
-            order_id:
-              order.id,
-
-            user_id:
-              user.id,
-
-            shipping_service_id:
-              selectedShipping
-                .serviceId,
-
-            shipping_company:
-              selectedShipping
-                .companyName,
-          },
+        payer: {
+          email: user.email ?? undefined,
         },
-      });
+
+        back_urls: {
+          success: `${origin}/checkout/sucesso`,
+
+          failure: `${origin}/checkout/erro`,
+
+          pending: `${origin}/checkout/pendente`,
+        },
+
+        auto_return: "approved",
+
+        external_reference: order.id,
+
+        metadata: {
+          order_id: order.id,
+
+          user_id: user.id,
+
+          shipping_service_id: selectedShipping.serviceId,
+
+          shipping_company: selectedShipping.companyName,
+        },
+      },
+    });
 
     if (!result.id) {
-      throw new Error(
-        "O Mercado Pago não retornou uma preferência válida."
-      );
+      throw new Error("O Mercado Pago não retornou uma preferência válida.");
     }
 
     /*
      * A preferência já existe no
      * Mercado Pago a partir daqui.
      */
-    mercadoPagoPreferenceCreated =
-      true;
+    mercadoPagoPreferenceCreated = true;
 
     /*
      * 21. Salva o ID da preferência
      * no pedido.
      */
-    const {
-      error:
-        preferenceUpdateError,
-    } = await supabaseAdmin
+    const { error: preferenceUpdateError } = await supabaseAdmin
       .from("orders")
       .update({
-        mercado_pago_preference_id:
-          result.id,
+        mercado_pago_preference_id: result.id,
 
-        updated_at:
-          new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
-      .eq(
-        "id",
-        order.id
-      );
+      .eq("id", order.id);
 
     if (preferenceUpdateError) {
-      console.error(
-        "Erro ao salvar preferência no pedido:",
-        preferenceUpdateError
-      );
+      console.error("Erro ao salvar preferência no pedido:", preferenceUpdateError);
 
       /*
        * A preferência já existe no
@@ -1174,7 +865,7 @@ export async function POST(
         },
         {
           status: 500,
-        }
+        },
       );
     }
 
@@ -1186,54 +877,34 @@ export async function POST(
     return NextResponse.json({
       success: true,
 
-      orderId:
-        order.id,
+      orderId: order.id,
 
       subtotal,
 
       shipping: {
-        serviceId:
-          selectedShipping
-            .serviceId,
+        serviceId: selectedShipping.serviceId,
 
-        serviceName:
-          selectedShipping
-            .serviceName,
+        serviceName: selectedShipping.serviceName,
 
-        companyName:
-          selectedShipping
-            .companyName,
+        companyName: selectedShipping.companyName,
 
-        price:
-          shippingPrice,
+        price: shippingPrice,
 
-        deliveryMin:
-          selectedShipping
-            .deliveryRange
-            .min,
+        deliveryMin: selectedShipping.deliveryRange.min,
 
-        deliveryMax:
-          selectedShipping
-            .deliveryRange
-            .max,
+        deliveryMax: selectedShipping.deliveryRange.max,
       },
 
       total,
 
-      preferenceId:
-        result.id,
+      preferenceId: result.id,
 
-      initPoint:
-        result.init_point,
+      initPoint: result.init_point,
 
-      sandboxInitPoint:
-        result.sandbox_init_point,
+      sandboxInitPoint: result.sandbox_init_point,
     });
   } catch (error) {
-    console.error(
-      "Erro ao criar checkout:",
-      error
-    );
+    console.error("Erro ao criar checkout:", error);
 
     /*
      * Só apagamos automaticamente
@@ -1248,36 +919,20 @@ export async function POST(
      * - order_shipping_addresses
      * - order_shipping_packages
      */
-    if (
-      createdOrderId &&
-      !mercadoPagoPreferenceCreated
-    ) {
-      const {
-        error: cleanupError,
-      } = await supabaseAdmin
+    if (createdOrderId && !mercadoPagoPreferenceCreated) {
+      const { error: cleanupError } = await supabaseAdmin
         .from("orders")
         .delete()
-        .eq(
-          "id",
-          createdOrderId
-        )
-        .is(
-          "mercado_pago_preference_id",
-          null
-        );
+        .eq("id", createdOrderId)
+        .is("mercado_pago_preference_id", null);
 
       if (cleanupError) {
-        console.error(
-          "Erro ao limpar pedido incompleto:",
-          cleanupError
-        );
+        console.error("Erro ao limpar pedido incompleto:", cleanupError);
       }
     }
 
     const message =
-      error instanceof Error
-        ? error.message
-        : "Erro interno ao criar checkout.";
+      error instanceof Error ? error.message : "Erro interno ao criar checkout.";
 
     return NextResponse.json(
       {
@@ -1286,7 +941,7 @@ export async function POST(
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }

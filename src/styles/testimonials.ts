@@ -1,0 +1,86 @@
+// Tailwind utilities grouped by component. Keep the marker class for descendant variants.
+export const testimonialsStyles = {
+  beecahTestimonials: [
+    "beecah-testimonials relative isolate overflow-clip mt-[38px] mr-3 mb-12 ml-3 pt-[42px]",
+    "pr-[90px] pb-8 pl-[90px] min-h-[435px] rounded-[24px] bg-[#f4f3f0] text-center",
+    "text-[#24251f] [&_button:focus-visible]:[outline:2px_solid_#2d416f]",
+    "[&_button:focus-visible]:[outline-offset:4px]",
+    "[&_a:focus-visible]:[outline:2px_solid_#2d416f] [&_a:focus-visible]:[outline-offset:4px]",
+    "[@media(max-width:640px)]:mt-[26px] [@media(max-width:640px)]:mr-3",
+    "[@media(max-width:640px)]:mb-[34px] [@media(max-width:640px)]:ml-3",
+    "[@media(max-width:640px)]:pt-8 [@media(max-width:640px)]:pr-6",
+    "[@media(max-width:640px)]:pb-[22px] [@media(max-width:640px)]:pl-6",
+    "[@media(max-width:640px)]:min-h-105",
+  ].join(" "),
+  storiesEyebrow: [
+    "stories-eyebrow text-[10px] font-normal tracking-[.22em] uppercase text-[#66685f] mt-0 mr-0",
+    "mb-[30px] ml-0 [@media(max-width:640px)]:mb-5 [@media(max-width:640px)]:text-[9px]",
+  ].join(" "),
+  storiesWatermark: [
+    "stories-watermark absolute z-[-1] bottom-[-.16em] left-[50%] [transform:translateX(-50%)]",
+    "text-[clamp(65px,11vw,148px)] font-semibold tracking-[-.065em] leading-[1]",
+    "whitespace-nowrap text-[#252b3910] pointer-events-none",
+    "[@media(max-width:640px)]:text-[70px] [@media(max-width:640px)]:bottom-[45px]",
+  ].join(" "),
+  storiesContent: [
+    "stories-content relative z-[1] max-w-[670px] mt-auto mr-auto mb-auto ml-auto min-h-60 flex",
+    "flex-col items-center justify-center",
+    '[&_blockquote]:[font-family:"Sorts_Mill_Goudy",Georgia,serif]',
+    "[&_blockquote]:text-[clamp(29px,3.5vw,46px)] [&_blockquote]:italic",
+    "[&_blockquote]:leading-[1.2] [&_blockquote]:tracking-[-.035em]",
+    "[&_blockquote]:[text-wrap:balance] [&_blockquote]:mt-0 [&_blockquote]:mr-0",
+    "[&_blockquote]:mb-0 [&_blockquote]:ml-0 [&_figcaption]:text-[12px]",
+    "[&_figcaption]:tracking-[.03em] [&_figcaption]:text-[#65665f] [&_figcaption]:mt-[22px]",
+    "[&_figcaption]:mr-0 [&_figcaption]:mb-0 [&_figcaption]:ml-0",
+    "[@media(max-width:640px)]:min-h-[265px]",
+    "[@media(max-width:640px)]:[&_blockquote]:text-[32px]",
+  ].join(" "),
+  storiesStars: ["stories-stars flex gap-[5px] text-[#2d416f] mb-[22px]"].join(" "),
+  storiesSymbol: ["stories-symbol mb-5 text-[#2d416f]"].join(" "),
+  storiesMessage: [
+    'stories-message [font-family:"Sorts_Mill_Goudy",Georgia,serif]',
+    "text-[clamp(29px,3.5vw,46px)] italic leading-[1.2] tracking-[-.035em] [text-wrap:balance]",
+    "mt-0 mr-0 mb-0 ml-0 [@media(max-width:640px)]:text-[32px]",
+  ].join(" "),
+  storiesAuthor: [
+    "stories-author text-[12px] tracking-[.03em] text-[#65665f] mt-[22px] mr-0 mb-0 ml-0",
+  ].join(" "),
+  storiesAction: [
+    "stories-action inline-flex items-center gap-3 text-[11px] mt-[22px]",
+    "[border-bottom:1px_solid_#8c8e91] pt-0 pr-0 pb-[7px] pl-0 text-[#2d416f]",
+  ].join(" "),
+  storiesArrow: [
+    "stories-arrow absolute top-[48%] grid place-items-center w-12 h-12 rounded-full bg-white",
+    "text-[#24251f] shadow-[0_5px_16px_#24251f0b] z-[2] [transition:background_.2s,color_.2s]",
+    "[&:hover]:bg-[#2d416f] [&:hover]:text-white [@media(max-width:640px)]:top-auto",
+    "[@media(max-width:640px)]:bottom-[21px] [@media(max-width:640px)]:w-11",
+    "[@media(max-width:640px)]:h-11 [@media(prefers-reduced-motion:reduce)]:[transition:none]",
+  ].join(" "),
+  storiesPrev: ["stories-prev left-[25px] [@media(max-width:640px)]:left-[22px]"].join(
+    " ",
+  ),
+  storiesNext: ["stories-next right-[25px] [@media(max-width:640px)]:right-[22px]"].join(
+    " ",
+  ),
+  storiesPagination: [
+    "stories-pagination relative flex justify-center mt-[26px] gap-[2px] [&_button]:min-w-[34px]",
+    "[&_button]:h-9 [&_button]:grid [&_button]:place-items-center [&_span]:h-[5px]",
+    "[&_span]:w-[6px] [&_span]:bg-[#b5b6b4] [&_span]:rounded-[4px]",
+    "[&_span]:[transition:width_.2s] [&_button[aria-current=true]_span]:w-[27px]",
+    "[&_button[aria-current=true]_span]:bg-[#2d416f] [@media(max-width:640px)]:mt-[17px]",
+    "[@media(max-width:640px)]:mr-12 [@media(max-width:640px)]:mb-0",
+    "[@media(max-width:640px)]:ml-12",
+    "[@media(prefers-reduced-motion:reduce)]:[&_span]:[transition:none]",
+  ].join(" "),
+  storiesGhost: [
+    'stories-ghost absolute top-[34%] w-55 [font-family:"Sorts_Mill_Goudy",Georgia,serif]',
+    "text-[32px] italic leading-[1.2] text-[#262c3809] pointer-events-none",
+    "[@media(max-width:640px)]:hidden",
+  ].join(" "),
+  storiesGhostLeft: ["stories-ghost-left right-[calc(100%_-_45px)]"].join(" "),
+  storiesGhostRight: ["stories-ghost-right left-[calc(100%_-_45px)]"].join(" "),
+  storiesDemo: [
+    "stories-demo inline-block mt-0 mr-0 mb-4 ml-0 pt-[6px] pr-[10px] pb-[6px] pl-[10px]",
+    "rounded-[20px] bg-[#e6e8ed] text-[#535c6e] text-[10px]",
+  ].join(" "),
+} as const satisfies Record<string, string>;

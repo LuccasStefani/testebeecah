@@ -1,11 +1,10 @@
 "use client";
 
+import { catalogContent } from "@/src/content/catalog";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  useEffect,
-  useState,
-} from "react";
+import { Check, Heart, LoaderCircle, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useCart } from "@/src/contexts/CartContext";
@@ -18,9 +17,7 @@ import { Product } from "@/src/types/product";
 
 type ProductCardProps = {
   product: Product;
-  onFavoriteRemoved?: (
-    productId: string
-  ) => void;
+  onFavoriteRemoved?: (productId: string) => void;
 };
 
 function formatPrice(value: number) {
@@ -30,41 +27,26 @@ function formatPrice(value: number) {
   }).format(value);
 }
 
-export default function ProductCard({
-  product,
-  onFavoriteRemoved,
-}: ProductCardProps) {
+export default function ProductCard({ product, onFavoriteRemoved }: ProductCardProps) {
   const router = useRouter();
   const { addItem } = useCart();
 
-  const [isFavorite, setIsFavorite] =
-    useState(false);
+  const [actionError, setActionError] = useState("");
 
-  const [
-    favoriteLoading,
-    setFavoriteLoading,
-  ] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  const [
-    cartLoading,
-    setCartLoading,
-  ] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
-  const [
-    addedToCart,
-    setAddedToCart,
-  ] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false);
+
+  const [addedToCart, setAddedToCart] = useState(false);
 
   const hasPromotion =
-    product.promoPrice !== undefined &&
-    product.promoPrice < product.price;
+    product.promoPrice !== undefined && product.promoPrice < product.price;
 
-  const finalPrice = hasPromotion
-    ? product.promoPrice!
-    : product.price;
+  const finalPrice = hasPromotion ? product.promoPrice! : product.price;
 
-  const isOutOfStock =
-    product.stock <= 0;
+  const isOutOfStock = product.stock <= 0;
 
   useEffect(() => {
     async function loadFavorite() {
@@ -77,24 +59,15 @@ export default function ProductCard({
         return;
       }
 
-      const {
-        data,
-        error,
-      } = await supabase
+      const { data, error } = await supabase
         .from("favorites")
         .select("id")
         .eq("user_id", user.id)
-        .eq(
-          "product_id",
-          product.id
-        )
+        .eq("product_id", product.id)
         .maybeSingle();
 
       if (error) {
-        console.error(
-          "Erro ao carregar favorito:",
-          error
-        );
+        console.error(catalogContent.erroAoCarregarFavorito, error);
         return;
       }
 
@@ -105,50 +78,34 @@ export default function ProductCard({
   }, [product.id]);
 
   useEffect(() => {
-    function handleFavoriteUpdated(
-      event: Event
-    ) {
-      const customEvent =
-        event as CustomEvent<{
-          productId: string;
-          isFavorite: boolean;
-        }>;
+    function handleFavoriteUpdated(event: Event) {
+      const customEvent = event as CustomEvent<{
+        productId: string;
+        isFavorite: boolean;
+      }>;
 
-      if (
-        customEvent.detail.productId !==
-        product.id
-      ) {
+      if (customEvent.detail.productId !== product.id) {
         return;
       }
 
-      setIsFavorite(
-        customEvent.detail.isFavorite
-      );
+      setIsFavorite(customEvent.detail.isFavorite);
     }
 
-    window.addEventListener(
-      FAVORITES_UPDATED_EVENT,
-      handleFavoriteUpdated
-    );
+    window.addEventListener(FAVORITES_UPDATED_EVENT, handleFavoriteUpdated);
 
     return () => {
-      window.removeEventListener(
-        FAVORITES_UPDATED_EVENT,
-        handleFavoriteUpdated
-      );
+      window.removeEventListener(FAVORITES_UPDATED_EVENT, handleFavoriteUpdated);
     };
   }, [product.id]);
 
   async function handleAddToCart() {
-    if (
-      isOutOfStock ||
-      cartLoading
-    ) {
+    if (isOutOfStock || cartLoading) {
       return;
     }
 
     try {
       setCartLoading(true);
+      setActionError("");
 
       await addItem(
         {
@@ -159,7 +116,7 @@ export default function ProductCard({
           imageUrl: product.imageUrl,
           stock: product.stock,
         },
-        1
+        1,
       );
 
       setAddedToCart(true);
@@ -167,6 +124,8 @@ export default function ProductCard({
       window.setTimeout(() => {
         setAddedToCart(false);
       }, 1500);
+    } catch {
+      setActionError(catalogContent.naoFoiPossivelAdicionarASacolaTenteNovamente);
     } finally {
       setCartLoading(false);
     }
@@ -190,24 +149,14 @@ export default function ProductCard({
       setFavoriteLoading(true);
 
       if (isFavorite) {
-        const { error } =
-          await supabase
-            .from("favorites")
-            .delete()
-            .eq(
-              "user_id",
-              user.id
-            )
-            .eq(
-              "product_id",
-              product.id
-            );
+        const { error } = await supabase
+          .from("favorites")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("product_id", product.id);
 
         if (error) {
-          console.error(
-            "Erro ao remover favorito:",
-            error
-          );
+          console.error(catalogContent.erroAoRemoverFavorito, error);
           return;
         }
 
@@ -218,26 +167,18 @@ export default function ProductCard({
           isFavorite: false,
         });
 
-        onFavoriteRemoved?.(
-          product.id
-        );
+        onFavoriteRemoved?.(product.id);
 
         return;
       }
 
-      const { error } =
-        await supabase
-          .from("favorites")
-          .insert({
-            user_id: user.id,
-            product_id: product.id,
-          });
+      const { error } = await supabase.from("favorites").insert({
+        user_id: user.id,
+        product_id: product.id,
+      });
 
       if (error) {
-        console.error(
-          "Erro ao adicionar favorito:",
-          error
-        );
+        console.error(catalogContent.erroAoAdicionarFavorito, error);
         return;
       }
 
@@ -252,108 +193,120 @@ export default function ProductCard({
     }
   }
 
+  const discount =
+    hasPromotion && product.price > 0
+      ? Math.round((1 - finalPrice / product.price) * 100)
+      : 0;
+
   return (
-    <article className="group overflow-hidden border border-neutral-200 bg-white">
-      <Link
-        href={`/perfumes/${product.slug}`}
-      >
-        <div className="relative aspect-square overflow-hidden bg-neutral-100">
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            fill
-            className="object-contain p-6 transition duration-300 group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
-
-          {hasPromotion && (
-            <span className="absolute left-3 top-3 bg-black px-3 py-1.5 text-xs font-medium text-white">
-              Oferta
-            </span>
-          )}
-
-          {isOutOfStock && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/70">
-              <span className="bg-neutral-950 px-4 py-2 text-xs font-medium uppercase tracking-wider text-white">
-                Esgotado
-              </span>
-            </div>
-          )}
-        </div>
-      </Link>
-
-      <div className="p-4">
-        <span className="text-xs uppercase tracking-wider text-neutral-500">
-          {product.brand}
-        </span>
-
+    <article className="group/card flex h-full min-w-0 flex-col">
+      <div className="relative isolate aspect-[4/5] overflow-hidden rounded-2xl bg-[#f3f2f0]">
         <Link
           href={`/perfumes/${product.slug}`}
+          className="block h-full"
+          aria-label={`Ver ${product.name}`}
         >
-          <h2 className="mt-1 text-base font-medium text-neutral-950 transition hover:text-neutral-600">
-            {product.name}
-          </h2>
+          <Image
+            src={product.imageUrl || "/images/products/placeholder.svg"}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-700 group-hover/card:scale-[1.035]"
+            sizes="(max-width: 640px) 47vw, (max-width: 1024px) 46vw, 25vw"
+          />
         </Link>
-
-        <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-500">
-          {product.description}
-        </p>
-
-        <div className="mt-4">
-          {hasPromotion && (
-            <span className="mr-2 text-sm text-neutral-400 line-through">
-              {formatPrice(
-                product.price
-              )}
-            </span>
-          )}
-
-          <span className="text-lg font-semibold">
-            {formatPrice(
-              finalPrice
-            )}
+        {discount > 0 && (
+          <span className="pointer-events-none absolute left-2.5 top-2.5 rounded-full bg-white px-2.5 py-1.5 text-[10px] font-semibold tracking-wide sm:left-3 sm:top-3">
+            {"−"}
+            {discount}
+            {"%"}
           </span>
+        )}
+        <button
+          type="button"
+          onClick={handleFavorite}
+          disabled={favoriteLoading}
+          aria-pressed={isFavorite}
+          aria-label={
+            isFavorite
+              ? `Remover ${product.name} dos favoritos`
+              : `Favoritar ${product.name}`
+          }
+          className="absolute right-2 top-2 flex size-11 items-center justify-center rounded-full bg-white/90 text-beecah-black backdrop-blur-sm transition hover:bg-white disabled:cursor-wait disabled:opacity-60"
+        >
+          {favoriteLoading ? (
+            <LoaderCircle size={17} className="animate-spin" />
+          ) : (
+            <Heart
+              size={19}
+              strokeWidth={1.4}
+              fill={isFavorite ? "currentColor" : "none"}
+            />
+          )}
+        </button>
+        {isOutOfStock && (
+          <span className="pointer-events-none absolute inset-x-2 bottom-2 rounded-lg bg-white/95 py-2.5 text-center text-[10px] font-medium uppercase tracking-wider">
+            {catalogContent.esgotado}
+          </span>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col pt-4">
+        <div className="flex items-center justify-between gap-2 text-[9px] uppercase tracking-[0.12em] text-neutral-500 sm:text-[10px]">
+          <span className="truncate">{product.brand}</span>
+          {product.volume && (
+            <span className="shrink-0 tracking-normal">{product.volume}</span>
+          )}
         </div>
-
-        <div className="mt-5 flex gap-2">
+        <Link href={`/perfumes/${product.slug}`} className="mt-1.5 block">
+          <h3 className="line-clamp-2 min-h-10 text-[15px] font-medium leading-5 tracking-tight sm:min-h-12 sm:text-lg sm:leading-6 group-hover/card:underline group-hover/card:decoration-neutral-300 group-hover/card:underline-offset-4">
+            {product.name}
+          </h3>
+        </Link>
+        <p className="mt-1 truncate text-[11px] text-neutral-500 sm:text-xs">
+          {[product.category, product.fragranceFamily].filter(Boolean).join(" · ")}
+        </p>
+        <div className="mt-auto flex items-end justify-between gap-2 pt-4">
+          <div className="min-w-0">
+            <p className="min-h-4 text-[10px] text-neutral-400 sm:text-xs">
+              {hasPromotion ? (
+                <>
+                  <span className="sr-only">{catalogContent.de}</span>
+                  <span className="line-through">{formatPrice(product.price)}</span>
+                </>
+              ) : null}
+            </p>
+            <p className="mt-0.5 text-base font-semibold tracking-tight sm:text-xl">
+              {formatPrice(finalPrice)}
+            </p>
+          </div>
           <button
             type="button"
             onClick={handleAddToCart}
-            disabled={
-              isOutOfStock ||
-              cartLoading
-            }
-            className="flex-1 bg-neutral-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
-          >
-            {isOutOfStock
-              ? "Esgotado"
-              : cartLoading
-                ? "Adicionando..."
-                : addedToCart
-                  ? "Adicionado ✓"
-                  : "Adicionar"}
-          </button>
-
-          <button
-            type="button"
-            onClick={
-              handleFavorite
-            }
-            disabled={
-              favoriteLoading
-            }
+            disabled={isOutOfStock || cartLoading}
             aria-label={
-              isFavorite
-                ? `Remover ${product.name} dos favoritos`
-                : `Favoritar ${product.name}`
+              isOutOfStock
+                ? product.name + " esgotado"
+                : "Adicionar " + product.name + catalogContent.aSacola
             }
-            className="min-w-12 border border-neutral-300 px-4 text-xl transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
+            title={catalogContent.adicionarASacola}
+            className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-beecah-black text-white transition hover:bg-beecah-blue disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-neutral-400"
           >
-            {isFavorite
-              ? "♥"
-              : "♡"}
+            {cartLoading ? (
+              <LoaderCircle size={18} className="animate-spin" />
+            ) : addedToCart ? (
+              <Check size={19} />
+            ) : (
+              <Plus size={20} strokeWidth={1.5} />
+            )}
           </button>
         </div>
+        <span role="status" className="sr-only">
+          {addedToCart ? product.name + catalogContent.adicionadoASacola2 : ""}
+        </span>
+        {actionError && (
+          <p role="alert" className="mt-3 text-xs text-red-700">
+            {actionError}
+          </p>
+        )}
       </div>
     </article>
   );

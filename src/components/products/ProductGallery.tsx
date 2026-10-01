@@ -1,5 +1,7 @@
 "use client";
 
+import { productStyles } from "@/src/styles/product";
+
 import Image from "next/image";
 import { useState } from "react";
 
@@ -8,35 +10,32 @@ type ProductGalleryProps = {
   images: string[];
 };
 
-export default function ProductGallery({
-  name,
-  images,
-}: ProductGalleryProps) {
-  const [selectedImage, setSelectedImage] = useState(
-    images[0]
-  );
+export default function ProductGallery({ name, images }: ProductGalleryProps) {
+  const [selectedImage, setSelectedImage] = useState(images[0]);
 
   return (
-    <div>
-      <div className="relative aspect-square overflow-hidden bg-neutral-100">
+    <div className={productStyles.productGallery}>
+      <div className="relative aspect-square overflow-hidden rounded-[26px] bg-[#f4f2ef]">
         <Image
           src={selectedImage}
           alt={name}
           fill
           priority
-          className="object-contain p-10"
+          className="object-contain p-5 sm:p-8"
           sizes="(max-width: 1024px) 100vw, 50vw"
         />
       </div>
 
       {images.length > 1 && (
-        <div className="mt-4 grid grid-cols-4 gap-3">
+        <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
           {images.map((image, index) => (
             <button
               key={`${image}-${index}`}
               type="button"
+              aria-label={`Ver foto ${index + 1} de ${name}`}
+              aria-pressed={selectedImage === image}
               onClick={() => setSelectedImage(image)}
-              className={`relative aspect-square overflow-hidden border bg-neutral-100 transition ${
+              className={`relative size-20 shrink-0 overflow-hidden rounded-2xl border bg-neutral-100 transition ${
                 selectedImage === image
                   ? "border-neutral-950"
                   : "border-neutral-200 hover:border-neutral-500"

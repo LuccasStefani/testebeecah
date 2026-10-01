@@ -1,5 +1,6 @@
 "use client";
 
+import { adminContent } from "@/src/content/admin";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -13,64 +14,51 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
-  ) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     try {
       setLoading(true);
       setMessage("");
 
-      const { error } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
       if (error) {
-        setMessage("E-mail ou senha inválidos.");
+        setMessage(adminContent.eMailOuSenhaInvalidos);
         return;
       }
 
-      router.push("/admin");
+      router.replace("/auth/continue");
       router.refresh();
     } catch (error) {
       console.error(error);
 
-      setMessage(
-        "Não foi possível fazer login."
-      );
+      setMessage(adminContent.naoFoiPossivelFazerLogin);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <section className="flex min-h-[70vh] items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md border border-neutral-200 p-8">
+    <section className="flex min-h-screen bg-[#f5f5f3] items-center justify-center px-6 py-12">
+      <div className="w-full max-w-md rounded-[28px] border border-neutral-100 bg-white p-8 shadow-sm">
         <p className="text-sm uppercase tracking-[0.2em] text-neutral-500">
-          Beecah
+          {adminContent.beecah}
         </p>
 
-        <h1 className="mt-3 text-3xl font-semibold">
-          Administração
-        </h1>
+        <h1 className="mt-3 text-3xl font-semibold">{adminContent.administracao}</h1>
 
         <p className="mt-2 text-sm text-neutral-500">
-          Entre com sua conta de administrador.
+          {adminContent.entreComSuaContaDeAdministrador}
         </p>
 
-        <form
-          onSubmit={handleSubmit}
-          className="mt-8 space-y-5"
-        >
+        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <div>
-            <label
-              htmlFor="email"
-              className="mb-2 block text-sm font-medium"
-            >
-              E-mail
+            <label htmlFor="email" className="mb-2 block text-sm font-medium">
+              {adminContent.eMail}
             </label>
 
             <input
@@ -79,19 +67,14 @@ export default function AdminLoginPage() {
               required
               autoComplete="email"
               value={email}
-              onChange={(event) =>
-                setEmail(event.target.value)
-              }
-              className="w-full border border-neutral-300 px-4 py-3 outline-none transition focus:border-neutral-950"
+              onChange={(event) => setEmail(event.target.value)}
+              className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 outline-none transition focus:border-neutral-950"
             />
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="mb-2 block text-sm font-medium"
-            >
-              Senha
+            <label htmlFor="password" className="mb-2 block text-sm font-medium">
+              {adminContent.senha}
             </label>
 
             <input
@@ -100,25 +83,21 @@ export default function AdminLoginPage() {
               required
               autoComplete="current-password"
               value={password}
-              onChange={(event) =>
-                setPassword(event.target.value)
-              }
-              className="w-full border border-neutral-300 px-4 py-3 outline-none transition focus:border-neutral-950"
+              onChange={(event) => setPassword(event.target.value)}
+              className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 outline-none transition focus:border-neutral-950"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-neutral-950 px-6 py-3 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-xl bg-neutral-950 px-6 py-3 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading
-              ? "Entrando..."
-              : "Entrar"}
+            {loading ? adminContent.entrando : adminContent.entrar}
           </button>
 
           {message && (
-            <p className="text-sm text-red-600">
+            <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
               {message}
             </p>
           )}

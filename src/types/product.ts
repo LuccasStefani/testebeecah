@@ -12,6 +12,8 @@ export type Product = {
   stock: number;
 
   category: string;
+  isArabian?: boolean;
+  isNew?: boolean;
 
   volume?: string;
   fragranceFamily?: string;

@@ -1,5 +1,6 @@
 "use client";
 
+import { checkoutContent } from "@/src/content/checkout";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -65,7 +66,7 @@ function getDeliveryText(quote: ShippingQuote) {
 
   if (typeof min === "number" && typeof max === "number") {
     if (min === max) {
-      return `${min} ${min === 1 ? "dia útil" : "dias úteis"}`;
+      return `${min} ${min === 1 ? checkoutContent.diaUtil : checkoutContent.diasUteis}`;
     }
 
     return `${min} a ${max} dias úteis`;
@@ -73,11 +74,11 @@ function getDeliveryText(quote: ShippingQuote) {
 
   if (typeof quote.deliveryTime === "number") {
     return `${quote.deliveryTime} ${
-      quote.deliveryTime === 1 ? "dia útil" : "dias úteis"
+      quote.deliveryTime === 1 ? checkoutContent.diaUtil : checkoutContent.diasUteis
     }`;
   }
 
-  return "Prazo não informado";
+  return checkoutContent.prazoNaoInformado;
 }
 
 export default function CheckoutSummary() {
@@ -91,9 +92,7 @@ export default function CheckoutSummary() {
 
   const [addresses, setAddresses] = useState<Address[]>([]);
 
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
-    null
-  );
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
   const [changingAddress, setChangingAddress] = useState(false);
 
@@ -101,9 +100,7 @@ export default function CheckoutSummary() {
 
   const [shippingQuotes, setShippingQuotes] = useState<ShippingQuote[]>([]);
 
-  const [selectedShippingId, setSelectedShippingId] = useState<number | null>(
-    null
-  );
+  const [selectedShippingId, setSelectedShippingId] = useState<number | null>(null);
 
   const [calculatingShipping, setCalculatingShipping] = useState(false);
 
@@ -113,14 +110,12 @@ export default function CheckoutSummary() {
 
   const selectedAddress = useMemo(
     () => addresses.find((address) => address.id === selectedAddressId) ?? null,
-    [addresses, selectedAddressId]
+    [addresses, selectedAddressId],
   );
 
   const selectedShipping = useMemo(
-    () =>
-      shippingQuotes.find((quote) => quote.serviceId === selectedShippingId) ??
-      null,
-    [shippingQuotes, selectedShippingId]
+    () => shippingQuotes.find((quote) => quote.serviceId === selectedShippingId) ?? null,
+    [shippingQuotes, selectedShippingId],
   );
 
   const finalTotal = totalPrice + (selectedShipping?.price ?? 0);
@@ -142,33 +137,14 @@ export default function CheckoutSummary() {
       const [{ data: profile }, { data: addressData }] = await Promise.all([
         supabase
           .from("profiles")
-          .select(
-            `
-            full_name,
-            phone,
-            cpf
-          `
-          )
+          .select(checkoutContent.fullNamePhoneCpf)
           .eq("id", user.id)
           .maybeSingle(),
 
         supabase
           .from("addresses")
           .select(
-            `
-            id,
-            label,
-            recipient_name,
-            phone,
-            zip_code,
-            street,
-            number,
-            complement,
-            neighborhood,
-            city,
-            state,
-            is_default
-          `
+            "\n            id,\n            label,\n            recipient_name,\n            phone,\n            zip_code,\n            street,\n            number,\n            complement,\n            neighborhood,\n            city,\n            state,\n            is_default\n          ",
           )
           .eq("user_id", user.id)
           .order("is_default", {
@@ -248,15 +224,13 @@ export default function CheckoutSummary() {
       const data = (await response.json()) as QuoteResponse;
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message || "Não foi possível calcular o frete.");
+        throw new Error(data.message || checkoutContent.naoFoiPossivelCalcularOFrete);
       }
 
       const quotes = Array.isArray(data.quotes) ? data.quotes : [];
 
       if (quotes.length === 0) {
-        throw new Error(
-          "Nenhuma modalidade de frete está disponível para este endereço."
-        );
+        throw new Error(checkoutContent.nenhumaModalidadeDeFreteEstaDisponivelParaEste);
       }
 
       setShippingQuotes(quotes);
@@ -266,12 +240,12 @@ export default function CheckoutSummary() {
        * O cliente escolhe a modalidade.
        */
     } catch (error) {
-      console.error("Erro ao calcular frete:", error);
+      console.error(checkoutContent.erroAoCalcularFrete, error);
 
       setShippingError(
         error instanceof Error
           ? error.message
-          : "Não foi possível calcular o frete."
+          : checkoutContent.naoFoiPossivelCalcularOFrete,
       );
     } finally {
       setCalculatingShipping(false);
@@ -300,7 +274,7 @@ export default function CheckoutSummary() {
     }
 
     if (!selectedShipping) {
-      setShippingError("Selecione uma modalidade de frete para continuar.");
+      setShippingError(checkoutContent.selecioneUmaModalidadeDeFreteParaContinuar);
       return;
     }
 
@@ -354,9 +328,7 @@ export default function CheckoutSummary() {
           setSelectedShippingId(null);
         }
 
-        throw new Error(
-          data.message || "Não foi possível preparar o pagamento."
-        );
+        throw new Error(data.message || checkoutContent.naoFoiPossivelPrepararOPagamento);
       }
 
       /*
@@ -366,7 +338,7 @@ export default function CheckoutSummary() {
        * o checkout.
        */
       if (!data.initPoint) {
-        throw new Error("O Mercado Pago não retornou a URL de pagamento.");
+        throw new Error(checkoutContent.oMercadoPagoNaoRetornouAUrlDe);
       }
 
       /*
@@ -378,12 +350,12 @@ export default function CheckoutSummary() {
        */
       window.location.assign(data.initPoint);
     } catch (error) {
-      console.error("Erro ao finalizar compra:", error);
+      console.error(checkoutContent.erroAoFinalizarCompra, error);
 
       setShippingError(
         error instanceof Error
           ? error.message
-          : "Não foi possível preparar o pagamento."
+          : checkoutContent.naoFoiPossivelPrepararOPagamento,
       );
 
       setProcessingCheckout(false);
@@ -392,19 +364,20 @@ export default function CheckoutSummary() {
 
   if (loading) {
     return (
-      <aside className="h-fit border border-neutral-200 p-6">
-        <p className="text-sm text-neutral-500">Carregando resumo...</p>
+      <aside className="h-fit rounded-[20px] bg-white p-6">
+        <p className="text-sm text-neutral-500">{checkoutContent.carregandoResumo}</p>
       </aside>
     );
   }
 
   return (
-    <aside className="h-fit border border-neutral-200 bg-white p-6">
-      <h2 className="text-xl font-semibold">Resumo da compra</h2>
+    <aside className="h-fit rounded-[20px] bg-white p-5 sm:p-6">
+      <h3 className="text-sm font-medium">{checkoutContent.produtosNaSacola}</h3>
 
-      <div className="mt-6 flex items-center justify-between border-b border-neutral-200 pb-5 text-sm">
+      <div className="mt-4 flex items-center justify-between border-b border-neutral-200 pb-5 text-sm">
         <span>
-          {items.length} {items.length === 1 ? "item" : "itens"}
+          {items.reduce((sum, item) => sum + item.quantity, 0)}
+          {checkoutContent.unidades}
         </span>
 
         <span className="font-medium">{formatPrice(totalPrice)}</span>
@@ -413,35 +386,42 @@ export default function CheckoutSummary() {
       <div className="border-b border-neutral-200 py-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium">Entrega</p>
+            <p className="text-sm font-medium">{checkoutContent.entrega}</p>
 
             {!userId ? (
               <p className="mt-2 text-sm text-neutral-500">
-                Entre na sua conta para continuar.
+                {checkoutContent.entreNaSuaContaParaContinuar}
               </p>
             ) : !profileComplete ? (
               <p className="mt-2 text-sm text-neutral-500">
-                Complete seus dados pessoais.
+                {checkoutContent.completeSeusDadosPessoais}
               </p>
             ) : selectedAddress ? (
               <div className="mt-2 text-sm leading-6 text-neutral-600">
                 <p className="font-medium text-neutral-950">
-                  {selectedAddress.label || "Endereço"}
+                  {selectedAddress.label || checkoutContent.endereco}
                 </p>
 
                 <p>
-                  {selectedAddress.street}, {selectedAddress.number}
+                  {selectedAddress.street}
+                  {", "}
+                  {selectedAddress.number}
                 </p>
 
                 <p>
-                  {selectedAddress.city} - {selectedAddress.state}
+                  {selectedAddress.city}
+                  {" - "}
+                  {selectedAddress.state}
                 </p>
 
-                <p>CEP {selectedAddress.zip_code}</p>
+                <p>
+                  {checkoutContent.cep}
+                  {selectedAddress.zip_code}
+                </p>
               </div>
             ) : (
               <p className="mt-2 text-sm text-neutral-500">
-                Nenhum endereço cadastrado.
+                {checkoutContent.nenhumEnderecoCadastrado}
               </p>
             )}
           </div>
@@ -453,7 +433,7 @@ export default function CheckoutSummary() {
               disabled={processingCheckout}
               className="text-sm font-medium underline underline-offset-4 disabled:opacity-50"
             >
-              Alterar
+              {checkoutContent.alterar}
             </button>
           )}
         </div>
@@ -463,7 +443,7 @@ export default function CheckoutSummary() {
             {addresses.map((address) => (
               <label
                 key={address.id}
-                className="flex cursor-pointer gap-3 border border-neutral-200 p-4"
+                className="flex cursor-pointer gap-3 rounded-xl border border-neutral-200 p-4"
               >
                 <input
                   type="radio"
@@ -475,17 +455,21 @@ export default function CheckoutSummary() {
 
                 <div className="text-sm">
                   <p className="font-medium">
-                    {address.label || "Endereço"}
+                    {address.label || checkoutContent.endereco}
 
-                    {address.is_default ? " · Principal" : ""}
+                    {address.is_default ? checkoutContent.principal2 : ""}
                   </p>
 
                   <p className="mt-1 text-neutral-500">
-                    {address.street}, {address.number}
+                    {address.street}
+                    {", "}
+                    {address.number}
                   </p>
 
                   <p className="text-neutral-500">
-                    {address.city} - {address.state}
+                    {address.city}
+                    {" - "}
+                    {address.state}
                   </p>
                 </div>
               </label>
@@ -495,16 +479,16 @@ export default function CheckoutSummary() {
               href="/minha-conta/enderecos/novo"
               className="inline-block text-sm font-medium underline underline-offset-4"
             >
-              + Adicionar outro endereço
+              {checkoutContent.adicionarOutroEndereco}
             </Link>
 
             <button
               type="button"
               onClick={() => setChangingAddress(false)}
               disabled={processingCheckout}
-              className="block w-full bg-neutral-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="block w-full rounded-xl bg-neutral-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Confirmar endereço
+              {checkoutContent.confirmarEndereco}
             </button>
           </div>
         )}
@@ -512,7 +496,7 @@ export default function CheckoutSummary() {
 
       <div className="border-b border-neutral-200 py-5">
         <div className="flex items-center justify-between gap-4">
-          <span className="text-sm font-medium">Frete</span>
+          <span className="text-sm font-medium">{checkoutContent.frete}</span>
 
           {selectedShipping && (
             <span className="text-sm font-medium">
@@ -523,23 +507,23 @@ export default function CheckoutSummary() {
 
         {!userId || !profileComplete || !selectedAddress ? (
           <p className="mt-2 text-xs leading-5 text-neutral-500">
-            Informe seus dados e endereço para calcular o frete.
+            {checkoutContent.informeSeusDadosEEnderecoParaCalcularO}
           </p>
         ) : shippingQuotes.length === 0 ? (
           <div className="mt-3">
             <p className="text-xs leading-5 text-neutral-500">
-              Calcule as modalidades de entrega disponíveis para este endereço.
+              {checkoutContent.calculeAsModalidadesDeEntregaDisponiveisParaEste}
             </p>
 
             <button
               type="button"
               onClick={calculateShipping}
-              disabled={
-                calculatingShipping || processingCheckout || items.length === 0
-              }
-              className="mt-3 w-full border border-neutral-950 px-4 py-3 text-sm font-medium transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={calculatingShipping || processingCheckout || items.length === 0}
+              className="mt-3 w-full rounded-xl border border-neutral-950 px-4 py-3 text-sm font-medium transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {calculatingShipping ? "Calculando frete..." : "Calcular frete"}
+              {calculatingShipping
+                ? checkoutContent.calculandoFrete
+                : checkoutContent.calcularFrete}
             </button>
           </div>
         ) : (
@@ -550,7 +534,7 @@ export default function CheckoutSummary() {
               return (
                 <label
                   key={quote.serviceId}
-                  className={`flex cursor-pointer items-start gap-3 border p-4 transition ${
+                  className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${
                     selected ? "border-neutral-950" : "border-neutral-200"
                   }`}
                 >
@@ -569,9 +553,7 @@ export default function CheckoutSummary() {
                   <div className="min-w-0 flex-1">
                     <div className="flex justify-between gap-4">
                       <div>
-                        <p className="text-sm font-medium">
-                          {quote.serviceName}
-                        </p>
+                        <p className="text-sm font-medium">{quote.serviceName}</p>
 
                         <p className="mt-1 text-xs text-neutral-500">
                           {quote.companyName}
@@ -597,13 +579,18 @@ export default function CheckoutSummary() {
               disabled={calculatingShipping || processingCheckout}
               className="text-xs font-medium underline underline-offset-4 disabled:opacity-50"
             >
-              {calculatingShipping ? "Atualizando..." : "Recalcular frete"}
+              {calculatingShipping
+                ? checkoutContent.atualizando
+                : checkoutContent.recalcularFrete}
             </button>
           </div>
         )}
 
         {shippingError && (
-          <p className="mt-3 text-sm leading-5 text-neutral-600">
+          <p
+            role="alert"
+            className="mt-3 rounded-xl bg-red-50 p-3 text-sm leading-5 text-red-700"
+          >
             {shippingError}
           </p>
         )}
@@ -611,49 +598,49 @@ export default function CheckoutSummary() {
 
       <div className="space-y-3 pt-5">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-neutral-600">Produtos</span>
+          <span className="text-neutral-600">{checkoutContent.produtos}</span>
 
           <span>{formatPrice(totalPrice)}</span>
         </div>
 
         <div className="flex items-center justify-between text-sm">
-          <span className="text-neutral-600">Frete</span>
+          <span className="text-neutral-600">{checkoutContent.frete}</span>
 
           <span>
-            {selectedShipping ? formatPrice(selectedShipping.price) : "—"}
+            {selectedShipping
+              ? formatPrice(selectedShipping.price)
+              : checkoutContent.aCalcular}
           </span>
         </div>
 
         <div className="flex items-center justify-between border-t border-neutral-200 pt-4">
-          <span className="font-medium">Total</span>
-
-          <span className="text-2xl font-semibold">
-            {formatPrice(finalTotal)}
+          <span className="font-medium">
+            {selectedShipping ? checkoutContent.total : checkoutContent.totalSemFrete}
           </span>
+
+          <span className="text-2xl font-semibold">{formatPrice(finalTotal)}</span>
         </div>
       </div>
 
       <button
         type="button"
         onClick={handleContinue}
-        disabled={
-          calculatingShipping || processingCheckout || items.length === 0
-        }
-        className="mt-6 w-full bg-neutral-950 px-6 py-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={calculatingShipping || processingCheckout || items.length === 0}
+        className="mt-6 w-full rounded-xl bg-neutral-950 px-6 py-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {processingCheckout
-          ? "Preparando pagamento..."
+          ? checkoutContent.preparandoPagamento
           : !userId
-          ? "Entrar para continuar"
-          : !profileComplete
-          ? "Completar dados"
-          : !selectedAddress
-          ? "Adicionar endereço"
-          : shippingQuotes.length === 0
-          ? "Calcular frete"
-          : !selectedShipping
-          ? "Selecione o frete"
-          : "Finalizar compra"}
+            ? checkoutContent.entrarParaContinuar
+            : !profileComplete
+              ? checkoutContent.completarDados
+              : !selectedAddress
+                ? checkoutContent.adicionarEndereco
+                : shippingQuotes.length === 0
+                  ? checkoutContent.calcularFrete
+                  : !selectedShipping
+                    ? checkoutContent.selecioneOFrete
+                    : checkoutContent.finalizarCompra}
       </button>
     </aside>
   );

@@ -1,11 +1,7 @@
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 
-import {
-  R2_BUCKET_NAME,
-  R2_PUBLIC_URL,
-  r2,
-} from "@/src/lib/r2/client";
+import { R2_BUCKET_NAME, R2_PUBLIC_URL, r2 } from "@/src/lib/r2/client";
 import { requireAdmin } from "@/src/lib/auth/require-admin";
 import { supabaseAdmin } from "@/src/lib/supabase/admin";
 
@@ -20,43 +16,27 @@ function getR2ObjectKey(imageUrl: string) {
   const fileUrl = new URL(imageUrl);
 
   if (fileUrl.hostname !== publicUrl.hostname) {
-    throw new Error(
-      "A imagem não pertence ao domínio R2 configurado."
-    );
+    throw new Error("A imagem não pertence ao domínio R2 configurado.");
   }
 
-  return decodeURIComponent(
-    fileUrl.pathname.replace(/^\/+/, "")
-  );
+  return decodeURIComponent(fileUrl.pathname.replace(/^\/+/, ""));
 }
 
-function parseOptionalPositiveNumber(
-  value: unknown
-): number | null {
-  if (
-    value === undefined ||
-    value === null ||
-    value === ""
-  ) {
+function parseOptionalPositiveNumber(value: unknown): number | null {
+  if (value === undefined || value === null || value === "") {
     return null;
   }
 
   const parsed = Number(value);
 
-  if (
-    !Number.isFinite(parsed) ||
-    parsed <= 0
-  ) {
+  if (!Number.isFinite(parsed) || parsed <= 0) {
     return null;
   }
 
   return parsed;
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: RouteProps
-) {
+export async function PATCH(request: Request, { params }: RouteProps) {
   try {
     const auth = await requireAdmin();
 
@@ -68,7 +48,7 @@ export async function PATCH(
         },
         {
           status: auth.status,
-        }
+        },
       );
     }
 
@@ -88,6 +68,8 @@ export async function PATCH(
       height,
       length,
       category,
+      isArabian,
+      isNew,
       volume,
       fragranceFamily,
       topNotes,
@@ -108,96 +90,74 @@ export async function PATCH(
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Nome, marca e categoria são obrigatórios.",
+          message: "Nome, marca e categoria são obrigatórios.",
         },
-        { status: 400 }
+        { status: 400 },
+      );
+    }
+
+    if (
+      (isArabian !== undefined && typeof isArabian !== "boolean") ||
+      (isNew !== undefined && typeof isNew !== "boolean")
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Classificação do perfume inválida." },
+        { status: 400 },
       );
     }
 
     const parsedPrice = Number(price);
     const parsedStock = Number(stock);
 
-    if (
-      !Number.isFinite(parsedPrice) ||
-      parsedPrice < 0
-    ) {
+    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
       return NextResponse.json(
         {
           success: false,
           message: "Preço inválido.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    if (
-      !Number.isInteger(parsedStock) ||
-      parsedStock < 0
-    ) {
+    if (!Number.isInteger(parsedStock) || parsedStock < 0) {
       return NextResponse.json(
         {
           success: false,
           message: "Estoque inválido.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    let parsedPromoPrice: number | null =
-      null;
+    let parsedPromoPrice: number | null = null;
 
-    if (
-      promoPrice !== undefined &&
-      promoPrice !== null &&
-      promoPrice !== ""
-    ) {
-      parsedPromoPrice =
-        Number(promoPrice);
+    if (promoPrice !== undefined && promoPrice !== null && promoPrice !== "") {
+      parsedPromoPrice = Number(promoPrice);
 
-      if (
-        !Number.isFinite(
-          parsedPromoPrice
-        ) ||
-        parsedPromoPrice < 0
-      ) {
+      if (!Number.isFinite(parsedPromoPrice) || parsedPromoPrice < 0) {
         return NextResponse.json(
           {
             success: false,
-            message:
-              "Preço promocional inválido.",
+            message: "Preço promocional inválido.",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
-    const parsedWeight =
-      parseOptionalPositiveNumber(weight);
+    const parsedWeight = parseOptionalPositiveNumber(weight);
 
-    const parsedWidth =
-      parseOptionalPositiveNumber(width);
+    const parsedWidth = parseOptionalPositiveNumber(width);
 
-    const parsedHeight =
-      parseOptionalPositiveNumber(height);
+    const parsedHeight = parseOptionalPositiveNumber(height);
 
-    const parsedLength =
-      parseOptionalPositiveNumber(length);
+    const parsedLength = parseOptionalPositiveNumber(length);
 
-    const shippingValues = [
-      weight,
-      width,
-      height,
-      length,
-    ];
+    const shippingValues = [weight, width, height, length];
 
-    const hasAnyShippingValue =
-      shippingValues.some(
-        (value) =>
-          value !== undefined &&
-          value !== null &&
-          value !== ""
-      );
+    const hasAnyShippingValue = shippingValues.some(
+      (value) => value !== undefined && value !== null && value !== "",
+    );
 
     const hasAllValidShippingValues =
       parsedWeight !== null &&
@@ -205,130 +165,91 @@ export async function PATCH(
       parsedHeight !== null &&
       parsedLength !== null;
 
-    if (
-      hasAnyShippingValue &&
-      !hasAllValidShippingValues
-    ) {
+    if (hasAnyShippingValue && !hasAllValidShippingValues) {
       return NextResponse.json(
         {
           success: false,
           message:
             "Para configurar o frete, informe peso, largura, altura e comprimento com valores maiores que zero.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const { data, error } =
-      await supabaseAdmin
-        .from("products")
-        .update({
-          name: name.trim(),
-          brand: brand.trim(),
+    const { data, error } = await supabaseAdmin
+      .from("products")
+      .update({
+        name: name.trim(),
+        brand: brand.trim(),
 
-          description:
-            typeof description ===
-              "string"
-              ? description.trim()
-              : "",
+        description: typeof description === "string" ? description.trim() : "",
 
-          price: parsedPrice,
-          promo_price:
-            parsedPromoPrice,
-          stock: parsedStock,
-          weight: parsedWeight,
-          width: parsedWidth,
-          height: parsedHeight,
+        price: parsedPrice,
+        promo_price: parsedPromoPrice,
+        stock: parsedStock,
+        weight: parsedWeight,
+        width: parsedWidth,
+        height: parsedHeight,
         length: parsedLength,
 
-          category:
-            category.trim(),
+        category: category.trim(),
+        ...(isArabian !== undefined ? { is_arabian: isArabian } : {}),
+        ...(isNew !== undefined ? { is_new: isNew } : {}),
 
-          volume:
-            typeof volume ===
-              "string" &&
-              volume.trim()
-              ? volume.trim()
-              : null,
+        volume: typeof volume === "string" && volume.trim() ? volume.trim() : null,
 
-          fragrance_family:
-            typeof fragranceFamily ===
-              "string" &&
-              fragranceFamily.trim()
-              ? fragranceFamily.trim()
-              : null,
+        fragrance_family:
+          typeof fragranceFamily === "string" && fragranceFamily.trim()
+            ? fragranceFamily.trim()
+            : null,
 
-          top_notes:
-            Array.isArray(topNotes)
-              ? topNotes
-              : [],
+        top_notes: Array.isArray(topNotes) ? topNotes : [],
 
-          heart_notes:
-            Array.isArray(heartNotes)
-              ? heartNotes
-              : [],
+        heart_notes: Array.isArray(heartNotes) ? heartNotes : [],
 
-          base_notes:
-            Array.isArray(baseNotes)
-              ? baseNotes
-              : [],
+        base_notes: Array.isArray(baseNotes) ? baseNotes : [],
 
-          featured:
-            featured === true,
+        featured: featured === true,
 
-          active:
-            active === true,
+        active: active === true,
 
-          updated_at:
-            new Date().toISOString(),
-        })
-        .eq("id", id)
-        .select()
-        .single();
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select()
+      .single();
 
     if (error) {
-      console.error(
-        "Erro ao atualizar produto:",
-        error
-      );
+      console.error("Erro ao atualizar produto:", error);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível atualizar o produto.",
+          message: "Não foi possível atualizar o produto.",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     return NextResponse.json({
       success: true,
-      message:
-        "Produto atualizado com sucesso.",
+      message: "Produto atualizado com sucesso.",
       product: data,
     });
   } catch (error) {
-    console.error(
-      "Erro na edição do produto:",
-      error
-    );
+    console.error("Erro na edição do produto:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message:
-          "Erro interno ao atualizar produto.",
+        message: "Erro interno ao atualizar produto.",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: RouteProps
-) {
+export async function DELETE(_request: Request, { params }: RouteProps) {
   try {
     const auth = await requireAdmin();
 
@@ -340,25 +261,24 @@ export async function DELETE(
         },
         {
           status: auth.status,
-        }
+        },
       );
     }
 
     const { id } = await params;
 
-    const {
-      data: product,
-      error: productError,
-    } = await supabaseAdmin
+    const { data: product, error: productError } = await supabaseAdmin
       .from("products")
-      .select(`
+      .select(
+        `
         id,
         name,
         product_images (
           id,
           image_url
         )
-      `)
+      `,
+      )
       .eq("id", id)
       .single();
 
@@ -366,98 +286,72 @@ export async function DELETE(
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Produto não encontrado.",
+          message: "Produto não encontrado.",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
-    const images =
-      product.product_images ?? [];
+    const images = product.product_images ?? [];
 
-    const {
-      error: deleteProductError,
-    } = await supabaseAdmin
+    const { error: deleteProductError } = await supabaseAdmin
       .from("products")
       .delete()
       .eq("id", id);
 
     if (deleteProductError) {
-      console.error(
-        "Erro ao excluir produto:",
-        deleteProductError
-      );
+      console.error("Erro ao excluir produto:", deleteProductError);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível excluir o produto.",
+          message: "Não foi possível excluir o produto.",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
-    const failedR2Deletes: string[] =
-      [];
+    const failedR2Deletes: string[] = [];
 
     for (const image of images) {
       try {
-        const objectKey =
-          getR2ObjectKey(
-            image.image_url
-          );
+        const objectKey = getR2ObjectKey(image.image_url);
 
         await r2.send(
           new DeleteObjectCommand({
-            Bucket:
-              R2_BUCKET_NAME,
+            Bucket: R2_BUCKET_NAME,
             Key: objectKey,
-          })
+          }),
         );
       } catch (r2Error) {
-        console.error(
-          `Erro ao excluir imagem ${image.id} do R2:`,
-          r2Error
-        );
+        console.error(`Erro ao excluir imagem ${image.id} do R2:`, r2Error);
 
-        failedR2Deletes.push(
-          image.image_url
-        );
+        failedR2Deletes.push(image.image_url);
       }
     }
 
-    if (
-      failedR2Deletes.length > 0
-    ) {
+    if (failedR2Deletes.length > 0) {
       return NextResponse.json({
         success: true,
         warning:
           "O produto foi excluído da loja, mas um ou mais arquivos de imagem podem ter permanecido no R2.",
-        failedImages:
-          failedR2Deletes.length,
+        failedImages: failedR2Deletes.length,
       });
     }
 
     return NextResponse.json({
       success: true,
-      message:
-        "Produto e imagens excluídos com sucesso.",
+      message: "Produto e imagens excluídos com sucesso.",
     });
   } catch (error) {
-    console.error(
-      "Erro na exclusão do produto:",
-      error
-    );
+    console.error("Erro na exclusão do produto:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message:
-          "Erro interno ao excluir produto.",
+        message: "Erro interno ao excluir produto.",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

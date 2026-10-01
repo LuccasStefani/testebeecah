@@ -1,5 +1,6 @@
 "use client";
 
+import { catalogContent } from "@/src/content/catalog";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -10,19 +11,12 @@ type FavoritesGridProps = {
   initialProducts: Product[];
 };
 
-export default function FavoritesGrid({
-  initialProducts,
-}: FavoritesGridProps) {
-  const [products, setProducts] =
-    useState(initialProducts);
+export default function FavoritesGrid({ initialProducts }: FavoritesGridProps) {
+  const [products, setProducts] = useState(initialProducts);
 
-  function handleFavoriteRemoved(
-    productId: string
-  ) {
+  function handleFavoriteRemoved(productId: string) {
     setProducts((currentProducts) =>
-      currentProducts.filter(
-        (product) => product.id !== productId
-      )
+      currentProducts.filter((product) => product.id !== productId),
     );
   }
 
@@ -30,15 +24,14 @@ export default function FavoritesGrid({
     return (
       <div className="mt-12 border border-neutral-200 p-8 text-center">
         <p className="text-neutral-600">
-          Você ainda não adicionou nenhum perfume aos
-          favoritos.
+          {catalogContent.voceAindaNaoAdicionouNenhumPerfumeAosFavoritos}
         </p>
 
         <Link
           href="/perfumes"
           className="mt-5 inline-block bg-neutral-950 px-6 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
         >
-          Ver perfumes
+          {catalogContent.verPerfumes}
         </Link>
       </div>
     );
@@ -50,9 +43,7 @@ export default function FavoritesGrid({
         <ProductCard
           key={product.id}
           product={product}
-          onFavoriteRemoved={
-            handleFavoriteRemoved
-          }
+          onFavoriteRemoved={handleFavoriteRemoved}
         />
       ))}
     </div>

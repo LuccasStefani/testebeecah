@@ -1,135 +1,58 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-
 import { requireAdmin } from "@/src/lib/auth/require-admin";
 import { supabaseAdmin } from "@/src/lib/supabase/admin";
+import Dashboard, {
+  type ProductMetric,
+  type OrderMetric,
+  type SaleMetric,
+} from "@/src/components/admin/Dashboard";
 
 export default async function AdminPage() {
   const auth = await requireAdmin();
-
-  if (!auth.authorized) {
-    redirect("/admin/login");
+  if (!auth.authorized) redirect("/admin/login");
+  const updatedAt = new Date().toISOString();
+  const since = new Date(new Date(updatedAt).getTime() - 90 * 86400000).toISOString();
+  async function load(table: string, columns: string, dateColumn?: string) {
+    const rows: unknown[] = [];
+    for (let offset = 0; ; offset += 1000) {
+      let query = supabaseAdmin
+        .from(table)
+        .select(columns)
+        .order("id")
+        .range(offset, offset + 999);
+      if (dateColumn) query = query.gte(dateColumn, since);
+      if (table === "order_items") query = query.eq("orders.status", "approved");
+      const { data, error } = await query;
+      if (error) return { rows: [], failed: true };
+      rows.push(...(data ?? []));
+      if (!data || data.length < 1000) return { rows, failed: false };
+    }
   }
-
-  const { user } = auth;
-
-  const [
-    { count: productsCount },
-    { count: pendingOrdersCount },
-    { count: approvedOrdersCount },
-  ] = await Promise.all([
-    supabaseAdmin
-      .from("products")
-      .select("*", {
-        count: "exact",
-        head: true,
-      }),
-
-    supabaseAdmin
-      .from("orders")
-      .select("*", {
-        count: "exact",
-        head: true,
-      })
-      .eq("status", "pending"),
-
-    supabaseAdmin
-      .from("orders")
-      .select("*", {
-        count: "exact",
-        head: true,
-      })
-      .eq("status", "approved"),
+  const [products, orders, sales, favorites, clicks] = await Promise.all([
+    load("products", "id,name,stock,active"),
+    load("orders", "id,status,total,created_at", "created_at"),
+    load(
+      "order_items",
+      "id,product_id,product_name,quantity,subtotal,orders!inner(created_at,status)",
+      "orders.created_at",
+    ),
+    load("favorites", "id,product_id"),
+    load("product_clicks", "id,product_id,created_at", "created_at"),
   ]);
-
+  const errors = Object.entries({ products, orders, sales, favorites, clicks })
+    .filter(([, v]) => v.failed)
+    .map(([key]) => key);
   return (
-    <section className="mx-auto max-w-7xl px-6 py-12">
-      <p className="text-sm uppercase tracking-[0.2em] text-neutral-500">
-        Beecah
-      </p>
-
-      <h1 className="mt-3 text-3xl font-semibold">
-        Painel administrativo
-      </h1>
-
-      <p className="mt-2 text-neutral-500">
-        Área de gerenciamento da loja.
-      </p>
-
-      <p className="mt-4 text-sm text-neutral-400">
-        Logado como: {user.email}
-      </p>
-
-      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <Link
-          href="/admin/produtos"
-          className="border border-neutral-200 p-6 transition hover:border-neutral-950"
-        >
-          <p className="text-sm text-neutral-500">
-            Produtos
-          </p>
-
-          <p className="mt-3 text-3xl font-semibold">
-            {productsCount ?? 0}
-          </p>
-
-          <p className="mt-3 text-sm text-neutral-500">
-            Cadastre, edite e gerencie os perfumes.
-          </p>
-        </Link>
-
-        <Link
-          href="/admin/produtos"
-          className="border border-neutral-200 p-6 transition hover:border-neutral-950"
-        >
-          <p className="text-sm text-neutral-500">
-            Estoque
-          </p>
-
-          <p className="mt-3 text-lg font-semibold">
-            Gerenciar produtos
-          </p>
-
-          <p className="mt-3 text-sm text-neutral-500">
-            Acompanhe e altere as quantidades disponíveis.
-          </p>
-        </Link>
-
-        <Link
-          href="/admin/pedidos"
-          className="border border-neutral-200 p-6 transition hover:border-neutral-950"
-        >
-          <p className="text-sm text-neutral-500">
-            Pedidos
-          </p>
-
-          <div className="mt-4 flex gap-6">
-            <div>
-              <p className="text-2xl font-semibold">
-                {pendingOrdersCount ?? 0}
-              </p>
-
-              <p className="mt-1 text-xs text-neutral-500">
-                Pendentes
-              </p>
-            </div>
-
-            <div>
-              <p className="text-2xl font-semibold">
-                {approvedOrdersCount ?? 0}
-              </p>
-
-              <p className="mt-1 text-xs text-neutral-500">
-                Aprovados
-              </p>
-            </div>
-          </div>
-
-          <p className="mt-4 text-sm text-neutral-500">
-            Veja pagamentos e itens comprados.
-          </p>
-        </Link>
-      </div>
-    </section>
+    <Dashboard
+      data={{
+        products: products.rows as ProductMetric[],
+        orders: orders.rows as OrderMetric[],
+        sales: sales.rows as SaleMetric[],
+        favorites: favorites.rows as { product_id: string }[],
+        clicks: clicks.rows as { product_id: string; created_at: string }[],
+        errors,
+        updatedAt,
+      }}
+    />
   );
 }

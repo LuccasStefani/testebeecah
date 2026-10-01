@@ -27,8 +27,6 @@ export const r2 = new S3Client({
   },
 });
 
-export const R2_BUCKET_NAME =
-  process.env.R2_BUCKET_NAME!;
+export const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME!;
 
-export const R2_PUBLIC_URL =
-  process.env.R2_PUBLIC_URL!;
+export const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL!;

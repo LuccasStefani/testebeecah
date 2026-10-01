@@ -9,10 +9,7 @@ type RouteProps = {
   }>;
 };
 
-export async function PATCH(
-  _request: Request,
-  { params }: RouteProps
-) {
+export async function PATCH(_request: Request, { params }: RouteProps) {
   try {
     const auth = await requireAdmin();
 
@@ -24,22 +21,21 @@ export async function PATCH(
         },
         {
           status: auth.status,
-        }
+        },
       );
     }
 
     const { id } = await params;
 
-    const {
-      data: image,
-      error: imageError,
-    } = await supabaseAdmin
+    const { data: image, error: imageError } = await supabaseAdmin
       .from("product_images")
-      .select(`
+      .select(
+        `
         id,
         product_id,
         is_cover
-      `)
+      `,
+      )
       .eq("id", id)
       .single();
 
@@ -49,51 +45,38 @@ export async function PATCH(
           success: false,
           message: "Imagem não encontrada.",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     if (image.is_cover) {
       return NextResponse.json({
         success: true,
-        message:
-          "Esta imagem já é a capa do produto.",
+        message: "Esta imagem já é a capa do produto.",
       });
     }
 
-    const {
-      error: removeCoverError,
-    } = await supabaseAdmin
+    const { error: removeCoverError } = await supabaseAdmin
       .from("product_images")
       .update({
         is_cover: false,
       })
-      .eq(
-        "product_id",
-        image.product_id
-      )
+      .eq("product_id", image.product_id)
       .eq("is_cover", true);
 
     if (removeCoverError) {
-      console.error(
-        "Erro ao remover capa atual:",
-        removeCoverError
-      );
+      console.error("Erro ao remover capa atual:", removeCoverError);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível alterar a capa.",
+          message: "Não foi possível alterar a capa.",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
-    const {
-      data: updatedImage,
-      error: updateError,
-    } = await supabaseAdmin
+    const { data: updatedImage, error: updateError } = await supabaseAdmin
       .from("product_images")
       .update({
         is_cover: true,
@@ -103,40 +86,31 @@ export async function PATCH(
       .single();
 
     if (updateError) {
-      console.error(
-        "Erro ao definir nova capa:",
-        updateError
-      );
+      console.error("Erro ao definir nova capa:", updateError);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível definir a nova capa.",
+          message: "Não foi possível definir a nova capa.",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     return NextResponse.json({
       success: true,
-      message:
-        "Imagem principal alterada com sucesso.",
+      message: "Imagem principal alterada com sucesso.",
       image: updatedImage,
     });
   } catch (error) {
-    console.error(
-      "Erro ao alterar capa:",
-      error
-    );
+    console.error("Erro ao alterar capa:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message:
-          "Erro interno ao alterar a capa.",
+        message: "Erro interno ao alterar a capa.",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,8 +1,6 @@
+import { checkoutContent } from "@/src/content/checkout";
 import Link from "next/link";
-import {
-  notFound,
-  redirect,
-} from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { createSupabaseServerClient } from "@/src/lib/supabase/server";
 
@@ -12,18 +10,14 @@ type PageProps = {
   }>;
 };
 
-export default async function CheckoutShippingPage({
-  searchParams,
-}: PageProps) {
-  const { address: addressId } =
-    await searchParams;
+export default async function CheckoutShippingPage({ searchParams }: PageProps) {
+  const { address: addressId } = await searchParams;
 
   if (!addressId) {
     redirect("/checkout/entrega");
   }
 
-  const supabase =
-    await createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const {
     data: { user },
@@ -33,34 +27,17 @@ export default async function CheckoutShippingPage({
     redirect("/login");
   }
 
-  const {
-    data: address,
-    error: addressError,
-  } = await supabase
+  const { data: address, error: addressError } = await supabase
     .from("addresses")
-    .select(`
-      id,
-      label,
-      recipient_name,
-      phone,
-      zip_code,
-      street,
-      number,
-      complement,
-      neighborhood,
-      city,
-      state,
-      is_default
-    `)
+    .select(
+      "\n      id,\n      label,\n      recipient_name,\n      phone,\n      zip_code,\n      street,\n      number,\n      complement,\n      neighborhood,\n      city,\n      state,\n      is_default\n    ",
+    )
     .eq("id", addressId)
     .eq("user_id", user.id)
     .maybeSingle();
 
   if (addressError) {
-    console.error(
-      "Erro ao carregar endereço no frete:",
-      addressError
-    );
+    console.error(checkoutContent.erroAoCarregarEnderecoNoFrete, addressError);
   }
 
   if (!address) {
@@ -73,75 +50,63 @@ export default async function CheckoutShippingPage({
         href={`/checkout/entrega/${address.id}`}
         className="text-sm text-neutral-500 transition hover:text-neutral-950"
       >
-        ← Voltar para o endereço
+        {checkoutContent.voltarParaOEndereco}
       </Link>
 
       <div className="mt-6">
         <p className="text-sm uppercase tracking-[0.2em] text-neutral-500">
-          Checkout
+          {checkoutContent.checkout}
         </p>
 
-        <h1 className="mt-3 text-3xl font-semibold">
-          Escolha o frete
-        </h1>
+        <h1 className="mt-3 text-3xl font-semibold">{checkoutContent.escolhaOFrete}</h1>
 
         <p className="mt-2 text-neutral-500">
-          Selecione a melhor opção de entrega para o seu pedido.
+          {checkoutContent.selecioneAMelhorOpcaoDeEntregaParaO}
         </p>
       </div>
 
       <div className="mt-8 border border-neutral-200 p-6">
         <p className="text-xs uppercase tracking-wider text-neutral-400">
-          Entregar em
+          {checkoutContent.entregarEm}
         </p>
 
-        <p className="mt-2 font-semibold">
-          {address.recipient_name}
-        </p>
+        <p className="mt-2 font-semibold">{address.recipient_name}</p>
 
         <div className="mt-2 text-sm leading-6 text-neutral-600">
           <p>
-            {address.street},{" "}
-            {address.number}
-            {address.complement
-              ? ` - ${address.complement}`
-              : ""}
+            {address.street}
+            {","} {address.number}
+            {address.complement ? ` - ${address.complement}` : ""}
+          </p>
+
+          <p>{address.neighborhood}</p>
+
+          <p>
+            {address.city}
+            {" -"} {address.state}
           </p>
 
           <p>
-            {address.neighborhood}
-          </p>
-
-          <p>
-            {address.city} -{" "}
-            {address.state}
-          </p>
-
-          <p>
-            CEP {address.zip_code}
+            {checkoutContent.cep}
+            {address.zip_code}
           </p>
         </div>
       </div>
 
       <div className="mt-8 border border-neutral-200 p-6">
-        <h2 className="text-lg font-semibold">
-          Opções de entrega
-        </h2>
+        <h2 className="text-lg font-semibold">{checkoutContent.opcoesDeEntrega}</h2>
 
         <p className="mt-2 text-sm text-neutral-500">
-          As opções de frete aparecerão aqui após a integração
-          com o Melhor Envio.
+          {checkoutContent.asOpcoesDeFreteApareceraoAquiAposA}
         </p>
 
         <div className="mt-6 border border-dashed border-neutral-300 bg-neutral-50 p-5">
-          <p className="text-sm font-medium">
-            Integração pendente
-          </p>
+          <p className="text-sm font-medium">{checkoutContent.integracaoPendente}</p>
 
           <p className="mt-2 text-sm leading-6 text-neutral-500">
-            Vamos consultar o Melhor Envio usando o CEP{" "}
-            <strong>{address.zip_code}</strong>,
-            os produtos do carrinho e as dimensões/peso da embalagem.
+            {checkoutContent.vamosConsultarOMelhorEnvioUsandoOCep}{" "}
+            <strong>{address.zip_code}</strong>
+            {checkoutContent.osProdutosDoCarrinhoEAsDimensoesPeso}
           </p>
         </div>
       </div>
@@ -151,7 +116,7 @@ export default async function CheckoutShippingPage({
           href={`/checkout/entrega/${address.id}`}
           className="border border-neutral-300 px-5 py-3 text-sm font-medium transition hover:border-neutral-950"
         >
-          Alterar endereço
+          {checkoutContent.alterarEndereco}
         </Link>
 
         <button
@@ -159,7 +124,7 @@ export default async function CheckoutShippingPage({
           disabled
           className="cursor-not-allowed bg-neutral-300 px-5 py-3 text-sm font-medium text-white"
         >
-          Continuar para pagamento
+          {checkoutContent.continuarParaPagamento}
         </button>
       </div>
     </section>

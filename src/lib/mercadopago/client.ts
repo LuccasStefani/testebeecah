@@ -1,15 +1,11 @@
 import { MercadoPagoConfig } from "mercadopago";
 
-const accessToken =
-  process.env.MERCADO_PAGO_ACCESS_TOKEN;
+const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
 
 if (!accessToken) {
-  throw new Error(
-    "MERCADO_PAGO_ACCESS_TOKEN não foi configurado."
-  );
+  throw new Error("MERCADO_PAGO_ACCESS_TOKEN não foi configurado.");
 }
 
-export const mercadoPagoClient =
-  new MercadoPagoConfig({
-    accessToken,
-  });
+export const mercadoPagoClient = new MercadoPagoConfig({
+  accessToken,
+});

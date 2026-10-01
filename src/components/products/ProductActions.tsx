@@ -1,5 +1,18 @@
 "use client";
 
+import { catalogContent } from "@/src/content/catalog";
+import { productStyles } from "@/src/styles/product";
+
+import {
+  Heart,
+  ShoppingBag,
+  Minus,
+  Plus,
+  Check,
+  LoaderCircle,
+  ArrowRight,
+} from "lucide-react";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -22,16 +35,15 @@ type ProductActionsProps = {
   };
 };
 
-export default function ProductActions({
-  product,
-}: ProductActionsProps) {
+export default function ProductActions({ product }: ProductActionsProps) {
   const router = useRouter();
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   const [quantity, setQuantity] = useState(1);
-  const [isFavorite, setIsFavorite] =
-    useState(false);
-  const [favoriteLoading, setFavoriteLoading] =
-    useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   const { addItem } = useCart();
 
@@ -57,10 +69,7 @@ export default function ProductActions({
         .maybeSingle();
 
       if (error) {
-        console.error(
-          "Erro ao carregar favorito:",
-          error
-        );
+        console.error(catalogContent.erroAoCarregarFavorito, error);
         return;
       }
 
@@ -71,67 +80,59 @@ export default function ProductActions({
   }, [product.id]);
 
   useEffect(() => {
-    function handleFavoriteUpdated(
-      event: Event
-    ) {
-      const customEvent =
-        event as CustomEvent<{
-          productId: string;
-          isFavorite: boolean;
-        }>;
+    function handleFavoriteUpdated(event: Event) {
+      const customEvent = event as CustomEvent<{
+        productId: string;
+        isFavorite: boolean;
+      }>;
 
-      if (
-        customEvent.detail.productId !==
-        product.id
-      ) {
+      if (customEvent.detail.productId !== product.id) {
         return;
       }
 
-      setIsFavorite(
-        customEvent.detail.isFavorite
-      );
+      setIsFavorite(customEvent.detail.isFavorite);
     }
 
-    window.addEventListener(
-      FAVORITES_UPDATED_EVENT,
-      handleFavoriteUpdated
-    );
+    window.addEventListener(FAVORITES_UPDATED_EVENT, handleFavoriteUpdated);
 
     return () => {
-      window.removeEventListener(
-        FAVORITES_UPDATED_EVENT,
-        handleFavoriteUpdated
-      );
+      window.removeEventListener(FAVORITES_UPDATED_EVENT, handleFavoriteUpdated);
     };
   }, [product.id]);
 
   function decreaseQuantity() {
-    setQuantity((current) =>
-      Math.max(1, current - 1)
-    );
+    setQuantity((current) => Math.max(1, current - 1));
   }
 
   function increaseQuantity() {
-    setQuantity((current) =>
-      Math.min(stock, current + 1)
-    );
+    setQuantity((current) => Math.min(stock, current + 1));
   }
 
   async function handleAddToCart() {
-    const finalPrice =
-      product.promoPrice ?? product.price;
+    if (adding || isOutOfStock) return;
+    setAdding(true);
+    setAdded(false);
+    setActionError("");
+    try {
+      const finalPrice = product.promoPrice ?? product.price;
 
-    await addItem(
-      {
-        id: product.id,
-        name: product.name,
-        slug: product.slug,
-        price: finalPrice,
-        imageUrl: product.imageUrl,
-        stock: product.stock,
-      },
-      quantity
-    );
+      await addItem(
+        {
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          price: finalPrice,
+          imageUrl: product.imageUrl,
+          stock: product.stock,
+        },
+        quantity,
+      );
+      setAdded(true);
+    } catch {
+      setActionError(catalogContent.naoFoiPossivelAdicionarASacolaTenteNovamente);
+    } finally {
+      setAdding(false);
+    }
   }
 
   async function handleFavorite() {
@@ -159,10 +160,7 @@ export default function ProductActions({
           .eq("product_id", product.id);
 
         if (error) {
-          console.error(
-            "Erro ao remover favorito:",
-            error
-          );
+          console.error(catalogContent.erroAoRemoverFavorito, error);
           return;
         }
 
@@ -176,18 +174,13 @@ export default function ProductActions({
         return;
       }
 
-      const { error } = await supabase
-        .from("favorites")
-        .insert({
-          user_id: user.id,
-          product_id: product.id,
-        });
+      const { error } = await supabase.from("favorites").insert({
+        user_id: user.id,
+        product_id: product.id,
+      });
 
       if (error) {
-        console.error(
-          "Erro ao adicionar favorito:",
-          error
-        );
+        console.error(catalogContent.erroAoAdicionarFavorito, error);
         return;
       }
 
@@ -203,66 +196,100 @@ export default function ProductActions({
   }
 
   return (
-    <div className="mt-10">
+    <div className={productStyles.productActions}>
       {!isOutOfStock && (
-        <div>
-          <span className="text-sm font-medium">
-            Quantidade
-          </span>
-
-          <div className="mt-3 inline-flex items-center border border-neutral-300">
+        <div className={productStyles.productQuantityRow}>
+          <span>{catalogContent.quantidade}</span>
+          <div className={productStyles.productStepper}>
             <button
               type="button"
+              aria-label={catalogContent.diminuirQuantidade}
               onClick={decreaseQuantity}
-              disabled={quantity <= 1}
-              className="h-12 w-12 text-lg transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:text-neutral-300"
+              disabled={quantity <= 1 || adding}
             >
-              −
+              <Minus size={16} />
             </button>
-
-            <span className="flex h-12 min-w-14 items-center justify-center border-x border-neutral-300 text-sm font-medium">
-              {quantity}
-            </span>
-
+            <span aria-live="polite">{quantity}</span>
             <button
               type="button"
+              aria-label={catalogContent.aumentarQuantidade}
               onClick={increaseQuantity}
-              disabled={quantity >= stock}
-              className="h-12 w-12 text-lg transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:text-neutral-300"
+              disabled={quantity >= stock || adding}
             >
-              +
+              <Plus size={16} />
             </button>
           </div>
-
-          <p className="mt-2 text-xs text-neutral-500">
-            {stock} unidades disponíveis
-          </p>
         </div>
       )}
-
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+      <div className={productStyles.productPurchaseButtons}>
         <button
           type="button"
-          disabled={isOutOfStock}
+          disabled={isOutOfStock || adding}
           onClick={handleAddToCart}
-          className="flex-1 bg-neutral-950 px-6 py-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+          className={productStyles.productAddButton}
         >
-          {isOutOfStock
-            ? "Esgotado"
-            : "Adicionar ao carrinho"}
+          {adding ? (
+            <LoaderCircle size={18} className="animate-spin" />
+          ) : added ? (
+            <Check size={18} />
+          ) : (
+            <ShoppingBag size={18} strokeWidth={1.5} />
+          )}
+          <span>
+            {isOutOfStock
+              ? catalogContent.esgotado
+              : adding
+                ? catalogContent.adicionando
+                : added
+                  ? catalogContent.adicionadoASacola
+                  : catalogContent.adicionarASacola}
+          </span>
+          {!adding && !added && !isOutOfStock && <ArrowRight size={17} />}
         </button>
-
         <button
           type="button"
+          className={productStyles.productFavoriteButton}
+          aria-pressed={isFavorite}
+          aria-label={
+            isFavorite
+              ? catalogContent.removerDosFavoritos
+              : catalogContent.salvarNosFavoritos
+          }
           onClick={handleFavorite}
           disabled={favoriteLoading}
-          className="border border-neutral-300 px-6 py-4 text-sm font-medium transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isFavorite
-            ? "♥ Favoritado"
-            : "♡ Favoritar"}
+          {favoriteLoading ? (
+            <LoaderCircle size={19} className="animate-spin" />
+          ) : (
+            <Heart
+              size={21}
+              strokeWidth={1.5}
+              fill={isFavorite ? "currentColor" : "none"}
+            />
+          )}
         </button>
       </div>
+      <p className={productStyles.productActionHint}>
+        {catalogContent.toqueNoCoracaoParaGuardarSeuFavorito}
+      </p>
+      <p role="status" className={productStyles.productActionStatus}>
+        {added ? catalogContent.produtoAdicionadoASuaSacola : ""}
+      </p>
+      {actionError && (
+        <p role="alert" className="mt-3 text-sm text-red-700">
+          {actionError}
+        </p>
+      )}
+      {added && (
+        <button
+          type="button"
+          onClick={() => router.push("/carrinho")}
+          className={productStyles.productViewBag}
+        >
+          {catalogContent.verMinhaSacola}
+          <ArrowRight size={15} />
+        </button>
+      )}
     </div>
   );
 }

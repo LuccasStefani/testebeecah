@@ -15,34 +15,32 @@ export async function GET() {
         },
         {
           status: auth.status,
-        }
+        },
       );
     }
 
     const { data, error } = await supabaseAdmin
       .from("products")
-      .select(`
+      .select(
+        `
         id,
         name
-      `)
+      `,
+      )
       .eq("active", true)
       .order("name", {
         ascending: true,
       });
 
     if (error) {
-      console.error(
-        "Erro ao buscar produtos:",
-        error
-      );
+      console.error("Erro ao buscar produtos:", error);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Não foi possível carregar os produtos.",
+          message: "Não foi possível carregar os produtos.",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -51,18 +49,14 @@ export async function GET() {
       products: data ?? [],
     });
   } catch (error) {
-    console.error(
-      "Erro na rota products-simple:",
-      error
-    );
+    console.error("Erro na rota products-simple:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message:
-          "Erro interno ao carregar produtos.",
+        message: "Erro interno ao carregar produtos.",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

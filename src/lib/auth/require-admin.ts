@@ -4,8 +4,7 @@ import { supabaseAdmin } from "@/src/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/src/lib/supabase/server";
 
 export async function requireAdmin() {
-  const supabase =
-    await createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const {
     data: { user },
@@ -20,25 +19,17 @@ export async function requireAdmin() {
     };
   }
 
-  const {
-    data: profile,
-    error: profileError,
-  } = await supabaseAdmin
+  const { data: profile, error: profileError } = await supabaseAdmin
     .from("profiles")
     .select("role")
     .eq("id", user.id)
     .maybeSingle();
 
-  if (
-    profileError ||
-    !profile ||
-    profile.role !== "admin"
-  ) {
+  if (profileError || !profile || profile.role !== "admin") {
     return {
       authorized: false as const,
       status: 403,
-      message:
-        "Acesso permitido apenas para administradores.",
+      message: "Acesso permitido apenas para administradores.",
     };
   }
 
