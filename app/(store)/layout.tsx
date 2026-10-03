@@ -1,3 +1,4 @@
+import CookieConsent from "@/src/components/layout/CookieConsent";
 import StoreSecondaryContent from "@/src/components/layout/StoreSecondaryContent";
 import { storeContent } from "@/src/content/store";
 import StorePreloader from "@/src/components/layout/StorePreloader";
@@ -17,6 +18,7 @@ export default function StoreLayout({ children }: StoreLayoutProps) {
     <CartProvider>
       <StorePreloader />
       <ClickTracking />
+      <CookieConsent />
       <a
         href="#conteudo"
         className={[

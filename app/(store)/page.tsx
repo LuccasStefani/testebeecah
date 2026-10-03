@@ -24,9 +24,15 @@ export default async function Home() {
   );
 
   return (
-    <div className={[homeStyles.beecahHome, "mx-auto", "max-w-7xl"].join(" ")}>
+    <div
+      className={[
+        homeStyles.beecahHome,
+        "mx-auto w-full min-w-0 overflow-x-clip",
+        "max-w-7xl",
+      ].join(" ")}
+    >
       <HomeMotion>
-        <Hero />
+        <Hero compactMobile />
         <BrandSlide />
         <HomeShowcase
           products={[

@@ -13,7 +13,7 @@ export default function BrandSlide() {
   return (
     <section
       aria-label={showcaseContent.brands}
-      className="overflow-hidden bg-white py-5 sm:py-7"
+      className="overflow-hidden bg-white py-3 sm:py-7"
     >
       <div className="overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]">
         <div className="flex w-max animate-[brand-marquee_32s_linear_infinite] will-change-transform motion-reduce:animate-none">
@@ -26,7 +26,7 @@ export default function BrandSlide() {
               {[...brands, ...brands].map((brand, index) => (
                 <div
                   key={`${brand.src}-${index}`}
-                  className="flex h-14 w-32 shrink-0 items-center justify-center px-4 sm:h-16 sm:w-40"
+                  className="flex h-10 w-[90px] shrink-0 items-center justify-center px-2 sm:px-4 sm:h-16 sm:w-40"
                 >
                   <Image
                     src={brand.src}

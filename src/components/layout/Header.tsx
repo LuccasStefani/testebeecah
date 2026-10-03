@@ -351,13 +351,13 @@ export default function Header() {
                 LOGO
             ================================ */}
 
-            <NavbarLogo />
+            <NavbarLogo className="w-13 min-[360px]:w-20 [&_img]:h-auto [&_img]:w-full" />
 
             {/* ===============================
                 AÇÕES
             ================================ */}
 
-            <div className="flex items-center gap-2">
+            <div className="relative z-10 flex shrink-0 items-center gap-1 [&_svg]:shrink-0">
               <button
                 type="button"
                 onClick={openAccount}
@@ -365,7 +365,7 @@ export default function Header() {
                 aria-haspopup="dialog"
                 aria-expanded={accountOpen}
                 aria-controls="account-drawer"
-                className="flex size-9 items-center justify-center rounded-lg bg-beecah-black text-white"
+                className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#171914] text-white"
               >
                 <User size={18} strokeWidth={1.6} />
               </button>
@@ -382,13 +382,14 @@ export default function Header() {
                 aria-label={storeContent.buscarPerfumes}
                 className="
                   flex
-                  h-9
-                  w-9
+                  h-11
+                  w-11
                   items-center
                   justify-center
-                  rounded-lg
-                  bg-beecah-black
-                  text-beecah-white
+                  shrink-0
+                  rounded-xl
+                  bg-[#171914]
+                  text-white
                   transition
                   hover:opacity-80
                 "
@@ -404,8 +405,8 @@ export default function Header() {
                 href="/carrinho"
                 aria-label={storeContent.carrinho}
                 className="
-                  relative
-                  text-beecah-black
+                  relative flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#171914]
+                  text-white
                 "
               >
                 <ShoppingBag size={21} strokeWidth={1.6} />

@@ -13,7 +13,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface NavbarProps {
   children: React.ReactNode;
@@ -70,7 +70,10 @@ export const Navbar = ({ children, className }: NavbarProps) => {
     <motion.div
       ref={ref}
       // IMPORTANT: Change this to class of `fixed` if you want the navbar to be fixed
-      className={cn("fixed inset-x-0 top-6 z-40 w-full", className)}
+      className={cn(
+        "fixed inset-x-0 top-3 z-40 w-auto max-w-full sm:top-4 xl:top-6",
+        className,
+      )}
     >
       {React.Children.map(children, (child) =>
         React.isValidElement(child)
@@ -146,52 +149,74 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
 };
 
 export const MobileNav = ({ children, className, visible }: MobileNavProps) => {
-  const reducedMotion = useReducedMotion();
   return (
-    <motion.div
-      animate={{
-        backdropFilter: visible ? "blur(10px)" : "none",
-        boxShadow: visible
-          ? "0 0 24px rgba(34, 42, 53, 0.06), 0 1px 1px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(34, 42, 53, 0.04), 0 0 4px rgba(34, 42, 53, 0.08), 0 16px 68px rgba(47, 48, 55, 0.05), 0 1px 0 rgba(255, 255, 255, 0.1) inset"
-          : "none",
-        width: visible ? "90%" : "100%",
-        paddingRight: visible ? "12px" : "0px",
-        paddingLeft: visible ? "12px" : "0px",
-        borderRadius: visible ? "20px" : "16px",
-        y: visible ? 8 : 0,
-      }}
-      transition={
-        reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 200, damping: 50 }
-      }
+    <div
+      data-mobile-navbar
       className={cn(
-        "relative z-50 mx-auto flex w-full max-w-[calc(100vw-2rem)] flex-col items-center justify-between bg-white/95 px-3 py-2 xl:hidden",
-        visible && "bg-white/80 dark:bg-neutral-950/80",
+        "relative isolate z-50 mx-auto flex min-w-0 max-w-[calc(100%_-_24px)] flex-col rounded-[18px] bg-white px-2 py-2 text-[#171914] transition-[width,box-shadow] duration-300 ease-out motion-reduce:transition-none xl:hidden",
+        visible
+          ? "w-[calc(100%_-_40px)] shadow-[0_4px_24px_#00000012]"
+          : "w-[calc(100%_-_24px)]",
         className,
       )}
     >
-      {children}
-    </motion.div>
-  );
-};
-
-export const MobileNavHeader = ({ children, className }: MobileNavHeaderProps) => {
-  return (
-    <div className={cn("flex w-full flex-row items-center justify-between", className)}>
       {children}
     </div>
   );
 };
 
-export const MobileNavMenu = ({ children, className, isOpen }: MobileNavMenuProps) => {
+export const MobileNavHeader = ({ children, className }: MobileNavHeaderProps) => {
+  return (
+    <div
+      className={cn(
+        "flex min-h-12 w-full min-w-0 flex-row items-center justify-between gap-2",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+};
+
+export const MobileNavMenu = ({
+  children,
+  className,
+  isOpen,
+  onClose,
+}: MobileNavMenuProps) => {
+  const menu = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    const closeOutside = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Element && !menu.current?.parentElement?.contains(target))
+        onClose();
+    };
+    const desktop = window.matchMedia("(min-width: 1280px)");
+    const closeDesktop = () => {
+      if (desktop.matches) onClose();
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    desktop.addEventListener("change", closeDesktop);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      desktop.removeEventListener("change", closeDesktop);
+    };
+  }, [isOpen, onClose]);
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          ref={menu}
+          id="store-mobile-menu"
+          role="navigation"
+          aria-label="Menu principal"
+          data-lenis-prevent
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className={cn(
-            "absolute inset-x-0 top-16 z-50 flex w-full flex-col items-start justify-start gap-4 rounded-lg bg-white px-4 py-8 shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset] dark:bg-neutral-950",
+            "absolute inset-x-0 top-[calc(100%+8px)] z-50 flex max-h-[min(36rem,calc(100dvh-100px))] w-full flex-col items-stretch justify-start gap-1 overflow-y-auto overscroll-contain rounded-2xl bg-white p-4 [&>a]:flex [&>a]:min-h-11 [&>a]:items-center [&>a]:rounded-lg [&>a]:px-3 [&>a:hover]:bg-neutral-50 [&>button]:min-h-11 [&>button]:text-left [&>button]:px-3 shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]",
             className,
           )}
         >
@@ -214,8 +239,9 @@ export const MobileNavToggle = ({
       type="button"
       onClick={onClick}
       aria-expanded={isOpen}
+      aria-controls="store-mobile-menu"
       aria-label={isOpen ? storeContent.fecharMenu : storeContent.abrirMenu}
-      className="flex size-11 items-center justify-center rounded-xl bg-white text-black"
+      className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#171914] text-white [&_svg]:size-5 [&_svg]:shrink-0"
     >
       {isOpen ? <IconX aria-hidden="true" /> : <IconMenu2 aria-hidden="true" />}
     </button>
@@ -224,7 +250,7 @@ export const MobileNavToggle = ({
 
 export const NavbarLogo = ({ className }: { className?: string }) => {
   return (
-    <Link href="/" className={cn("relative z-20 flex items-center", className)}>
+    <Link href="/" className={cn("relative z-20 flex shrink-0 items-center", className)}>
       <Image
         src="/images/logo/LogoBlack.svg"
         alt={storeContent.beecahLogo}

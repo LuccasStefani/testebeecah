@@ -1,3 +1,4 @@
+import { privacyContent } from "@/src/content/privacy";
 import { storeContent } from "@/src/content/store";
 import Link from "next/link";
 import { MessageCircle, Package, Truck, Heart, ShieldCheck } from "lucide-react";
@@ -39,7 +40,7 @@ const topics = [
 export default function Support() {
   return (
     <section className="mx-auto max-w-6xl px-6 py-12">
-      <div className="rounded-3xl bg-[#f2f4f8] p-8 sm:p-12">
+      <div className="rounded-3xl bg-[#f2f4f8] p-5 sm:p-12">
         <p className="text-xs uppercase tracking-[0.3em] text-beecah-blue">
           {storeContent.estamosPorAqui}
         </p>
@@ -70,6 +71,11 @@ export default function Support() {
             <Icon size={24} className="text-beecah-blue" />
             <h2 className="mt-5 text-xl font-medium">{title}</h2>
             <p className="mt-3 text-sm leading-7 text-neutral-600">{text}</p>
+            {id === "privacidade" && (
+              <p className="mt-3 text-sm leading-7 text-neutral-600">
+                {privacyContent.details}
+              </p>
+            )}
             <Link
               href={href}
               className="mt-5 inline-block text-sm font-medium underline underline-offset-4"

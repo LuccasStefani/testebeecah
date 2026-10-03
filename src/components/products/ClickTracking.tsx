@@ -1,9 +1,11 @@
 "use client";
 
+import { hasAnalyticsConsent } from "@/src/lib/cookie-consent";
 import { useEffect } from "react";
 export default function ClickTracking() {
   useEffect(() => {
     function track(event: MouseEvent) {
+      if (!hasAnalyticsConsent()) return;
       if (event.button !== 0 && event.button !== 1) return;
       const target = event.target instanceof Element ? event.target.closest("a") : null;
       if (!target) return;

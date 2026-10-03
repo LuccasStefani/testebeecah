@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  consentSnapshot,
+  parseConsent,
+  subscribeConsent,
+} from "@/src/lib/cookie-consent";
 import { storeContent } from "@/src/content/store";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -25,15 +30,25 @@ export default function PromotionPopup({
     try {
       if (sessionStorage.getItem("beecah:popup-seen")) return;
     } catch {}
-    const timer = setTimeout(() => {
-      if (document.querySelector("dialog[open]")) return;
-      setPaused(window.matchMedia(storeContent.prefersReducedMotionReduce).matches);
-      setOpen(true);
-      try {
-        sessionStorage.setItem("beecah:popup-seen", "1");
-      } catch {}
-    }, 1400);
-    return () => clearTimeout(timer);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const schedule = () => {
+      if (!parseConsent(consentSnapshot())) return;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (document.querySelector("dialog[open], [data-cookie-consent]")) return;
+        setPaused(window.matchMedia(storeContent.prefersReducedMotionReduce).matches);
+        setOpen(true);
+        try {
+          sessionStorage.setItem("beecah:popup-seen", "1");
+        } catch {}
+      }, 1400);
+    };
+    schedule();
+    const unsubscribe = subscribeConsent(schedule);
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+    };
   }, [path]);
   useEffect(() => {
     if (!open) return;

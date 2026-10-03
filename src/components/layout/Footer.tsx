@@ -1,3 +1,4 @@
+import { CookiePreferencesButton } from "./CookieConsent";
 import FooterVideo from "./FooterVideo";
 import Image from "next/image";
 import Link from "next/link";
@@ -86,6 +87,7 @@ export default function Footer() {
               <Link href="/politica-de-privacidade" className="hover:text-white">
                 {storeContent.privacidade}
               </Link>
+              <CookiePreferencesButton />
               <Link href="/termos" className="hover:text-white">
                 {storeContent.termosDeUso}
               </Link>

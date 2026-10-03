@@ -429,7 +429,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                   sm:pt-6
                 "
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   {/* FECHAR */}
 
                   <button
@@ -438,8 +438,8 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                     aria-label={storeContent.fecharBusca}
                     className="
                       flex
-                      h-14
-                      w-14
+                      h-11 sm:h-14
+                      w-11 sm:w-14
                       shrink-0
                       items-center
                       justify-center
@@ -460,13 +460,13 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                   <div
                     className="
                       flex
-                      h-14
+                      h-11 sm:h-14
                       min-w-0
                       flex-1
                       items-center
                       rounded-[16px]
                       bg-beecah-black
-                      px-5
+                      px-3 sm:px-5
                       text-beecah-white
                     "
                   >
@@ -474,6 +474,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
 
                     <input
                       type="search"
+                      aria-label="Buscar perfumes"
                       value={search}
                       autoFocus
                       onChange={(event) => setSearch(event.target.value)}
@@ -482,8 +483,8 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                         min-w-0
                         flex-1
                         bg-transparent
-                        pl-3.5
-                        text-[15px]
+                        pl-2
+                        text-base
                         text-beecah-white
                         outline-none
                         placeholder:text-white/45
@@ -496,9 +497,11 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                   <button
                     type="button"
                     onClick={() => setFiltersOpen((current) => !current)}
+                    aria-label="Filtrar perfumes"
+                    aria-expanded={filtersOpen}
                     className={`
                       flex
-                      h-14
+                      h-11 sm:h-14
                       shrink-0
                       items-center
                       justify-center
@@ -548,7 +551,8 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                       transition={{
                         duration: 0.28,
                       }}
-                      className="overflow-hidden"
+                      className="max-h-[min(28rem,calc(100dvh-160px))] overflow-y-auto overscroll-contain"
+                      data-lenis-prevent
                     >
                       <div
                         className="
@@ -668,7 +672,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                             className="
                               mt-2.5
                               flex
-                              max-h-[112px]
+                              max-h-[96px]
                               flex-wrap
                               gap-2
                               overflow-y-auto
@@ -1008,7 +1012,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                                         group
                                         grid
                                         min-h-[148px]
-                                        grid-cols-[112px_minmax(0,1fr)_44px]
+                                        grid-cols-[72px_minmax(0,1fr)]
                                         items-center
                                         gap-4
                                         rounded-[22px]
@@ -1030,7 +1034,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                                     className="
                                           relative
                                           h-[112px]
-                                          w-[112px]
+                                          w-[72px]
                                           overflow-hidden
                                           rounded-[18px]
                                           bg-neutral-100
@@ -1108,8 +1112,8 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                                     <h3
                                       className="
                                             mt-1
-                                            truncate
-                                            text-[18px]
+                                            line-clamp-2 break-words
+                                            text-[16px] sm:text-[18px]
                                             font-medium
                                             leading-tight
                                             text-beecah-black
@@ -1137,7 +1141,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                                       <p
                                         className="
                                               mt-1.5
-                                              text-[24px]
+                                              text-[20px] sm:text-[24px]
                                               font-semibold
                                               leading-none
                                               tracking-[-0.025em]
@@ -1171,7 +1175,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
 
                                   <div
                                     className="
-                                          flex
+                                          hidden sm:flex
                                           h-11
                                           w-11
                                           items-center
@@ -1217,8 +1221,8 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                           className="
                               mx-auto
                               flex
-                              h-14
-                              w-14
+                              h-11 sm:h-14
+                              w-11 sm:w-14
                               items-center
                               justify-center
                               rounded-full

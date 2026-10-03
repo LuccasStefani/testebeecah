@@ -201,7 +201,7 @@ export default function CartPage() {
                 transition={{ duration: reducedMotion ? 0 : 0.18 }}
                 aria-busy={updating}
                 key={item.id}
-                className="group grid grid-cols-[6.5rem_minmax(0,1fr)] gap-4 py-6 first:pt-0 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-6"
+                className="group grid grid-cols-[5rem_minmax(0,1fr)] gap-3 min-[380px]:grid-cols-[6.5rem_minmax(0,1fr)] min-[380px]:gap-4 py-6 first:pt-0 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-6"
               >
                 {/* Imagem */}
                 <Link
@@ -213,7 +213,7 @@ export default function CartPage() {
                       src={item.imageUrl}
                       alt={item.name}
                       fill
-                      sizes="(max-width: 640px) 104px, 160px"
+                      sizes="(max-width: 379px) 80px, (max-width: 640px) 104px, 160px"
                       className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
                     />
                   ) : (
