@@ -50,7 +50,7 @@ export default function HomeMotion({ children }: { children: ReactNode }) {
       );
       element
         .querySelectorAll(
-          "#hero-heading, #hero-heading + p, #hero-heading + p + div, #showcase-title, #showcase-track > div, [data-bento-tile], .home-intro",
+          "#hero-heading, #hero-heading + p, #hero-heading + p + div, #showcase-title, #showcase-track > div, [data-bento-tile], .home-intro, #body-splash-heading",
         )
         .forEach((target) => observer?.observe(target));
     };

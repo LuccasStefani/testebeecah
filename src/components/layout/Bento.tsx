@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { bentoContent, type BentoTile } from "@/src/content/bento";
 
 function BentoImage({ tile }: { tile: BentoTile }) {
@@ -13,7 +14,7 @@ function BentoImage({ tile }: { tile: BentoTile }) {
           ? "(min-width: 768px) 67vw, 100vw"
           : "(min-width: 768px) 45vw, 100vw"
       }
-      className="object-cover transition-transform duration-700 group-hover:scale-[1.035] motion-reduce:transition-none motion-reduce:transform-none"
+      className={`object-cover transition-transform duration-700 group-hover:scale-[1.035] motion-reduce:transition-none motion-reduce:transform-none ${tile.imagePosition ?? "object-center"}`}
     />
   );
 }
@@ -32,7 +33,7 @@ export default function Bento() {
             >
               <BentoImage tile={tile} />
               <div
-                className={`absolute inset-0 ${tile.kind === "offer" ? "bg-gradient-to-r from-white/65 via-white/15 to-transparent" : "bg-gradient-to-b from-black/35 via-transparent to-black/15"}`}
+                className={`absolute inset-0 ${tile.kind === "offer" ? "bg-gradient-to-r from-white/65 via-white/15 to-transparent" : "bg-gradient-to-b from-black/50 via-black/5 to-black/30"}`}
               />
               <div
                 className={`absolute inset-0 flex flex-col ${tile.kind === "offer" ? "items-start px-[6.7%] pb-[5%] pt-[8.8%] text-neutral-950" : tile.id === "populares" ? "p-[5.5%] text-white" : tile.id === "novos" ? "px-[5%] py-[5.5%] text-white" : "px-[9%] py-[9%] text-white"} ${tile.id === "feminino" ? "items-end text-right" : "items-start"}`}
@@ -52,18 +53,17 @@ export default function Bento() {
                     {tile.description}
                   </p>
                 )}
-                {tile.action && (
-                  <span
-                    className={`inline-flex items-center justify-center rounded-full transition-colors group-hover:bg-white ${tile.kind === "offer" ? "mt-[3.4%] min-h-9 bg-white/50 px-[3.5%] py-[1.2%] text-[clamp(12px,2.1cqw,18px)] font-medium text-neutral-950" : "mt-auto min-h-9 self-end bg-white/60 px-[10%] py-[4.2%] text-[clamp(12px,4.8cqw,16px)] font-medium text-white group-hover:text-neutral-950"}`}
-                  >
+                <div className="mt-auto flex w-full flex-col items-start gap-4 pt-6">
+                  {tile.note && (
+                    <p className="text-left text-[clamp(10px,1.65cqw,14px)] font-normal tracking-[-0.025em]">
+                      {tile.note}
+                    </p>
+                  )}
+                  <span className="inline-flex min-h-11 items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 text-xs font-medium leading-4 text-[#171914] transition-colors group-hover:bg-[#171914] group-hover:text-white group-focus-visible:bg-[#171914] group-focus-visible:text-white motion-reduce:transition-none">
                     {tile.action}
+                    <ArrowUpRight size={16} strokeWidth={1.6} aria-hidden="true" />
                   </span>
-                )}
-                {tile.note && (
-                  <p className="mt-auto pt-6 text-[clamp(10px,1.65cqw,14px)] font-normal tracking-[-0.025em]">
-                    {tile.note}
-                  </p>
-                )}
+                </div>
               </div>
             </Link>
           ))}

@@ -75,6 +75,8 @@ export default function PromotionPopup({
   return (
     <dialog
       ref={dialog}
+      data-promotion-popup
+      data-lenis-prevent
       aria-labelledby="promo-title"
       onCancel={(e) => {
         e.preventDefault();
@@ -83,11 +85,11 @@ export default function PromotionPopup({
       onClick={(e) => {
         if (e.target === e.currentTarget) setOpen(false);
       }}
-      className="fixed inset-0 m-auto max-h-[90dvh] w-[calc(100%-32px)] max-w-4xl overflow-y-auto rounded-[24px] border-0 bg-white p-0 text-beecah-black shadow-2xl backdrop:bg-black/45 backdrop:backdrop-blur-sm"
+      className="fixed inset-0 m-auto max-h-[calc(100dvh_-_24px)] w-[calc(100%_-_24px)] min-w-0 max-w-4xl overflow-x-hidden overflow-y-auto overscroll-contain sm:max-h-[calc(100dvh_-_40px)] sm:w-[calc(100%_-_40px)] rounded-[24px] border-0 bg-white p-0 text-beecah-black shadow-2xl backdrop:bg-black/45 backdrop:backdrop-blur-sm"
     >
       {open && (
         <div
-          className="relative grid sm:grid-cols-[.9fr_1.1fr]"
+          className="relative grid min-w-0 sm:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]"
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
           onKeyDown={() => setPaused(true)}
@@ -103,26 +105,28 @@ export default function PromotionPopup({
           <div
             role="img"
             aria-label={slide.name}
-            className="min-h-52 bg-neutral-100 bg-cover bg-center sm:min-h-[460px]"
+            className="h-40 min-w-0 bg-neutral-100 bg-cover bg-center sm:h-auto sm:min-h-[460px]"
             style={{ backgroundImage: "url(" + JSON.stringify(slide.image) + ")" }}
           />
-          <div className="flex flex-col items-center justify-center px-7 py-9 text-center sm:px-10">
+          <div className="flex min-w-0 flex-col items-center justify-center px-5 py-5 text-center [overflow-wrap:anywhere] sm:px-10 sm:py-9">
             <p className="font-haerins text-2xl text-beecah-blue">
               {storeContent.beecah}
             </p>
-            <span className="mt-5 rounded-full bg-rose-50 px-4 py-2 text-xs font-medium text-rose-800">
+            <span className="mt-3 rounded-full bg-rose-50 sm:mt-5 px-4 py-2 text-xs font-medium text-rose-800">
               {Math.round((1 - slide.promoPrice / slide.price) * 100)}
               {storeContent.deDesconto}
             </span>
             <h2
               id="promo-title"
-              className="mt-5 text-3xl font-medium tracking-tight sm:text-4xl"
+              className="mt-3 max-w-full text-2xl font-medium tracking-tight sm:mt-5 sm:text-4xl"
             >
               {slide.title}
             </h2>
-            <p className="mt-4 text-sm leading-6 text-neutral-500">{slide.description}</p>
-            <p className="mt-5 text-sm font-medium">{slide.name}</p>
-            <div className="mt-3 flex items-center gap-3">
+            <p className="mt-3 max-w-full text-xs leading-5 text-neutral-500 sm:mt-4 sm:text-sm sm:leading-6">
+              {slide.description}
+            </p>
+            <p className="mt-3 max-w-full text-sm font-medium sm:mt-5">{slide.name}</p>
+            <div className="mt-3 flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1">
               <span className="text-sm text-neutral-400 line-through">
                 {money(slide.price)}
               </span>
@@ -131,7 +135,7 @@ export default function PromotionPopup({
             <Link
               href={slide.href}
               onClick={() => setOpen(false)}
-              className="mt-6 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl bg-beecah-black px-5 py-4 text-sm text-white hover:bg-beecah-blue"
+              className="mt-4 flex min-h-11 w-full sm:mt-6 sm:min-h-12 items-center justify-center gap-3 rounded-xl bg-beecah-black px-4 py-3 text-sm text-white sm:px-5 sm:py-4 hover:bg-beecah-blue"
             >
               {storeContent.conhecerAOferta}
               <ArrowRight size={17} />

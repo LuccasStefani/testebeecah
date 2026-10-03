@@ -1,8 +1,11 @@
+import { productTypeContent } from "@/src/content/product-types";
 import { catalogContent } from "@/src/content/catalog";
 import Link from "next/link";
 const links = [
   [catalogContent.todos, "/perfumes"],
   [catalogContent.arabes, "/categorias/arabes"],
+  [productTypeContent.collections["body-splash"].title, "/categorias/body-splash"],
+  [productTypeContent.collections.decantes.title, "/categorias/decantes"],
   [catalogContent.femininos, "/categorias/feminino"],
   [catalogContent.masculinos, "/categorias/masculino"],
   [catalogContent.novos, "/categorias/novos"],

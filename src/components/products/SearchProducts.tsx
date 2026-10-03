@@ -1,4 +1,9 @@
 "use client";
+import {
+  productTypeContent,
+  productTypeLabel,
+  parseProductType,
+} from "@/src/content/product-types";
 
 import { catalogContent } from "@/src/content/catalog";
 import { useMemo, useState } from "react";
@@ -11,6 +16,7 @@ type SearchProductsProps = {
 };
 
 export default function SearchProducts({ products }: SearchProductsProps) {
+  const [productType, setProductType] = useState("");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>(catalogContent.todas);
   const [brand, setBrand] = useState<string>(catalogContent.todas);
@@ -35,6 +41,7 @@ export default function SearchProducts({ products }: SearchProductsProps) {
 
       const matchesSearch =
         !term ||
+        (productTypeLabel(product.productType) + "s").toLowerCase().includes(term) ||
         product.name.toLowerCase().includes(term) ||
         product.brand.toLowerCase().includes(term) ||
         product.category.toLowerCase().includes(term) ||
@@ -51,6 +58,7 @@ export default function SearchProducts({ products }: SearchProductsProps) {
       return (
         matchesSearch &&
         matchesCategory &&
+        (!productType || parseProductType(product.productType) === productType) &&
         matchesBrand &&
         matchesMinPrice &&
         matchesMaxPrice
@@ -76,9 +84,10 @@ export default function SearchProducts({ products }: SearchProductsProps) {
 
       return 0;
     });
-  }, [products, search, category, brand, sort, minPrice, maxPrice]);
+  }, [products, search, category, brand, sort, minPrice, maxPrice, productType]);
 
   function clearFilters() {
+    setProductType("");
     setSearch("");
     setCategory(catalogContent.todas);
     setBrand(catalogContent.todas);
@@ -89,6 +98,7 @@ export default function SearchProducts({ products }: SearchProductsProps) {
 
   const hasFilters =
     search !== "" ||
+    productType !== "" ||
     category !== "Todas" ||
     brand !== "Todas" ||
     sort !== "relevancia" ||
@@ -107,6 +117,23 @@ export default function SearchProducts({ products }: SearchProductsProps) {
         />
       </div>
 
+      <div className="mt-6">
+        <label className="block text-sm">
+          {productTypeContent.label}
+          <select
+            value={productType}
+            onChange={(event) => setProductType(event.target.value)}
+            className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm"
+          >
+            <option value="">{productTypeContent.all}</option>
+            {Object.entries(productTypeContent.labels).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
       <div className="mt-6">
         <p className="mb-3 text-sm font-medium">{catalogContent.categoria}</p>
 

@@ -1,3 +1,4 @@
+import { parseProductType } from "@/src/content/product-types";
 import PersonalPageHero from "@/src/components/layout/PersonalPageHero";
 import { catalogContent } from "@/src/content/catalog";
 import { redirect } from "next/navigation";
@@ -34,7 +35,7 @@ export default async function FavoritosPage() {
     const { data: productsData, error: productsError } = await supabase
       .from("products")
       .select(
-        "\n        id,\n        name,\n        slug,\n        brand,\n        description,\n        price,\n        promo_price,\n        stock,\n        category,\n        product_images (\n          image_url,\n          position,\n          is_cover\n        )\n      ",
+        "\n        id,\n        name,\n        slug,\n        brand,\n        description,\n        price,\n        promo_price,\n        stock,\n        category,\n          product_type,\n        product_images (\n          image_url,\n          position,\n          is_cover\n        )\n      ",
       )
       .in("id", productIds)
       .eq("active", true);
@@ -70,6 +71,7 @@ export default async function FavoritosPage() {
             product.promo_price !== null ? Number(product.promo_price) : undefined,
           stock: product.stock,
           category: product.category,
+          productType: parseProductType(product.product_type),
           imageUrl: sortedImages[0]?.image_url ?? "",
         };
       }) ?? [];

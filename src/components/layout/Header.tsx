@@ -1,10 +1,11 @@
 "use client";
 
+import { productTypeContent } from "@/src/content/product-types";
 import { storeContent } from "@/src/content/store";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { User, ShoppingBag, Heart, Search } from "lucide-react";
+import { User, ShoppingBag, Heart, Search, ChevronDown } from "lucide-react";
 
 import {
   Navbar,
@@ -151,57 +152,49 @@ export default function Header() {
               MENU ESQUERDO
           ================================== */}
 
-          <nav className="flex items-center gap-6">
-            <Link
-              href="/perfumes"
-              className="
-                text-[15px]
-                font-medium
-                text-beecah-black
-                transition
-                hover:opacity-60
-              "
-            >
+          <nav className="flex items-center gap-5 text-[13px] font-medium text-beecah-black">
+            <Link href="/perfumes" className="py-3 transition hover:opacity-60">
               {storeContent.colecao}
             </Link>
-
+            <details className="group relative">
+              <summary className="flex cursor-pointer list-none items-center gap-1.5 py-3 transition hover:opacity-60 [&::-webkit-details-marker]:hidden">
+                {storeContent.perfumes}
+                <ChevronDown
+                  size={14}
+                  aria-hidden="true"
+                  className="transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none"
+                />
+              </summary>
+              <div className="absolute left-0 top-full z-30 grid min-w-44 gap-1 rounded-2xl bg-white p-2 shadow-lg">
+                {[
+                  [storeContent.arabes, "/categorias/arabes"],
+                  [storeContent.feminino, "/categorias/feminino"],
+                  [storeContent.masculino, "/categorias/masculino"],
+                ].map(([label, href]) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={(event) =>
+                      event.currentTarget.closest("details")?.removeAttribute("open")
+                    }
+                    className="rounded-lg px-3 py-3 hover:bg-neutral-100"
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </details>
             <Link
-              href="/categorias/arabes"
-              className="
-                text-[15px]
-                font-medium
-                text-beecah-black
-                transition
-                hover:opacity-60
-              "
+              href="/categorias/body-splash"
+              className="py-3 transition hover:opacity-60"
             >
-              {storeContent.arabes}
+              {productTypeContent.collections["body-splash"].title}
             </Link>
-
             <Link
-              href="/categorias/feminino"
-              className="
-                text-[15px]
-                font-medium
-                text-beecah-black
-                transition
-                hover:opacity-60
-              "
+              href="/categorias/decantes"
+              className="py-3 transition hover:opacity-60"
             >
-              {storeContent.feminino}
-            </Link>
-
-            <Link
-              href="/categorias/masculino"
-              className="
-                text-[15px]
-                font-medium
-                text-beecah-black
-                transition
-                hover:opacity-60
-              "
-            >
-              {storeContent.masculino}
+              {productTypeContent.collections.decantes.title}
             </Link>
           </nav>
 
@@ -450,6 +443,21 @@ export default function Header() {
           ================================== */}
 
           <MobileNavMenu isOpen={isMobileMenuOpen} onClose={closeMobileMenu}>
+            <Link
+              href="/categorias/body-splash"
+              onClick={closeMobileMenu}
+              className="text-beecah-black"
+            >
+              {productTypeContent.collections["body-splash"].title}
+            </Link>
+            <Link
+              href="/categorias/decantes"
+              onClick={closeMobileMenu}
+              className="text-beecah-black"
+            >
+              {productTypeContent.collections.decantes.title}
+            </Link>
+
             <Link
               href="/perfumes"
               onClick={closeMobileMenu}

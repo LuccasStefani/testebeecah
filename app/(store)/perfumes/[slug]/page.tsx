@@ -1,3 +1,4 @@
+import { productTypeLabel, parseProductType } from "@/src/content/product-types";
 import { catalogContent } from "@/src/content/catalog";
 import { productStyles } from "@/src/styles/product";
 
@@ -27,7 +28,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "\n      id,\n      name,\n      slug,\n      brand,\n      description,\n      price,\n      promo_price,\n      stock,\n      category,\n      volume,\n      fragrance_family,\n      top_notes,\n      heart_notes,\n      base_notes,\n      featured,\n      active,\n      product_images (\n        id,\n        image_url,\n        position,\n        is_cover\n      )\n    ",
+      "\n      id,\n      name,\n      slug,\n      brand,\n      description,\n      price,\n      promo_price,\n      stock,\n      category,\n          product_type,\n      volume,\n      fragrance_family,\n      top_notes,\n      heart_notes,\n      base_notes,\n      featured,\n      active,\n      product_images (\n        id,\n        image_url,\n        position,\n        is_cover\n      )\n    ",
     )
     .eq("slug", slug)
     .eq("active", true)
@@ -56,6 +57,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
     stock: data.stock,
     category: data.category,
+    productType: parseProductType(data.product_type),
 
     volume: data.volume ?? undefined,
 
@@ -117,7 +119,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <p className={productStyles.productBrand}>{product.brand}</p>
           <h1>{product.name}</h1>
           <div className={productStyles.productTags}>
-            {[product.category, product.volume, product.fragranceFamily]
+            {[
+              productTypeLabel(product.productType),
+              product.category,
+              product.volume,
+              product.fragranceFamily,
+            ]
               .filter(Boolean)
               .map((tag, i) => (
                 <span key={i}>{tag}</span>

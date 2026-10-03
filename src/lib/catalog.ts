@@ -1,3 +1,4 @@
+import { parseProductType } from "@/src/content/product-types";
 import { cache } from "react";
 import { createSupabaseServerClient } from "@/src/lib/supabase/server";
 import type { Product } from "@/src/types/product";
@@ -17,6 +18,7 @@ export const getCatalog = cache(async () => {
       promo_price,
       stock,
       category,
+      product_type,
       is_arabian,
       is_new,
       volume,
@@ -63,6 +65,7 @@ export const getCatalog = cache(async () => {
 
       stock: product.stock,
       category: product.category,
+      productType: parseProductType(product.product_type),
       isArabian: product.is_arabian,
       isNew: product.is_new,
 

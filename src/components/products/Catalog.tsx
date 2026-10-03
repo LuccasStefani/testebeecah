@@ -1,4 +1,9 @@
 "use client";
+import {
+  productTypeContent,
+  productTypeLabel,
+  parseProductType,
+} from "@/src/content/product-types";
 
 import { catalogContent } from "@/src/content/catalog";
 import { useState } from "react";
@@ -30,6 +35,7 @@ export default function Catalog({
   defaultOrderLabel?: string;
   collectionMode?: boolean;
 }) {
+  const [productType, setProductType] = useState("");
   const [search, setSearch] = useState(initialSearch);
   const [category, setCategory] = useState(initialCategory);
   const [brand, setBrand] = useState("");
@@ -46,9 +52,16 @@ export default function Catalog({
       (p) =>
         (!search.trim() ||
           normalize(
-            [p.name, p.brand, p.description, p.fragranceFamily].join(" "),
+            [
+              p.name,
+              p.brand,
+              p.description,
+              p.fragranceFamily,
+              productTypeLabel(p.productType) + "s",
+            ].join(" "),
           ).includes(normalize(search.trim()))) &&
         (category === "Todas" || p.category === category) &&
+        (!productType || parseProductType(p.productType) === productType) &&
         (!brand || p.brand === brand) &&
         (!arabian || p.isArabian) &&
         (!offers || price(p) < p.price) &&
@@ -65,6 +78,7 @@ export default function Catalog({
             : 0,
     );
   function reset() {
+    setProductType("");
     setArabian(false);
     setSearch("");
     setCategory(catalogContent.todas);
@@ -75,7 +89,14 @@ export default function Catalog({
     setMaximum("");
   }
   const hasFilters = Boolean(
-    arabian || search || category !== "Todas" || brand || offers || available || maximum,
+    productType ||
+      arabian ||
+      search ||
+      category !== "Todas" ||
+      brand ||
+      offers ||
+      available ||
+      maximum,
   );
   const inputClass =
     "mt-2 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm";
@@ -111,6 +132,21 @@ export default function Catalog({
             {catalogContent.encontreSeuPerfume}
           </h2>
           <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+            <label className="block text-sm">
+              {productTypeContent.label}
+              <select
+                value={productType}
+                onChange={(event) => setProductType(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm"
+              >
+                <option value="">{productTypeContent.all}</option>
+                {Object.entries(productTypeContent.labels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label className="text-sm">
               {catalogContent.nomeOuFragrancia}
               <input

@@ -1,3 +1,4 @@
+import HomeBodySplash from "@/src/components/layout/HomeBodySplash";
 import { getTestimonials } from "@/src/lib/testimonials";
 import HomeMotion from "@/src/components/layout/HomeMotion";
 import HomeShowcase from "@/src/components/layout/HomeShowcase";
@@ -49,6 +50,7 @@ export default async function Home() {
           <a href="#colecao">{storeContent.encontreSeuProximoPerfume}</a>
         </div>
         <Bento />
+        <HomeBodySplash products={selectCollection(products, "body-splash")} />
       </HomeMotion>
 
       <HomeTestimonials items={reviews.items} />

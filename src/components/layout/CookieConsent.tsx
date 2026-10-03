@@ -55,7 +55,7 @@ export default function CookieConsent() {
       }}
       aria-labelledby="privacy-title"
       data-cookie-consent
-      className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[80] mx-auto max-h-[calc(100dvh-32px)] max-w-xl overflow-y-auto overscroll-contain rounded-2xl border border-neutral-200 bg-white p-5 text-neutral-900 shadow-xl sm:inset-x-auto sm:bottom-5 sm:left-5 sm:p-6"
+      className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[80] mx-auto max-h-[calc(100dvh_-_32px)] min-w-0 max-w-xl overflow-x-hidden overflow-y-auto overscroll-contain [overflow-wrap:anywhere] rounded-2xl border border-neutral-200 bg-white p-5 text-neutral-900 shadow-xl sm:inset-x-auto sm:bottom-5 sm:left-5 sm:p-6"
       data-lenis-prevent
     >
       <div className="flex items-center gap-2">

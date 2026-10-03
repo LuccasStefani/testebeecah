@@ -8,7 +8,7 @@ export const heroContent = {
   description:
     "Perfumes que traduzem personalidade, despertam sensações e deixam sua presença por onde você passa.",
   primaryAction: "Collection perfume",
-  secondaryAction: "Explore fragrâncias",
+  secondaryAction: "Explorar",
   collectionLink: "Perfumes",
   imageAlt:
     "Três mulheres em uma campanha de perfumes Beecah, em um salão com lustres e detalhes dourados.",

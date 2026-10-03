@@ -1,3 +1,4 @@
+import { parseProductType } from "@/src/content/product-types";
 import { notFound, redirect } from "next/navigation";
 
 import { requireAdmin } from "@/src/lib/auth/require-admin";
@@ -23,7 +24,7 @@ export default async function EditProductPage({ params }: PageProps) {
   const { data: product, error } = await supabaseAdmin
     .from("products")
     .select(
-      "\n      id,\n      name,\n      brand,\n      description,\n      price,\n      promo_price,\n      stock,\n      weight,\n      width,\n      height,\n      length,\n      category,\n      is_arabian,\n      is_new,\n      volume,\n      fragrance_family,\n      top_notes,\n      heart_notes,\n      base_notes,\n      featured,\n      active,\n      product_images (\n        id,\n        image_url,\n        position,\n        is_cover\n      )\n    ",
+      "\n      id,\n      name,\n      brand,\n      description,\n      price,\n      promo_price,\n      stock,\n      weight,\n      width,\n      height,\n      length,\n      category,\n      product_type,\n      is_arabian,\n      is_new,\n      volume,\n      fragrance_family,\n      top_notes,\n      heart_notes,\n      base_notes,\n      featured,\n      active,\n      product_images (\n        id,\n        image_url,\n        position,\n        is_cover\n      )\n    ",
     )
     .eq("id", id)
     .single();
@@ -61,6 +62,7 @@ export default async function EditProductPage({ params }: PageProps) {
         length: product.length !== null ? Number(product.length) : null,
 
         category: product.category,
+        productType: parseProductType(product.product_type),
 
         volume: product.volume ?? "",
 

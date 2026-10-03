@@ -1,3 +1,4 @@
+import { isProductType, productTypeContent } from "@/src/content/product-types";
 import { NextResponse } from "next/server";
 
 import { requireAdmin } from "@/src/lib/auth/require-admin";
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
       promoPrice,
       stock,
       category,
+      productType,
       isArabian,
       isNew,
       volume,
@@ -92,6 +94,13 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json(
         { success: false, message: "Classificação do perfume inválida." },
+        { status: 400 },
+      );
+    }
+
+    if (productType !== undefined && !isProductType(productType)) {
+      return NextResponse.json(
+        { success: false, message: productTypeContent.invalid },
         { status: 400 },
       );
     }
@@ -208,6 +217,7 @@ export async function POST(request: Request) {
         stock: parsedStock,
 
         category: category.trim(),
+        product_type: productType ?? "perfume",
         ...(isArabian !== undefined ? { is_arabian: isArabian } : {}),
         ...(isNew !== undefined ? { is_new: isNew } : {}),
 

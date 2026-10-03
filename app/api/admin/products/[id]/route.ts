@@ -1,4 +1,5 @@
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { isProductType, productTypeContent } from "@/src/content/product-types";
 import { NextResponse } from "next/server";
 
 import { R2_BUCKET_NAME, R2_PUBLIC_URL, r2 } from "@/src/lib/r2/client";
@@ -68,6 +69,7 @@ export async function PATCH(request: Request, { params }: RouteProps) {
       height,
       length,
       category,
+      productType,
       isArabian,
       isNew,
       volume,
@@ -102,6 +104,13 @@ export async function PATCH(request: Request, { params }: RouteProps) {
     ) {
       return NextResponse.json(
         { success: false, message: "Classificação do perfume inválida." },
+        { status: 400 },
+      );
+    }
+
+    if (productType !== undefined && !isProductType(productType)) {
+      return NextResponse.json(
+        { success: false, message: productTypeContent.invalid },
         { status: 400 },
       );
     }
@@ -193,6 +202,7 @@ export async function PATCH(request: Request, { params }: RouteProps) {
         length: parsedLength,
 
         category: category.trim(),
+        ...(productType !== undefined ? { product_type: productType } : {}),
         ...(isArabian !== undefined ? { is_arabian: isArabian } : {}),
         ...(isNew !== undefined ? { is_new: isNew } : {}),
 

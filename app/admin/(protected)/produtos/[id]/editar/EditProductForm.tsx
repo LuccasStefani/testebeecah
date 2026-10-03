@@ -1,4 +1,6 @@
 "use client";
+import ProductTypeField from "@/src/components/products/ProductTypeField";
+import type { ProductType } from "@/src/content/product-types";
 
 import { notify } from "@/src/lib/notifications";
 import { notificationContent } from "@/src/content/notifications";
@@ -30,6 +32,7 @@ type Product = {
   length: number | null;
 
   category: string;
+  productType: ProductType;
   isArabian: boolean;
   isNew: boolean;
   volume: string;
@@ -96,6 +99,7 @@ export default function EditProductForm({ product }: Props) {
         length: form.get("length"),
 
         category: form.get("category"),
+        productType: form.get("productType"),
         isArabian: form.get("isArabian") === "on",
         isNew: form.get("isNew") === "on",
         volume: form.get("volume"),
@@ -397,6 +401,7 @@ export default function EditProductForm({ product }: Props) {
               defaultValue={product.brand}
             />
 
+            <ProductTypeField defaultValue={product.productType} />
             <div>
               <label htmlFor="category" className="mb-2 block text-sm font-medium">
                 {adminContent.generoDoPerfume}

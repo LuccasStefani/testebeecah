@@ -19,16 +19,43 @@ function categoryHero(key: CollectionKey, title: string, accent: string): HeroCo
       titleAccent: accent,
       titleSecondLine: "",
       description: collections[key].description,
+      imageAlt:
+        key === "body-splash"
+          ? "Body splashes Victoria’s Secret em uma composição com embalagens cor-de-rosa."
+          : heroContent.imageAlt,
       primaryAction: "Explorar seleção",
-      secondaryAction: "Todos os perfumes",
+      secondaryAction: "Toda a coleção",
+      collectionLink:
+        key === "body-splash" || key === "decantes"
+          ? collections[key].title
+          : heroContent.collectionLink,
     },
   };
 }
 
 export const categoryHeroes = {
-  arabes: categoryHero("arabes", "Perfumes", "árabes"),
+  "body-splash": {
+    ...categoryHero("body-splash", "Body", "Splash"),
+    imageSrc: "/images/banners/bodybanner.jpg",
+  },
+  decantes: categoryHero("decantes", "Seus", "decantes"),
+  arabes: {
+    ...categoryHero("arabes", "Perfumes", "árabes"),
+    imageSrc: "/images/banners/arabebanner.jpg",
+    content: {
+      ...categoryHero("arabes", "Perfumes", "árabes").content,
+      imageAlt: "Coleção de perfumes árabes Beecah",
+    },
+  },
   feminino: categoryHero("feminino", "Perfumes", "femininos"),
-  masculino: categoryHero("masculino", "Perfumes", "masculinos"),
+  masculino: {
+    ...categoryHero("masculino", "Perfumes", "masculinos"),
+    imageSrc: "/images/banners/masculino.jpg",
+    content: {
+      ...categoryHero("masculino", "Perfumes", "masculinos").content,
+      imageAlt: "Coleção de perfumes masculinos Beecah",
+    },
+  },
   unissex: categoryHero("unissex", "Perfumes", "unissex"),
   novos: categoryHero("novos", "Novos", "perfumes"),
   "mais-vendidos": categoryHero("mais-vendidos", "Mais", "vendidos"),

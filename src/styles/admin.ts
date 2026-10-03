@@ -1,7 +1,7 @@
 // Tailwind utilities grouped by component. Keep the marker class for descendant variants.
 export const adminStyles = {
   adminDashboard: [
-    "admin-dashboard text-[#1e1e1e] [&_.dash-header]:pt-1 [&_.dash-header]:pr-1",
+    "admin-dashboard p-5 rounded-10 text-[#1e1e1e] [&_.dash-header]:pt-1 [&_.dash-header]:pr-1",
     "[&_.dash-header]:pb-2 [&_.dash-header]:pl-1 [&_.dash-header_h1]:text-[27px]",
     "[&_.dash-kicker]:text-[9px] [&_.dash-kicker]:text-[#7d7d7d]",
     "[&_.dash-tools_select]:[border:0] [&_.dash-tools_select]:bg-[#ffffffd9]",

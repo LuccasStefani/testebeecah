@@ -1,4 +1,5 @@
 "use client";
+import { productTypeLabel } from "@/src/content/product-types";
 
 import { useFeedbackState } from "@/src/hooks/use-feedback-state";
 
@@ -245,7 +246,7 @@ export default function ProductCard({
   );
 
   return (
-    <article className="group/card flex h-full w-full min-w-0 flex-col">
+    <article className="group/card relative flex h-full w-full min-w-0 flex-col">
       <div
         className={
           "relative isolate shrink-0 overflow-hidden rounded-2xl bg-[#f3f2f0] " +
@@ -334,6 +335,11 @@ export default function ProductCard({
               {[product.volume, product.fragranceFamily].filter(Boolean).join(" · ")}
             </p>
             <div className="flex min-h-6 items-center gap-2 text-[10px] font-medium">
+              {product.productType && product.productType !== "perfume" && (
+                <span className="rounded-full bg-[#eceaf1] px-2.5 py-1 text-[#2d416f]">
+                  {productTypeLabel(product.productType)}
+                </span>
+              )}
               {product.isArabian && (
                 <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-neutral-700">
                   {showcaseContent.arabian}
@@ -349,7 +355,13 @@ export default function ProductCard({
         )}
         {!showcase && (
           <p className="mt-1 truncate text-[11px] text-neutral-500 sm:text-xs">
-            {[product.category, product.fragranceFamily].filter(Boolean).join(" · ")}
+            {[
+              productTypeLabel(product.productType),
+              product.category,
+              product.fragranceFamily,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
         )}
         <div

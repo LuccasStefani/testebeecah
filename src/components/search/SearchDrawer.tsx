@@ -1,11 +1,16 @@
 "use client";
+import {
+  productTypeContent,
+  productTypeLabel,
+  parseProductType,
+  type ProductType,
+} from "@/src/content/product-types";
 
 import { storeContent } from "@/src/content/store";
-import Link from "next/link";
-import Image from "next/image";
+import SearchResultCard from "./SearchResultCard";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 
 import { supabase } from "@/src/lib/supabase/client";
 import { Product } from "@/src/types/product";
@@ -32,6 +37,7 @@ type SupabaseProduct = {
   promo_price: number | string | null;
   stock: number;
   category: string;
+  product_type: ProductType;
   volume: string | null;
   fragrance_family: string | null;
   top_notes: string[] | null;
@@ -82,6 +88,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
      BUSCA
   ========================================= */
 
+  const [productType, setProductType] = useState("");
   const [search, setSearch] = useState("");
 
   /* =========================================
@@ -109,7 +116,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
       const { data, error } = await supabase
         .from("products")
         .select(
-          "\n          id,\n          name,\n          slug,\n          brand,\n          description,\n          price,\n          promo_price,\n          stock,\n          category,\n          volume,\n          fragrance_family,\n          top_notes,\n          heart_notes,\n          base_notes,\n          featured,\n          active,\n          product_images (\n            id,\n            image_url,\n            position,\n            is_cover\n          )\n        ",
+          "\n          id,\n          name,\n          slug,\n          brand,\n          description,\n          price,\n          promo_price,\n          stock,\n          category,\n          product_type,\n          volume,\n          fragrance_family,\n          top_notes,\n          heart_notes,\n          base_notes,\n          featured,\n          active,\n          product_images (\n            id,\n            image_url,\n            position,\n            is_cover\n          )\n        ",
         )
         .eq("active", true)
         .order("created_at", {
@@ -148,6 +155,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
 
             stock: product.stock,
             category: product.category,
+            productType: parseProductType(product.product_type),
 
             volume: product.volume ?? undefined,
 
@@ -240,6 +248,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
 
       const matchesSearch =
         !term ||
+        (productTypeLabel(product.productType) + "s").toLowerCase().includes(term) ||
         product.name.toLowerCase().includes(term) ||
         product.brand.toLowerCase().includes(term) ||
         product.category.toLowerCase().includes(term) ||
@@ -256,6 +265,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
       return (
         matchesSearch &&
         matchesCategory &&
+        (!productType || parseProductType(product.productType) === productType) &&
         matchesBrand &&
         matchesMinPrice &&
         matchesMaxPrice
@@ -281,13 +291,14 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
 
       return 0;
     });
-  }, [products, search, category, brand, sort, minPrice, maxPrice]);
+  }, [products, search, category, brand, sort, minPrice, maxPrice, productType]);
 
   /* =========================================
      LIMPAR FILTROS
   ========================================= */
 
   function clearFilters() {
+    setProductType("");
     setCategory(storeContent.todas);
     setBrand(storeContent.todas);
     setSort("relevancia");
@@ -296,6 +307,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
   }
 
   const hasFilters =
+    productType !== "" ||
     category !== "Todas" ||
     brand !== "Todas" ||
     sort !== "relevancia" ||
@@ -305,31 +317,6 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
   /* =========================================
      PREÇO
   ========================================= */
-
-  function formatPrice(price: number) {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(price);
-  }
-
-  /* =========================================
-     BADGE
-  ========================================= */
-
-  function getCategoryClasses(productCategory: string) {
-    const normalized = productCategory.toLowerCase();
-
-    if (normalized === "feminino") {
-      return storeContent.bgPurple50TextPurple700;
-    }
-
-    if (normalized === "masculino") {
-      return storeContent.bgBlue50TextBeecahBlue;
-    }
-
-    return storeContent.bgNeutral100TextBeecahBlack70;
-  }
 
   return (
     <AnimatePresence>
@@ -613,6 +600,25 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                             CATEGORIA
                         ==================== */}
 
+                        <div className="mt-6">
+                          <label className="block text-sm">
+                            {productTypeContent.label}
+                            <select
+                              value={productType}
+                              onChange={(event) => setProductType(event.target.value)}
+                              className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm"
+                            >
+                              <option value="">{productTypeContent.all}</option>
+                              {Object.entries(productTypeContent.labels).map(
+                                ([value, label]) => (
+                                  <option key={value} value={value}>
+                                    {label}
+                                  </option>
+                                ),
+                              )}
+                            </select>
+                          </label>
+                        </div>
                         <div className="mt-6">
                           <p
                             className="
@@ -979,12 +985,6 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                       <motion.div layout className="space-y-3">
                         <AnimatePresence mode="popLayout">
                           {filteredProducts.map((product) => {
-                            const finalPrice = product.promoPrice ?? product.price;
-
-                            const hasPromotion =
-                              product.promoPrice !== undefined &&
-                              product.promoPrice < product.price;
-
                             return (
                               <motion.div
                                 layout
@@ -1005,193 +1005,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                                   duration: 0.18,
                                 }}
                               >
-                                <Link
-                                  href={`/perfumes/${product.slug}`}
-                                  onClick={onClose}
-                                  className="
-                                        group
-                                        grid
-                                        min-h-[148px]
-                                        grid-cols-[72px_minmax(0,1fr)]
-                                        items-center
-                                        gap-4
-                                        rounded-[22px]
-                                        bg-beecah-white
-                                        p-4
-                                        transition
-                                        duration-200
-                                        hover:-translate-y-[2px]
-                                        hover:shadow-md
-
-                                        sm:grid-cols-[120px_minmax(0,1fr)_46px]
-                                        sm:gap-5
-                                        sm:p-4
-                                      "
-                                >
-                                  {/* IMAGEM */}
-
-                                  <div
-                                    className="
-                                          relative
-                                          h-[112px]
-                                          w-[72px]
-                                          overflow-hidden
-                                          rounded-[18px]
-                                          bg-neutral-100
-
-                                          sm:h-[120px]
-                                          sm:w-[120px]
-                                        "
-                                  >
-                                    <Image
-                                      src={product.imageUrl}
-                                      alt={product.name}
-                                      fill
-                                      sizes="120px"
-                                      className="
-                                            object-contain
-                                            p-2
-                                            transition
-                                            duration-300
-                                            group-hover:scale-[1.04]
-                                          "
-                                    />
-                                  </div>
-
-                                  {/* CONTEÚDO */}
-
-                                  <div
-                                    className="
-                                          flex
-                                          min-w-0
-                                          self-stretch
-                                          flex-col
-                                          justify-center
-                                        "
-                                  >
-                                    {/* MARCA + BADGE */}
-
-                                    <div
-                                      className="
-                                            flex
-                                            min-w-0
-                                            items-center
-                                            justify-between
-                                            gap-3
-                                          "
-                                    >
-                                      <p
-                                        className="
-                                              min-w-0
-                                              truncate
-                                              text-[13px]
-                                              text-beecah-black/45
-                                            "
-                                      >
-                                        {product.brand}
-                                      </p>
-
-                                      <span
-                                        className={`
-                                              shrink-0
-                                              rounded-full
-                                              px-3
-                                              py-1.5
-                                              text-[10px]
-                                              font-medium
-
-                                              ${getCategoryClasses(product.category)}
-                                            `}
-                                      >
-                                        {product.category}
-                                      </span>
-                                    </div>
-
-                                    {/* NOME */}
-
-                                    <h3
-                                      className="
-                                            mt-1
-                                            line-clamp-2 break-words
-                                            text-[16px] sm:text-[18px]
-                                            font-medium
-                                            leading-tight
-                                            text-beecah-black
-                                          "
-                                    >
-                                      {product.name}
-                                    </h3>
-
-                                    {/* PREÇO */}
-
-                                    <div className="mt-3">
-                                      {hasPromotion && (
-                                        <p
-                                          className="
-                                                text-[12px]
-                                                leading-none
-                                                text-beecah-black/35
-                                                line-through
-                                              "
-                                        >
-                                          {formatPrice(product.price)}
-                                        </p>
-                                      )}
-
-                                      <p
-                                        className="
-                                              mt-1.5
-                                              text-[20px] sm:text-[24px]
-                                              font-semibold
-                                              leading-none
-                                              tracking-[-0.025em]
-                                              text-beecah-black
-                                            "
-                                      >
-                                        {formatPrice(finalPrice)}
-                                      </p>
-                                    </div>
-
-                                    {/* DETALHES */}
-
-                                    <p
-                                      className="
-                                            mt-3
-                                            truncate
-                                            text-[13px]
-                                            leading-none
-                                            text-beecah-black/45
-                                          "
-                                    >
-                                      {product.volume ?? storeContent.volumeNaoInformado}
-
-                                      {product.fragranceFamily
-                                        ? ` · ${product.fragranceFamily}`
-                                        : ""}
-                                    </p>
-                                  </div>
-
-                                  {/* SETA */}
-
-                                  <div
-                                    className="
-                                          hidden sm:flex
-                                          h-11
-                                          w-11
-                                          items-center
-                                          justify-center
-                                          rounded-[13px]
-                                          bg-beecah-black
-                                          text-beecah-white
-                                          transition
-                                          duration-200
-                                          group-hover:translate-x-0.5
-                                          group-hover:bg-beecah-blue
-                                        "
-                                  >
-                                    <ArrowRight size={18} strokeWidth={1.7} />
-                                  </div>
-                                </Link>
+                                <SearchResultCard product={product} onSelect={onClose} />
                               </motion.div>
                             );
                           })}

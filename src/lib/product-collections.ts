@@ -1,7 +1,10 @@
+import { productTypeContent, parseProductType } from "@/src/content/product-types";
 import { catalogContent } from "@/src/content/catalog";
 import type { Product } from "@/src/types/product";
 
 export const collections = {
+  "body-splash": productTypeContent.collections["body-splash"],
+  decantes: productTypeContent.collections.decantes,
   arabes: {
     title: catalogContent.perfumesArabes,
     description: catalogContent.exploreASelecaoArabeDaBeecahEscolhaPor,
@@ -34,6 +37,10 @@ export function selectCollection(
   collection: CollectionKey,
   ranking: string[] = [],
 ) {
+  if (collection === "body-splash" || collection === "decantes") {
+    const type = collection === "decantes" ? "decant" : "body-splash";
+    return products.filter((p) => parseProductType(p.productType) === type);
+  }
   if (collection === "mais-vendidos") {
     const positions = new Map(ranking.map((id, index) => [id, index]));
     return products

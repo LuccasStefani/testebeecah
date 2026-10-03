@@ -1,3 +1,4 @@
+import { productTypeLabel } from "@/src/content/product-types";
 import { adminContent } from "@/src/content/admin";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -22,7 +23,7 @@ export default async function AdminProductsPage() {
   const { data: products, error } = await supabaseAdmin
     .from("products")
     .select(
-      "\n        id,\n        name,\n        slug,\n        brand,\n        price,\n        promo_price,\n        stock,\n        category,\n        active,\n        created_at\n      ",
+      "\n        id,\n        name,\n        slug,\n        brand,\n        price,\n        promo_price,\n        stock,\n        category,\n        product_type,\n        active,\n        created_at\n      ",
     )
     .order("created_at", {
       ascending: false,
@@ -94,7 +95,10 @@ export default async function AdminProductsPage() {
                     <p className="mt-1 text-sm text-neutral-500">{product.brand}</p>
                   </td>
 
-                  <td className="px-5 py-4 text-sm">{product.category}</td>
+                  <td className="px-5 py-4 text-sm">
+                    <p>{productTypeLabel(product.product_type)}</p>
+                    <p className="mt-1 text-xs text-neutral-500">{product.category}</p>
+                  </td>
 
                   <td className="px-5 py-4">
                     {product.promo_price !== null && (

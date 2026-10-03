@@ -16,6 +16,9 @@ export default function HomeShowcase({
   bestSellerIds: string[];
   failed: boolean;
 }) {
+  const slides = products.length
+    ? Array.from({ length: 6 }, (_, index) => products[index % products.length])
+    : [];
   const track = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: true, end: false });
 
@@ -103,9 +106,9 @@ export default function HomeShowcase({
           tabIndex={0}
           className="flex items-stretch snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4"
         >
-          {products.slice(0, 6).map((product) => (
+          {slides.map((product, index) => (
             <div
-              key={product.id}
+              key={`${product.id}-${index}`}
               className="flex w-[220px] shrink-0 snap-start sm:w-[240px] lg:w-[260px]"
             >
               <ProductCard

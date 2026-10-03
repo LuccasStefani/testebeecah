@@ -1,3 +1,5 @@
+import type { ProductType } from "@/src/content/product-types";
+
 export type Product = {
   id: string;
   name: string;
@@ -12,6 +14,7 @@ export type Product = {
   stock: number;
 
   category: string;
+  productType?: ProductType;
   isArabian?: boolean;
   isNew?: boolean;
 

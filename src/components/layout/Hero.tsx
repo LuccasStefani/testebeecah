@@ -76,7 +76,7 @@ export default function Hero({
           className={
             "flex flex-col text-white sm:absolute sm:inset-0 sm:min-h-0 sm:justify-center sm:px-[3.4%] sm:py-[3%] " +
             (compactMobile
-              ? "absolute inset-0 justify-end px-5 pt-6 pb-16"
+              ? "absolute inset-0 justify-end px-5 pt-6 pb-5"
               : "min-h-[520px] justify-end px-6 pt-8 pb-24")
           }
         >
@@ -171,19 +171,26 @@ export default function Hero({
 
         <Link
           href={collectionHref}
+          aria-label={spotlight ? spotlight.name : content.collectionLink}
           className={
             "absolute right-0 bottom-0 flex max-w-[85%] items-center rounded-tl-[24px] bg-white pt-2 pr-1 pb-1 text-black focus-visible:outline-offset-[-4px] sm:gap-4 sm:pl-3 " +
             (compactMobile ? "gap-2 pl-2" : "gap-3 pl-3")
           }
         >
-          <span
+          <svg
             aria-hidden="true"
-            className="pointer-events-none absolute -top-6 right-0 size-6 rounded-br-[24px] shadow-[12px_12px_0_12px_white]"
-          />
-          <span
+            viewBox="0 0 24 24"
+            className="pointer-events-none absolute -top-[23px] right-0 size-6 fill-white"
+          >
+            <path d="M0 24C13.255 24 24 13.255 24 0V24Z" />
+          </svg>
+          <svg
             aria-hidden="true"
-            className="pointer-events-none absolute bottom-0 -left-6 size-6 rounded-br-[24px] shadow-[12px_12px_0_12px_white]"
-          />
+            viewBox="0 0 24 24"
+            className="pointer-events-none absolute bottom-0 -left-[23px] size-6 fill-white"
+          >
+            <path d="M0 24C13.255 24 24 13.255 24 0V24Z" />
+          </svg>
           <span
             className={
               "relative flex shrink-0 items-center justify-center bg-[#171914] text-white sm:size-11 sm:rounded-xl lg:size-12 " +
@@ -206,7 +213,7 @@ export default function Hero({
           </span>
           <span
             className={
-              "relative min-w-0 truncate pr-1 font-medium uppercase tracking-wide sm:text-xs lg:text-sm " +
+              "relative hidden min-w-0 truncate pr-1 font-medium uppercase tracking-wide sm:block sm:text-xs lg:text-sm " +
               (compactMobile ? "text-[11px]" : "text-xs")
             }
           >

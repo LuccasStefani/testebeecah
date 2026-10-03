@@ -1,3 +1,4 @@
+import { productTypeLabel } from "@/src/content/product-types";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/src/lib/auth/require-admin";
 import { supabaseAdmin } from "@/src/lib/supabase/admin";
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
         for (let offset = 0, count = 0; count < 6; offset += 500) {
           const { data, error } = await supabaseAdmin
             .from("products")
-            .select("id,name,brand,stock")
+            .select("id,name,brand,stock,product_type")
             .order("id")
             .range(offset, offset + 499);
           if (error) {
@@ -32,13 +33,18 @@ export async function GET(request: NextRequest) {
           }
           for (const p of data ?? []) {
             if (
-              (p.name + " " + p.brand).toLocaleLowerCase("pt-BR").includes(q) &&
+              (p.name + " " + p.brand + " " + productTypeLabel(p.product_type))
+                .toLocaleLowerCase("pt-BR")
+                .includes(q) &&
               count < 6
             ) {
               results.push({
                 id: p.id,
                 title: p.name,
-                detail: (p.brand || "Perfume") + " · Estoque: " + p.stock,
+                detail:
+                  (p.brand || productTypeLabel(p.product_type)) +
+                  " · Estoque: " +
+                  p.stock,
                 href: "/admin/produtos/" + p.id + "/editar",
                 group: "Produtos",
               });

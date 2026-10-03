@@ -1,3 +1,4 @@
+import { productTypeContent } from "@/src/content/product-types";
 import { storeContent } from "./store";
 
 export const footerContent = {
@@ -13,6 +14,8 @@ export const footerGroups = [
       [storeContent.femininos, "/categorias/feminino"],
       [storeContent.masculinos, "/categorias/masculino"],
       [storeContent.arabes, "/categorias/arabes"],
+      [productTypeContent.collections["body-splash"].title, "/categorias/body-splash"],
+      [productTypeContent.collections.decantes.title, "/categorias/decantes"],
       [storeContent.novos, "/categorias/novos"],
       [storeContent.maisVendidos, "/categorias/mais-vendidos"],
       [storeContent.emBreve, "/novidades"],

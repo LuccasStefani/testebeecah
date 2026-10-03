@@ -1,4 +1,5 @@
 "use client";
+import ProductTypeField from "@/src/components/products/ProductTypeField";
 
 import { useFeedbackState } from "@/src/hooks/use-feedback-state";
 
@@ -73,6 +74,7 @@ export default function NewProductPage() {
         length: form.get("length"),
 
         category: form.get("category"),
+        productType: form.get("productType"),
         isArabian: form.get("isArabian") === "on",
         isNew: form.get("isNew") === "on",
         volume: form.get("volume"),
@@ -168,6 +170,7 @@ export default function NewProductPage() {
               placeholder={adminContent.exLattafa}
             />
 
+            <ProductTypeField />
             <div>
               <label htmlFor="category" className="mb-2 block text-sm font-medium">
                 {adminContent.generoDoPerfume}

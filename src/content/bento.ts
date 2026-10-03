@@ -2,11 +2,12 @@ export type BentoTile = {
   id: string;
   kind: "offer" | "collection";
   image: string;
+  imagePosition?: string;
   href: string;
   title: string;
   eyebrow?: string;
   description?: string;
-  action?: string;
+  action: string;
   note?: string;
   layout: string;
 };
@@ -29,8 +30,9 @@ export const bentoContent: { tiles: BentoTile[] } = {
       id: "populares",
       kind: "collection",
       image: "/images/banners/bento2.jpeg",
-      href: "/categorias/mais-vendidos",
+      href: "/categorias/decantes",
       title: "Decantes Populares",
+      action: "Explorar",
       layout: "min-h-80 md:col-span-4 md:min-h-0",
     },
     {
@@ -59,6 +61,7 @@ export const bentoContent: { tiles: BentoTile[] } = {
       image: "/images/banners/yara.jpg",
       href: "/categorias/novos",
       title: "Novos\nprodutos",
+      action: "Explorar",
       layout: "min-h-80 md:col-span-6 md:min-h-0",
     },
   ] satisfies BentoTile[],
