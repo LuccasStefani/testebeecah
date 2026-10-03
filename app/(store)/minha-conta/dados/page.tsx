@@ -1,5 +1,7 @@
 "use client";
 
+import { useFeedbackState } from "@/src/hooks/use-feedback-state";
+
 import { accountContent } from "@/src/content/account";
 import { accountStyles } from "@/src/styles/account";
 
@@ -20,8 +22,8 @@ export default function MinhaContaDadosPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const [message, setMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [message, setMessage] = useFeedbackState("success");
+  const [errorMessage, setErrorMessage] = useFeedbackState("error");
 
   useEffect(() => {
     async function loadProfile() {
@@ -62,7 +64,7 @@ export default function MinhaContaDadosPage() {
       setErrorMessage(accountContent.naoFoiPossivelCarregarOsDadosAtualizeA);
       setLoading(false);
     });
-  }, [router]);
+  }, [router, setErrorMessage]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

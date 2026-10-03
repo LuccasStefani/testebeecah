@@ -1,5 +1,6 @@
 "use client";
 
+import { testimonialFormContent } from "@/src/content/testimonial-form";
 import { storeContent } from "@/src/content/store";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,8 +11,14 @@ import {
   Boxes,
   Users,
   PanelsTopLeft,
+  MessageSquare,
 } from "lucide-react";
 const links = [
+  {
+    href: "/admin/comentarios",
+    label: testimonialFormContent.adminTitle,
+    icon: MessageSquare,
+  },
   { href: "/admin", label: storeContent.visaoGeral, icon: LayoutDashboard },
   { href: "/admin/produtos", label: storeContent.produtos, icon: Package },
   { href: "/admin/estoque", label: storeContent.estoque, icon: Boxes },

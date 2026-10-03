@@ -1,6 +1,9 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { notify } from "@/src/lib/notifications";
+import { notificationContent } from "@/src/content/notifications";
+
+import { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react";
 
 import { supabase } from "@/src/lib/supabase/client";
 
@@ -25,6 +28,10 @@ type AddToCartProduct = {
 
 type CartContextType = {
   items: CartItem[];
+  loading: boolean;
+  updating: boolean;
+  loadError: string | null;
+  retryLoad: () => void;
   addItem: (product: AddToCartProduct, quantity: number) => Promise<void>;
   removeItem: (productId: string) => Promise<void>;
   updateQuantity: (productId: string, quantity: number) => Promise<void>;
@@ -45,6 +52,11 @@ export function CartProvider({ children }: CartProviderProps) {
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
 
   const [loaded, setLoaded] = useState(false);
+  const [loadedFor, setLoadedFor] = useState<string | null | undefined>(undefined);
+  const [updating, setUpdating] = useState(false);
+  const mutationLock = useRef(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     async function loadUser() {
@@ -55,7 +67,7 @@ export function CartProvider({ children }: CartProviderProps) {
       setUserId(user?.id ?? null);
     }
 
-    loadUser();
+    void loadUser().catch(() => setUserId(null));
 
     const {
       data: { subscription },
@@ -73,15 +85,36 @@ export function CartProvider({ children }: CartProviderProps) {
       return;
     }
 
+    let active = true;
     async function loadCart() {
+      setLoadedFor(undefined);
       setLoaded(false);
+      setLoadError(null);
 
       if (!userId) {
         const savedCart = localStorage.getItem("beecah-cart");
 
         if (savedCart) {
           try {
-            const parsedCart = JSON.parse(savedCart);
+            const parsedCart: unknown = JSON.parse(savedCart);
+            if (
+              !Array.isArray(parsedCart) ||
+              parsedCart.some(
+                (item) =>
+                  !item ||
+                  typeof item.id !== "string" ||
+                  typeof item.name !== "string" ||
+                  typeof item.slug !== "string" ||
+                  typeof item.imageUrl !== "string" ||
+                  !Number.isFinite(item.price) ||
+                  item.price < 0 ||
+                  !Number.isInteger(item.stock) ||
+                  item.stock < 0 ||
+                  !Number.isInteger(item.quantity) ||
+                  item.quantity < 1,
+              )
+            )
+              throw new Error("Sacola inválida");
 
             setItems(parsedCart);
           } catch {
@@ -93,6 +126,7 @@ export function CartProvider({ children }: CartProviderProps) {
           setItems([]);
         }
 
+        setLoadedFor(userId);
         setLoaded(true);
         return;
       }
@@ -107,17 +141,39 @@ export function CartProvider({ children }: CartProviderProps) {
         )
         .eq("user_id", userId);
 
+      if (!active) return;
       if (cartError) {
         console.error("Erro ao carregar carrinho:", cartError);
 
         setItems([]);
+        setLoadError("Não foi possível carregar sua sacola. Tente novamente.");
         setLoaded(true);
         return;
       }
 
-      const productIds = cartItems?.map((item) => item.product_id) ?? [];
+      let guestItems: CartItem[] = [];
+      try {
+        const saved: unknown = JSON.parse(localStorage.getItem("beecah-cart") ?? "[]");
+        if (Array.isArray(saved))
+          guestItems = saved.filter(
+            (item) =>
+              item &&
+              typeof item.id === "string" &&
+              Number.isInteger(item.quantity) &&
+              item.quantity > 0,
+          );
+      } catch {
+        /* A malformed guest cart must not block the account cart. */
+      }
+      const productIds = [
+        ...new Set([
+          ...(cartItems?.map((item) => item.product_id) ?? []),
+          ...guestItems.map((item) => item.id),
+        ]),
+      ];
 
       if (productIds.length === 0) {
+        setLoadedFor(userId);
         setItems([]);
         setLoaded(true);
         return;
@@ -144,10 +200,12 @@ export function CartProvider({ children }: CartProviderProps) {
         .in("id", productIds)
         .eq("active", true);
 
+      if (!active) return;
       if (productsError) {
         console.error("Erro ao carregar produtos do carrinho:", productsError);
 
         setItems([]);
+        setLoadError("Não foi possível carregar sua sacola. Tente novamente.");
         setLoaded(true);
         return;
       }
@@ -181,34 +239,71 @@ export function CartProvider({ children }: CartProviderProps) {
             slug: product.slug,
             price: finalPrice,
             imageUrl: sortedImages[0]?.image_url ?? "",
-            quantity: Math.min(cartItem?.quantity ?? 1, product.stock),
+            quantity: Math.min(
+              (cartItem?.quantity ?? 0) +
+                (guestItems.find((item) => item.id === product.id)?.quantity ?? 0),
+              product.stock,
+            ),
             stock: product.stock,
           };
         }) ?? [];
 
+      if (guestItems.length > 0) {
+        const merged = loadedItems.filter(
+          (item) => item.quantity > 0 && guestItems.some((guest) => guest.id === item.id),
+        );
+        if (merged.length > 0) {
+          const { error } = await supabase.from("cart_items").upsert(
+            merged.map((item) => ({
+              user_id: userId,
+              product_id: item.id,
+              quantity: item.quantity,
+              updated_at: new Date().toISOString(),
+            })),
+            { onConflict: "user_id,product_id" },
+          );
+          if (error)
+            throw new Error("Não foi possível recuperar a sacola. Tente novamente.");
+        }
+        localStorage.removeItem("beecah-cart");
+      }
+      if (!active) return;
+      setLoadedFor(userId);
       setItems(loadedItems);
       setLoaded(true);
     }
 
-    loadCart();
-  }, [userId]);
+    void loadCart().catch(() => {
+      if (!active) return;
+      setLoadError("Não foi possível carregar sua sacola. Tente novamente.");
+      setLoaded(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [userId, loadAttempt]);
 
   useEffect(() => {
-    if (!loaded || userId !== null) {
+    if (!loaded || userId !== null || loadedFor !== userId) {
       return;
     }
 
     localStorage.setItem("beecah-cart", JSON.stringify(items));
-  }, [items, loaded, userId]);
+  }, [items, loaded, userId, loadedFor]);
 
-  async function addItem(product: AddToCartProduct, quantity: number) {
+  async function addItemInternal(product: AddToCartProduct, quantity: number) {
+    if (!Number.isInteger(quantity) || quantity < 1)
+      throw new Error("Quantidade inválida.");
     if (product.stock <= 0) {
-      return;
+      throw new Error(notificationContent.outOfStock);
     }
 
     const existingItem = items.find((item) => item.id === product.id);
 
     const newQuantity = Math.min((existingItem?.quantity ?? 0) + quantity, product.stock);
+    if (existingItem && newQuantity === existingItem.quantity) {
+      throw new Error(notificationContent.stockLimit);
+    }
 
     if (userId) {
       const { error } = await supabase.from("cart_items").upsert(
@@ -225,8 +320,7 @@ export function CartProvider({ children }: CartProviderProps) {
 
       if (error) {
         console.error("Erro ao adicionar ao carrinho:", error);
-
-        return;
+        throw new Error(notificationContent.cartError);
       }
     }
 
@@ -254,9 +348,10 @@ export function CartProvider({ children }: CartProviderProps) {
         },
       ];
     });
+    notify.success(notificationContent.cartAdded, product.name, "bag");
   }
 
-  async function removeItem(productId: string) {
+  async function removeItemInternal(productId: string) {
     if (userId) {
       const { error } = await supabase
         .from("cart_items")
@@ -266,22 +361,25 @@ export function CartProvider({ children }: CartProviderProps) {
 
       if (error) {
         console.error("Erro ao remover item do carrinho:", error);
-
-        return;
+        throw new Error(notificationContent.cartError);
       }
     }
 
     setItems((currentItems) => currentItems.filter((item) => item.id !== productId));
+    notify.success(notificationContent.cartRemoved, undefined, "bag");
   }
 
-  async function updateQuantity(productId: string, quantity: number) {
+  async function updateQuantityInternal(productId: string, quantity: number) {
     const item = items.find((currentItem) => currentItem.id === productId);
 
     if (!item) {
       return;
     }
 
+    if (item.stock <= 0) throw new Error(notificationContent.outOfStock);
+    if (!Number.isInteger(quantity)) throw new Error("Quantidade inválida.");
     const newQuantity = Math.max(1, Math.min(quantity, item.stock));
+    if (newQuantity === item.quantity) return;
 
     if (userId) {
       const { error } = await supabase
@@ -295,8 +393,7 @@ export function CartProvider({ children }: CartProviderProps) {
 
       if (error) {
         console.error("Erro ao atualizar quantidade:", error);
-
-        return;
+        throw new Error(notificationContent.cartError);
       }
     }
 
@@ -312,21 +409,43 @@ export function CartProvider({ children }: CartProviderProps) {
         };
       }),
     );
+    if (newQuantity !== item.quantity)
+      notify.success(notificationContent.cartUpdated, item.name, "bag");
   }
 
-  async function clearCart() {
+  async function clearCartInternal() {
     if (userId) {
       const { error } = await supabase.from("cart_items").delete().eq("user_id", userId);
 
       if (error) {
         console.error("Erro ao limpar carrinho:", error);
-
-        return;
+        throw new Error(notificationContent.cartError);
       }
     }
 
     setItems([]);
+    notify.success(notificationContent.cartCleared, undefined, "bag");
   }
+
+  async function mutate(action: () => Promise<void>) {
+    if (!loaded || loadError) throw new Error("Aguarde o carregamento da sacola.");
+    if (mutationLock.current) throw new Error("Aguarde a atualização da sacola.");
+    mutationLock.current = true;
+    setUpdating(true);
+    try {
+      await action();
+    } finally {
+      mutationLock.current = false;
+      setUpdating(false);
+    }
+  }
+
+  const addItem = (product: AddToCartProduct, quantity: number) =>
+    mutate(() => addItemInternal(product, quantity));
+  const removeItem = (id: string) => mutate(() => removeItemInternal(id));
+  const updateQuantity = (id: string, quantity: number) =>
+    mutate(() => updateQuantityInternal(id, quantity));
+  const clearCart = () => mutate(clearCartInternal);
 
   const totalItems = items.reduce((total, item) => total + item.quantity, 0);
 
@@ -336,6 +455,10 @@ export function CartProvider({ children }: CartProviderProps) {
     <CartContext.Provider
       value={{
         items,
+        loading: !loadError && (!loaded || userId === undefined || loadedFor !== userId),
+        updating,
+        loadError,
+        retryLoad: () => setLoadAttempt((attempt) => attempt + 1),
         addItem,
         removeItem,
         updateQuantity,

@@ -1,5 +1,8 @@
 "use client";
 
+import { notify } from "@/src/lib/notifications";
+import { notificationContent } from "@/src/content/notifications";
+
 import { accountContent } from "@/src/content/account";
 import { accountStyles } from "@/src/styles/account";
 
@@ -27,10 +30,12 @@ export default function AccountNavigation() {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      notify.success(notificationContent.logout, undefined, "logout");
       router.replace("/");
       router.refresh();
     } catch {
       setError(accountContent.naoFoiPossivelSairTenteNovamente);
+      notify.error(accountContent.naoFoiPossivelSairTenteNovamente);
     } finally {
       setBusy(false);
     }

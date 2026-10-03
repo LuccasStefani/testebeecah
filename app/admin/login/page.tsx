@@ -1,5 +1,10 @@
 "use client";
 
+import { useFeedbackState } from "@/src/hooks/use-feedback-state";
+
+import { notify } from "@/src/lib/notifications";
+import { notificationContent } from "@/src/content/notifications";
+
 import { adminContent } from "@/src/content/admin";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,7 +17,7 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useFeedbackState("error");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -31,6 +36,7 @@ export default function AdminLoginPage() {
         return;
       }
 
+      notify.success(notificationContent.login, undefined, "login");
       router.replace("/auth/continue");
       router.refresh();
     } catch (error) {

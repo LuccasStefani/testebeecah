@@ -84,7 +84,8 @@ function getDeliveryText(quote: ShippingQuote) {
 export default function CheckoutSummary() {
   const router = useRouter();
 
-  const { items, totalPrice } = useCart();
+  const { items, totalPrice, updating } = useCart();
+  const unavailable = items.some((item) => item.stock <= 0 || item.quantity < 1);
 
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -113,9 +114,21 @@ export default function CheckoutSummary() {
     [addresses, selectedAddressId],
   );
 
+  const cartKey =
+    selectedAddressId +
+    ":" +
+    items
+      .map((item) => `${item.id}:${item.quantity}`)
+      .sort()
+      .join("|");
+  const [quotedCartKey, setQuotedCartKey] = useState<string | null>(null);
+
   const selectedShipping = useMemo(
-    () => shippingQuotes.find((quote) => quote.serviceId === selectedShippingId) ?? null,
-    [shippingQuotes, selectedShippingId],
+    () =>
+      quotedCartKey === cartKey
+        ? (shippingQuotes.find((quote) => quote.serviceId === selectedShippingId) ?? null)
+        : null,
+    [shippingQuotes, selectedShippingId, quotedCartKey, cartKey],
   );
 
   const finalTotal = totalPrice + (selectedShipping?.price ?? 0);
@@ -176,7 +189,12 @@ export default function CheckoutSummary() {
       setLoading(false);
     }
 
-    loadCheckoutData();
+    void loadCheckoutData().catch(() => {
+      setShippingError(
+        "Não foi possível carregar os dados de entrega. Recarregue a página para tentar novamente.",
+      );
+      setLoading(false);
+    });
   }, []);
 
   function resetShipping() {
@@ -234,6 +252,7 @@ export default function CheckoutSummary() {
       }
 
       setShippingQuotes(quotes);
+      setQuotedCartKey(cartKey);
 
       /*
        * Não selecionamos automaticamente.
@@ -253,8 +272,16 @@ export default function CheckoutSummary() {
   }
 
   async function handleContinue() {
+    if (
+      updating ||
+      calculatingShipping ||
+      processingCheckout ||
+      unavailable ||
+      items.length === 0
+    )
+      return;
     if (!userId) {
-      router.push("/login");
+      router.push("/login?next=/carrinho");
       return;
     }
 
@@ -268,7 +295,7 @@ export default function CheckoutSummary() {
       return;
     }
 
-    if (shippingQuotes.length === 0) {
+    if (shippingQuotes.length === 0 || quotedCartKey !== cartKey) {
       await calculateShipping();
       return;
     }
@@ -364,20 +391,34 @@ export default function CheckoutSummary() {
 
   if (loading) {
     return (
-      <aside className="h-fit rounded-[20px] bg-white p-6">
+      <aside className="h-fit min-w-0">
         <p className="text-sm text-neutral-500">{checkoutContent.carregandoResumo}</p>
       </aside>
     );
   }
 
   return (
-    <aside className="h-fit rounded-[20px] bg-white p-5 sm:p-6">
+    <aside aria-label="Entrega e pagamento" className="h-fit min-w-0">
+      <ol
+        aria-label="Etapas da compra"
+        className="mb-5 flex flex-wrap gap-x-3 gap-y-2 border-b border-neutral-200 pb-4 text-[11px] text-neutral-600"
+      >
+        <li className={!userId ? "font-medium text-beecah-blue" : ""}>1 · Conta</li>
+        <li className={userId && !selectedShipping ? "font-medium text-beecah-blue" : ""}>
+          2 · Entrega
+        </li>
+        <li className={selectedShipping ? "font-medium text-beecah-blue" : ""}>
+          3 · Pagamento
+        </li>
+      </ol>
       <h3 className="text-sm font-medium">{checkoutContent.produtosNaSacola}</h3>
 
       <div className="mt-4 flex items-center justify-between border-b border-neutral-200 pb-5 text-sm">
         <span>
           {items.reduce((sum, item) => sum + item.quantity, 0)}
-          {checkoutContent.unidades}
+          {items.reduce((sum, item) => sum + item.quantity, 0) === 1
+            ? " unidade"
+            : checkoutContent.unidades}
         </span>
 
         <span className="font-medium">{formatPrice(totalPrice)}</span>
@@ -430,7 +471,7 @@ export default function CheckoutSummary() {
             <button
               type="button"
               onClick={() => setChangingAddress((current) => !current)}
-              disabled={processingCheckout}
+              disabled={processingCheckout || calculatingShipping || updating}
               className="text-sm font-medium underline underline-offset-4 disabled:opacity-50"
             >
               {checkoutContent.alterar}
@@ -449,7 +490,7 @@ export default function CheckoutSummary() {
                   type="radio"
                   name="checkout-address"
                   checked={selectedAddressId === address.id}
-                  disabled={processingCheckout}
+                  disabled={processingCheckout || calculatingShipping || updating}
                   onChange={() => handleAddressChange(address.id)}
                 />
 
@@ -485,7 +526,7 @@ export default function CheckoutSummary() {
             <button
               type="button"
               onClick={() => setChangingAddress(false)}
-              disabled={processingCheckout}
+              disabled={processingCheckout || calculatingShipping || updating}
               className="block w-full rounded-xl bg-neutral-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {checkoutContent.confirmarEndereco}
@@ -509,7 +550,7 @@ export default function CheckoutSummary() {
           <p className="mt-2 text-xs leading-5 text-neutral-500">
             {checkoutContent.informeSeusDadosEEnderecoParaCalcularO}
           </p>
-        ) : shippingQuotes.length === 0 ? (
+        ) : shippingQuotes.length === 0 || quotedCartKey !== cartKey ? (
           <div className="mt-3">
             <p className="text-xs leading-5 text-neutral-500">
               {checkoutContent.calculeAsModalidadesDeEntregaDisponiveisParaEste}
@@ -518,7 +559,13 @@ export default function CheckoutSummary() {
             <button
               type="button"
               onClick={calculateShipping}
-              disabled={calculatingShipping || processingCheckout || items.length === 0}
+              disabled={
+                updating ||
+                unavailable ||
+                calculatingShipping ||
+                processingCheckout ||
+                items.length === 0
+              }
               className="mt-3 w-full rounded-xl border border-neutral-950 px-4 py-3 text-sm font-medium transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {calculatingShipping
@@ -542,7 +589,7 @@ export default function CheckoutSummary() {
                     type="radio"
                     name="shipping-service"
                     checked={selected}
-                    disabled={processingCheckout}
+                    disabled={processingCheckout || calculatingShipping || updating}
                     onChange={() => {
                       setSelectedShippingId(quote.serviceId);
 
@@ -597,13 +644,13 @@ export default function CheckoutSummary() {
       </div>
 
       <div className="space-y-3 pt-5">
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <span className="text-neutral-600">{checkoutContent.produtos}</span>
 
           <span>{formatPrice(totalPrice)}</span>
         </div>
 
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <span className="text-neutral-600">{checkoutContent.frete}</span>
 
           <span>
@@ -613,20 +660,28 @@ export default function CheckoutSummary() {
           </span>
         </div>
 
-        <div className="flex items-center justify-between border-t border-neutral-200 pt-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-5">
           <span className="font-medium">
             {selectedShipping ? checkoutContent.total : checkoutContent.totalSemFrete}
           </span>
 
-          <span className="text-2xl font-semibold">{formatPrice(finalTotal)}</span>
+          <span className="text-3xl font-medium tracking-tight">
+            {formatPrice(finalTotal)}
+          </span>
         </div>
       </div>
 
       <button
         type="button"
         onClick={handleContinue}
-        disabled={calculatingShipping || processingCheckout || items.length === 0}
-        className="mt-6 w-full rounded-xl bg-neutral-950 px-6 py-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={
+          updating ||
+          unavailable ||
+          calculatingShipping ||
+          processingCheckout ||
+          items.length === 0
+        }
+        className="mt-6 min-h-14 w-full rounded-xl bg-beecah-black px-6 py-4 text-sm font-medium text-white transition hover:bg-beecah-blue disabled:cursor-not-allowed disabled:opacity-50"
       >
         {processingCheckout
           ? checkoutContent.preparandoPagamento
@@ -636,12 +691,19 @@ export default function CheckoutSummary() {
               ? checkoutContent.completarDados
               : !selectedAddress
                 ? checkoutContent.adicionarEndereco
-                : shippingQuotes.length === 0
+                : shippingQuotes.length === 0 || quotedCartKey !== cartKey
                   ? checkoutContent.calcularFrete
                   : !selectedShipping
                     ? checkoutContent.selecioneOFrete
-                    : checkoutContent.finalizarCompra}
+                    : "Continuar para o Mercado Pago"}
       </button>
+      <p role="status" className="mt-4 text-center text-xs leading-5 text-neutral-500">
+        {unavailable
+          ? "Remova os produtos indisponíveis para continuar."
+          : updating
+            ? "Atualizando sua sacola…"
+            : "Confira a entrega antes de continuar. O pagamento acontece no Mercado Pago."}
+      </p>
     </aside>
   );
 }

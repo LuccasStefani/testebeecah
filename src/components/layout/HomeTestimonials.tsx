@@ -1,214 +1,188 @@
 "use client";
 
-import { storeContent } from "@/src/content/store";
-import { testimonialsStyles } from "@/src/styles/testimonials";
-
-import { useState } from "react";
+import { useRef, useState, type RefObject } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, ArrowUpRight, MessageCircle, Star } from "lucide-react";
+import { Playfair_Display } from "next/font/google";
+import { ArrowUpRight, RotateCcw } from "lucide-react";
+import { motion, useMotionValue, useReducedMotion } from "motion/react";
+import {
+  testimonialContent as content,
+  testimonials,
+  type Testimonial,
+} from "@/src/content/testimonials";
+import TestimonialCard from "@/src/components/testimonials/TestimonialCard";
 
-export type Testimonial = { id: string; text: string; author: string; rating?: number };
-const invitations = [
-  {
-    id: "experience",
-    text: storeContent.temUmPerfumeQueMarcouASuaHistoria,
-    label: storeContent.conteSuaExperienciaComABeecah,
-    action: storeContent.compartilharMinhaExperiencia,
-    href: "/atendimento",
-  },
-  {
-    id: "discovery",
-    text: storeContent.suaProximaFragranciaPodeComecarComUmaConversa,
-    label: storeContent.atendimentoBeecah,
-    action: storeContent.queroAjudaParaEscolher,
-    href: "/atendimento",
-  },
-  {
-    id: "collection",
-    text: storeContent.entreTantasNotasEncontreAsQueCombinamCom,
-    label: storeContent.exploreAColecaoBeecah,
-    action: storeContent.descobrirPerfumes,
-    href: "/perfumes",
-  },
+const playfair = Playfair_Display({ subsets: ["latin"], weight: "400", display: "swap" });
+const positions = [
+  "left-[4%] top-10 -rotate-6",
+  "right-[4%] top-8 rotate-6",
+  "left-[1%] top-[250px] rotate-3",
+  "right-[1%] top-[250px] -rotate-3",
+  "left-[16%] bottom-9 -rotate-3",
+  "right-[16%] bottom-7 rotate-3",
 ];
 
-const examples: Testimonial[] = [
-  {
-    id: "example-1",
-    text: storeContent.encontreiUmaFragranciaParaChamarDeMinha,
-    author: storeContent.clienteDeExemplo01,
-    rating: 5,
-  },
-  {
-    id: "example-2",
-    text: storeContent.umPerfumeQueTransformaPequenosMomentosEmBoas,
-    author: storeContent.clienteDeExemplo02,
-    rating: 5,
-  },
-  {
-    id: "example-3",
-    text: storeContent.minhaProximaEscolhaJaTemLugarNosFavoritos,
-    author: storeContent.clienteDeExemplo03,
-    rating: 5,
-  },
-];
+function DraggableCard({
+  item,
+  index,
+  bounds,
+  raise,
+  layer,
+}: {
+  item: Testimonial;
+  index: number;
+  bounds: RefObject<HTMLDivElement | null>;
+  raise: () => void;
+  layer: number;
+}) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const reduced = useReducedMotion();
+  return (
+    <motion.div
+      drag
+      dragConstraints={bounds}
+      dragElastic={0.05}
+      dragMomentum={!reduced}
+      style={{ x, y, zIndex: layer }}
+      whileDrag={reduced ? undefined : { scale: 1.03, rotate: 0 }}
+      onPointerDown={raise}
+      onFocus={raise}
+      tabIndex={0}
+      role="group"
+      aria-label={item.author}
+      aria-describedby="testimonial-keyboard"
+      onKeyDown={(event) => {
+        const direction = {
+          ArrowLeft: [-16, 0],
+          ArrowRight: [16, 0],
+          ArrowUp: [0, -16],
+          ArrowDown: [0, 16],
+        }[event.key];
+        if (event.key === "Escape") {
+          x.set(0);
+          y.set(0);
+        }
+        if (!direction || !bounds.current) return;
+        event.preventDefault();
+        const container = bounds.current.getBoundingClientRect();
+        const card = event.currentTarget.getBoundingClientRect();
+        x.set(
+          x.get() +
+            Math.max(
+              container.left - card.left,
+              Math.min(direction[0], container.right - card.right),
+            ),
+        );
+        y.set(
+          y.get() +
+            Math.max(
+              container.top - card.top,
+              Math.min(direction[1], container.bottom - card.bottom),
+            ),
+        );
+      }}
+      className={
+        "absolute w-[220px] touch-none select-none cursor-grab rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2d416f] active:cursor-grabbing xl:w-[240px] " +
+        positions[index]
+      }
+    >
+      <TestimonialCard item={item} compact />
+    </motion.div>
+  );
+}
 
 export default function HomeTestimonials({
-  testimonials = examples,
+  items = testimonials,
 }: {
-  testimonials?: Testimonial[];
+  items?: Testimonial[];
 }) {
-  const [index, setIndex] = useState(0);
-  const hasReviews = testimonials.length > 0;
-  const slides = hasReviews ? testimonials : invitations;
-  const currentIndex = index % slides.length;
-  const slide = slides[currentIndex];
-  const review = hasReviews ? testimonials[currentIndex] : null;
-  const invitation = !hasReviews ? invitations[currentIndex] : null;
-  function move(direction: number) {
-    setIndex((currentIndex + direction + slides.length) % slides.length);
-  }
+  const bounds = useRef<HTMLDivElement>(null);
+  const [reset, setReset] = useState(0);
+  const [layers, setLayers] = useState<number[]>([1, 2, 3, 4, 5, 6]);
+  const reduced = useReducedMotion();
   return (
     <section
-      className={testimonialsStyles.beecahTestimonials}
-      aria-labelledby="stories-title"
-      aria-roledescription={storeContent.carrossel}
-      onKeyDown={(event) => {
-        if (event.key === "ArrowLeft") {
-          event.preventDefault();
-          move(-1);
-        }
-        if (event.key === "ArrowRight") {
-          event.preventDefault();
-          move(1);
-        }
-      }}
+      aria-labelledby="testimonials-title"
+      className="mx-3 my-12 overflow-hidden rounded-[28px] bg-[#f5f4f0] bg-[radial-gradient(#0000000d_1px,transparent_1px)] bg-size-[20px_20px] sm:mx-4"
     >
-      {testimonials === examples && (
-        <p className={testimonialsStyles.storiesDemo}>
-          {storeContent.previaDepoimentosIlustrativos}
-        </p>
-      )}
-      <h2 id="stories-title" className={testimonialsStyles.storiesEyebrow}>
-        {hasReviews ? storeContent.quemEscolheuABeecah : storeContent.historiasQueFicam}
-      </h2>
-      <div className={testimonialsStyles.storiesWatermark} aria-hidden="true">
-        {hasReviews ? storeContent.suasHistorias : storeContent.suaEssencia}
-      </div>
-      {slides.length > 1 && (
-        <>
-          <p
-            className={[
-              testimonialsStyles.storiesGhost,
-              testimonialsStyles.storiesGhostLeft,
-            ].join(" ")}
-            aria-hidden="true"
-          >
-            {slides[(currentIndex + slides.length - 1) % slides.length].text}
+      <div ref={bounds} className="relative isolate px-5 py-12 lg:min-h-[720px] lg:py-0">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,#ffffff_0%,transparent_70%)]" />
+        <div className="relative z-20 mx-auto max-w-[350px] text-center lg:pt-44">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+            {content.eyebrow}
           </p>
-          <p
-            className={[
-              testimonialsStyles.storiesGhost,
-              testimonialsStyles.storiesGhostRight,
-            ].join(" ")}
-            aria-hidden="true"
+          <motion.h2
+            id="testimonials-title"
+            initial={false}
+            whileInView={{ opacity: 1, filter: "blur(0px)" }}
+            transition={{ duration: reduced ? 0 : 0.6 }}
+            className={
+              playfair.className +
+              " mt-4 text-4xl leading-[1.08] tracking-tight lg:text-[44px]"
+            }
           >
-            {slides[(currentIndex + 1) % slides.length].text}
+            {content.title}
+            <br />
+            <span className="font-['Bagind',serif]">{content.accent}</span>
+          </motion.h2>
+          <p className="mx-auto mt-4 max-w-64 text-sm leading-6 text-neutral-500">
+            {content.description}
           </p>
-        </>
-      )}
-      <div
-        className={testimonialsStyles.storiesContent}
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        {review?.rating ? (
-          <div
-            className={testimonialsStyles.storiesStars}
-            role="img"
-            aria-label={review.rating + storeContent.de5Estrelas}
+          <Link
+            href="/depoimentos"
+            className="mt-6 inline-flex min-h-11 items-center gap-3 rounded-xl bg-[#171914] px-5 text-xs text-white transition hover:bg-[#2d416f] focus-visible:outline-2 focus-visible:outline-offset-4"
           >
-            {Array.from({ length: 5 }, (_, i) => (
-              <Star
-                key={i}
-                size={22}
-                fill={i < Math.round(review.rating ?? 0) ? "currentColor" : "none"}
-                aria-hidden="true"
-              />
-            ))}
-          </div>
-        ) : (
-          <MessageCircle
-            className={testimonialsStyles.storiesSymbol}
-            size={27}
-            strokeWidth={1.3}
-            aria-hidden="true"
-          />
-        )}
-        {review ? (
-          <figure key={slide.id}>
-            <blockquote>
-              {"“"}
-              {slide.text}
-              {"”"}
-            </blockquote>
-            <figcaption>{review.author}</figcaption>
-          </figure>
-        ) : (
-          <div key={slide.id}>
-            <p className={testimonialsStyles.storiesMessage}>{slide.text}</p>
-            <p className={testimonialsStyles.storiesAuthor}>{invitation?.label}</p>
-          </div>
-        )}
-        {invitation && (
-          <Link className={testimonialsStyles.storiesAction} href={invitation.href}>
-            {invitation.action}
-            <ArrowUpRight size={15} />
+            {content.action}
+            <ArrowUpRight size={15} aria-hidden="true" />
           </Link>
-        )}
+          {items.slice(0, 6).some((item) => item.example) && (
+            <p className="mt-4 text-[10px] text-neutral-500">{content.demo}</p>
+          )}
+        </div>
+        <p id="testimonial-keyboard" className="sr-only">
+          {content.keyboard}
+        </p>
+        <div className="hidden lg:block">
+          {items.slice(0, 6).map((item, index) => (
+            <DraggableCard
+              key={item.id + reset}
+              item={item}
+              index={index}
+              bounds={bounds}
+              layer={layers[index]}
+              raise={() =>
+                setLayers((current) =>
+                  current.map((value, position) =>
+                    position === index ? Math.max(30, ...current) + 1 : value,
+                  ),
+                )
+              }
+            />
+          ))}
+        </div>
+        <div className="relative mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 lg:hidden">
+          {items.slice(0, 6).map((item) => (
+            <div key={item.id} className="w-64 shrink-0 snap-center">
+              <TestimonialCard item={item} compact />
+            </div>
+          ))}
+        </div>
       </div>
-      {slides.length > 1 && (
-        <>
-          <button
-            className={[
-              testimonialsStyles.storiesArrow,
-              testimonialsStyles.storiesPrev,
-            ].join(" ")}
-            type="button"
-            aria-label={storeContent.anterior}
-            onClick={() => move(-1)}
-          >
-            <ArrowLeft size={19} />
-          </button>
-          <button
-            className={[
-              testimonialsStyles.storiesArrow,
-              testimonialsStyles.storiesNext,
-            ].join(" ")}
-            type="button"
-            aria-label={storeContent.proximo}
-            onClick={() => move(1)}
-          >
-            <ArrowRight size={19} />
-          </button>
-          <div
-            className={testimonialsStyles.storiesPagination}
-            aria-label={storeContent.escolherSlide}
-          >
-            {slides.map((item, i) => (
-              <button
-                type="button"
-                key={item.id}
-                aria-label={storeContent.irParaSlide + (i + 1)}
-                aria-current={i === currentIndex ? "true" : undefined}
-                onClick={() => setIndex(i)}
-              >
-                <span />
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+      <div className="relative z-30 hidden items-center justify-center gap-5 pb-5 text-[10px] text-neutral-500 lg:flex">
+        <span>{content.drag}</span>
+        <button
+          type="button"
+          onClick={() => {
+            setReset((value) => value + 1);
+            setLayers([1, 2, 3, 4, 5, 6]);
+          }}
+          className="inline-flex min-h-11 items-center gap-2 hover:text-black"
+        >
+          <RotateCcw size={12} />
+          {content.reset}
+        </button>
+      </div>
     </section>
   );
 }

@@ -1,5 +1,10 @@
 "use client";
 
+import { useFeedbackState } from "@/src/hooks/use-feedback-state";
+
+import { notify } from "@/src/lib/notifications";
+import { notificationContent } from "@/src/content/notifications";
+
 import { adminContent } from "@/src/content/admin";
 import { FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -18,7 +23,7 @@ export default function NewProductPage() {
 
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useFeedbackState("error");
 
   async function uploadImages(productId: string) {
     for (let index = 0; index < files.length; index++) {
@@ -111,6 +116,7 @@ export default function NewProductPage() {
         await uploadImages(productId);
       }
 
+      notify.success(notificationContent.productCreated);
       router.push("/admin/produtos");
       router.refresh();
     } catch (error) {

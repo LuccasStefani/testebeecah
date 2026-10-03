@@ -18,8 +18,9 @@ import {
 
 import { PlaceholdersAndVanishInput } from "@/src/components/ui/placeholders-and-vanish-input";
 
-import SearchDrawer from "@/src/components/search/SearchDrawer";
-import AccountDrawer from "@/src/components/account/AccountDrawer";
+import dynamic from "next/dynamic";
+const SearchDrawer = dynamic(() => import("@/src/components/search/SearchDrawer"));
+const AccountDrawer = dynamic(() => import("@/src/components/account/AccountDrawer"));
 
 import { useCart } from "@/src/contexts/CartContext";
 import { supabase } from "@/src/lib/supabase/client";
@@ -37,6 +38,8 @@ export default function Header() {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const [accountLoaded, setAccountLoaded] = useState(false);
+  const [searchLoaded, setSearchLoaded] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
 
   const [searchOpen, setSearchOpen] = useState(false);
@@ -88,6 +91,7 @@ export default function Header() {
   ========================================= */
 
   function openAccount() {
+    setAccountLoaded(true);
     setIsMobileMenuOpen(false);
     setSearchOpen(false);
     setAccountOpen(true);
@@ -115,6 +119,7 @@ export default function Header() {
   ========================================= */
 
   function openSearch() {
+    setSearchLoaded(true);
     setAccountOpen(false);
     /*
      * Se a busca for aberta pelo menu mobile,
@@ -571,13 +576,15 @@ export default function Header() {
           transformações/animações do Header.
       ====================================== */}
 
-      <AccountDrawer
-        open={accountOpen}
-        onClose={() => setAccountOpen(false)}
-        userEmail={userEmail}
-      />
+      {accountLoaded && (
+        <AccountDrawer
+          open={accountOpen}
+          onClose={() => setAccountOpen(false)}
+          userEmail={userEmail}
+        />
+      )}
 
-      <SearchDrawer open={searchOpen} onClose={closeSearch} />
+      {searchLoaded && <SearchDrawer open={searchOpen} onClose={closeSearch} />}
     </div>
   );
 }

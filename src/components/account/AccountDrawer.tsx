@@ -1,5 +1,8 @@
 "use client";
 
+import { notify } from "@/src/lib/notifications";
+import { notificationContent } from "@/src/content/notifications";
+
 import { accountContent } from "@/src/content/account";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -147,11 +150,13 @@ function AccountContent({ onClose }: { onClose: () => void }) {
     try {
       const { error: signOutError } = await supabase.auth.signOut();
       if (signOutError) throw signOutError;
+      notify.success(notificationContent.logout, undefined, "logout");
       onClose();
       router.push("/");
       router.refresh();
     } catch {
       setError(accountContent.naoFoiPossivelSairDaContaTenteNovamente);
+      notify.error(accountContent.naoFoiPossivelSairDaContaTenteNovamente);
     } finally {
       setSigningOut(false);
     }

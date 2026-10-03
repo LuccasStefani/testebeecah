@@ -1,5 +1,8 @@
 "use client";
 
+import { notify } from "@/src/lib/notifications";
+import { notificationContent } from "@/src/content/notifications";
+
 import { adminContent } from "@/src/content/admin";
 import { ChangeEvent, FormEvent, useRef, useState } from "react";
 import Link from "next/link";
@@ -122,17 +125,20 @@ export default function EditProductForm({ product }: Props) {
 
       if (!response.ok) {
         setMessage(data.message ?? adminContent.naoFoiPossivelAtualizarOProduto);
+        notify.error(data.message ?? adminContent.naoFoiPossivelAtualizarOProduto);
 
         return;
       }
 
       setMessage(adminContent.produtoAtualizadoComSucesso);
+      notify.success(adminContent.produtoAtualizadoComSucesso);
 
       router.refresh();
     } catch (error) {
       console.error(error);
 
       setMessage(adminContent.naoFoiPossivelAtualizarOProduto);
+      notify.error(adminContent.naoFoiPossivelAtualizarOProduto);
     } finally {
       setLoading(false);
     }
@@ -151,17 +157,20 @@ export default function EditProductForm({ product }: Props) {
 
       if (!response.ok) {
         setMessage(data.message ?? adminContent.naoFoiPossivelAlterarACapa);
+        notify.error(data.message ?? adminContent.naoFoiPossivelAlterarACapa);
 
         return;
       }
 
       setMessage(adminContent.imagemPrincipalAlteradaComSucesso);
+      notify.success(adminContent.imagemPrincipalAlteradaComSucesso);
 
       router.refresh();
     } catch (error) {
       console.error(error);
 
       setMessage(adminContent.naoFoiPossivelAlterarACapa);
+      notify.error(adminContent.naoFoiPossivelAlterarACapa);
     } finally {
       setChangingCoverId(null);
     }
@@ -186,14 +195,17 @@ export default function EditProductForm({ product }: Props) {
 
       if (!response.ok) {
         setMessage(data.message ?? adminContent.naoFoiPossivelExcluirAImagem);
+        notify.error(data.message ?? adminContent.naoFoiPossivelExcluirAImagem);
 
         return;
       }
 
       if (data.warning) {
         setMessage(data.warning);
+        notify.info(data.warning);
       } else {
         setMessage(adminContent.imagemExcluidaComSucesso);
+        notify.success(adminContent.imagemExcluidaComSucesso);
       }
 
       router.refresh();
@@ -201,6 +213,7 @@ export default function EditProductForm({ product }: Props) {
       console.error(error);
 
       setMessage(adminContent.naoFoiPossivelExcluirAImagem);
+      notify.error(adminContent.naoFoiPossivelExcluirAImagem);
     } finally {
       setDeletingImageId(null);
     }
@@ -222,6 +235,7 @@ export default function EditProductForm({ product }: Props) {
   async function handleUploadImages() {
     if (selectedFiles.length === 0) {
       setMessage(adminContent.selecionePeloMenosUmaImagem);
+      notify.error(adminContent.selecionePeloMenosUmaImagem);
 
       return;
     }
@@ -320,6 +334,7 @@ export default function EditProductForm({ product }: Props) {
 
       if (!response.ok) {
         setMessage(data.message ?? adminContent.naoFoiPossivelExcluirOProduto);
+        notify.error(data.message ?? adminContent.naoFoiPossivelExcluirOProduto);
 
         return;
       }
@@ -328,12 +343,14 @@ export default function EditProductForm({ product }: Props) {
         console.warn(data.warning);
       }
 
+      notify.success(notificationContent.productDeleted);
       router.push("/admin/produtos");
       router.refresh();
     } catch (error) {
       console.error(error);
 
       setMessage(adminContent.naoFoiPossivelExcluirOProduto);
+      notify.error(adminContent.naoFoiPossivelExcluirOProduto);
     } finally {
       setDeletingProduct(false);
     }

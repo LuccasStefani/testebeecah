@@ -15,6 +15,7 @@ export default function StorePreloader() {
   if (finished) return null;
   return (
     <div
+      data-store-preloader
       className={preloaderStyles.storePreloader}
       aria-hidden="true"
       onAnimationEnd={(event) => {

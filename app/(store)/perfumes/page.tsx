@@ -1,3 +1,5 @@
+import Hero from "@/src/components/layout/Hero";
+import { catalogHero } from "@/src/content/page-heroes";
 import { catalogContent } from "@/src/content/catalog";
 import Link from "next/link";
 import CollectionLinks from "@/src/components/products/CollectionLinks";
@@ -29,18 +31,8 @@ export default async function PerfumesPage({
         <span className="mx-3">{"/"}</span>
         {catalogContent.perfumes}
       </nav>
-      <div className="rounded-3xl bg-[#f2f4f8] px-6 py-10 sm:px-10">
-        <p className="text-xs uppercase tracking-[0.25em] text-beecah-blue">
-          {catalogContent.aColecaoBeecah}
-        </p>
-        <h1 className="mt-3 text-4xl tracking-tight sm:text-6xl">
-          {catalogContent.seuProximo}
-          <span className="font-haerins text-beecah-blue">{catalogContent.perfume}</span>
-        </h1>
-        <p className="mt-4 max-w-xl text-sm leading-6 text-neutral-600">
-          {catalogContent.encontreAFragranciaQueCombinaComVoceExplore}
-        </p>
-      </div>
+      <Hero {...catalogHero} embedded />
+      <div id="produtos" className="scroll-mt-32" />
       <CollectionLinks />
       {failed ? (
         <div role="alert" className="mt-8 rounded-2xl border p-8">

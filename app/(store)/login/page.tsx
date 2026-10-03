@@ -1,10 +1,26 @@
 "use client";
 
+import { useFeedbackState } from "@/src/hooks/use-feedback-state";
+
+import { notify } from "@/src/lib/notifications";
+import { notificationContent } from "@/src/content/notifications";
+
+import { useVisibleVideo } from "@/src/hooks/use-visible-video";
+import AuthVideoCaption from "@/src/components/layout/AuthVideoCaption";
+import { authVisualContent } from "@/src/content/auth-visual";
+
 import { accountContent } from "@/src/content/account";
 import Link from "next/link";
-import Image from "next/image";
-import { ArrowRight, Eye, EyeOff, LoaderCircle, LockKeyhole } from "lucide-react";
-import { FormEvent, useState } from "react";
+import {
+  ArrowRight,
+  Eye,
+  EyeOff,
+  LoaderCircle,
+  LockKeyhole,
+  Pause,
+  Play,
+} from "lucide-react";
+import { FormEvent, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 import { supabase } from "@/src/lib/supabase/client";
@@ -13,11 +29,28 @@ export default function LoginPage() {
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useVisibleVideo(videoRef, "/video/videologin.mp4", 768);
+  async function toggleVideo() {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      if (!video.getAttribute("src")) video.src = "/video/videologin.mp4";
+      try {
+        await video.play();
+      } catch {
+        setVideoFailed(true);
+      }
+    } else video.pause();
+  }
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useFeedbackState("error");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -52,7 +85,12 @@ export default function LoginPage() {
         return;
       }
 
-      router.replace("/auth/continue");
+      notify.success(notificationContent.login, undefined, "login");
+      router.replace(
+        new URLSearchParams(window.location.search).get("next") === "/carrinho"
+          ? "/carrinho"
+          : "/auth/continue",
+      );
       router.refresh();
     } catch {
       setErrorMessage(accountContent.ocorreuUmErroAoEntrarNaConta);
@@ -62,48 +100,58 @@ export default function LoginPage() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-6 sm:px-8 sm:py-10">
-      <div className="grid overflow-hidden rounded-[28px] border border-neutral-100 bg-[#f7f7f5] lg:min-h-[680px] lg:grid-cols-[1.05fr_1fr]">
-        <div className="relative min-h-56 overflow-hidden sm:min-h-72 lg:min-h-full">
-          <Image
-            src="/images/banners/bghero2.jpg"
-            alt={accountContent.umMomentoBeecahEntreFloresEFragrancias}
-            fill
-            priority
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-cover object-[65%_center]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 p-7 text-white sm:p-10 lg:p-12">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-white/80">
-              {accountContent.beecahCollection}
-            </p>
-            <h2 className="mt-4 text-3xl leading-tight sm:text-4xl lg:text-5xl">
-              {accountContent.seuProximo}
-              <br />
-              <span className="font-haerins">{accountContent.encontro}</span>
-            </h2>
-            <p className="mt-4 hidden max-w-xs text-sm leading-7 text-white/80 sm:block">
-              {accountContent.fragranciasEscolhidasParaFazerParteDosSeusMomentos}
-            </p>
-          </div>
+    <section className="mx-auto max-w-6xl px-4 py-3 sm:px-6 md:flex md:min-h-[calc(100svh-96px)] md:items-center">
+      <div className="grid w-full overflow-hidden rounded-3xl border border-neutral-100 bg-[#f7f7f5] md:grid-cols-[0.9fr_1.1fr]">
+        <div className="relative hidden overflow-hidden bg-neutral-900 md:block">
+          {!videoFailed && (
+            <video
+              ref={videoRef}
+              muted
+              loop
+              playsInline
+              preload="none"
+              poster="/images/banners/bghero2.jpg"
+              aria-label={authVisualContent.videoLabel}
+              onPlay={() => setPlaying(true)}
+              onPause={() => setPlaying(false)}
+              onError={() => {
+                setVideoFailed(true);
+                setPlaying(false);
+              }}
+              className="absolute inset-0 h-full w-full object-cover"
+            ></video>
+          )}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/10" />
+          {!videoFailed && (
+            <button
+              type="button"
+              onClick={toggleVideo}
+              aria-label={
+                playing ? accountContent.pausarVideo : accountContent.reproduzirVideo
+              }
+              className="absolute right-5 top-5 flex size-11 items-center justify-center rounded-full border border-white/30 bg-black/30 text-white backdrop-blur-sm hover:bg-black/50"
+            >
+              {playing ? <Pause size={17} /> : <Play size={17} />}
+            </button>
+          )}
+          <AuthVideoCaption />
         </div>
-        <div className="flex items-center bg-white px-6 py-10 sm:px-12 lg:px-14 lg:py-14">
+        <div className="flex items-center bg-white px-5 py-6 sm:px-8 md:py-5 lg:px-10">
           <div className="mx-auto w-full max-w-sm">
             <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-beecah-blue">
               {accountContent.seuEspacoBeecah}
             </p>
-            <h1 className="mt-4 text-3xl tracking-tight sm:text-4xl">
+            <h1 className="mt-2 text-3xl tracking-tight">
               {accountContent.queBomTer}
               <br />
               <span className="font-haerins text-beecah-blue">
                 {accountContent.voceDeVolta}
               </span>
             </h1>
-            <p className="mt-4 text-sm leading-7 text-neutral-500">
+            <p className="mt-2 text-sm leading-5 text-neutral-500">
               {accountContent.entreParaAcompanharSeusPedidosSalvarFavoritosE}
             </p>
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5" aria-busy={loading}>
+            <form onSubmit={handleSubmit} className="mt-5 space-y-3" aria-busy={loading}>
               <div>
                 <label htmlFor="email" className="text-sm font-medium">
                   {accountContent.eMail}
@@ -121,7 +169,7 @@ export default function LoginPage() {
                   disabled={loading}
                   aria-invalid={Boolean(errorMessage)}
                   aria-describedby={errorMessage ? "login-error" : undefined}
-                  className="mt-2 w-full rounded-xl border border-neutral-200 bg-neutral-50/50 px-4 py-3.5 text-base transition focus:border-beecah-blue focus:bg-white disabled:opacity-60"
+                  className="mt-2 w-full rounded-xl border border-neutral-200 bg-neutral-50/50 px-4 py-2.5 text-base transition focus:border-beecah-blue focus:bg-white disabled:opacity-60"
                 />
               </div>
               <div>
@@ -141,7 +189,7 @@ export default function LoginPage() {
                     disabled={loading}
                     aria-invalid={Boolean(errorMessage)}
                     aria-describedby={errorMessage ? "login-error" : undefined}
-                    className="w-full rounded-xl border border-neutral-200 bg-neutral-50/50 py-3.5 pl-4 pr-14 text-base transition focus:border-beecah-blue focus:bg-white disabled:opacity-60"
+                    className="w-full rounded-xl border border-neutral-200 bg-neutral-50/50 py-2.5 pl-4 pr-14 text-base transition focus:border-beecah-blue focus:bg-white disabled:opacity-60"
                   />
                   <button
                     type="button"
@@ -171,19 +219,19 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex w-full items-center justify-center gap-3 rounded-xl bg-beecah-black px-5 py-4 text-sm font-medium text-white transition hover:bg-beecah-blue disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-3 rounded-xl bg-beecah-black px-5 py-3 text-sm font-medium text-white transition hover:bg-beecah-blue disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? <LoaderCircle size={18} className="animate-spin" /> : null}
                 {loading ? accountContent.entrando : accountContent.entrarNaMinhaConta}
                 {!loading && <ArrowRight size={18} />}
               </button>
             </form>
-            <div className="mt-7 flex items-center gap-3 text-[11px] text-neutral-400">
+            <div className="mt-4 flex items-center gap-3 text-[11px] text-neutral-400">
               <span className="h-px flex-1 bg-neutral-200" />
               {accountContent.suaProximaDescobertaComecaAqui}
               <span className="h-px flex-1 bg-neutral-200" />
             </div>
-            <p className="mt-6 text-center text-sm text-neutral-500">
+            <p className="mt-3 text-center text-sm text-neutral-500">
               {accountContent.primeiraVezNaBeecah}
               <Link
                 href="/cadastro"
@@ -192,7 +240,7 @@ export default function LoginPage() {
                 {accountContent.criarConta}
               </Link>
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-between gap-3 text-xs text-neutral-500">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-neutral-500">
               <span className="inline-flex items-center gap-2">
                 <LockKeyhole size={13} />
                 {accountContent.acessoASuaConta}

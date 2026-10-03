@@ -1,3 +1,5 @@
+import Hero from "@/src/components/layout/Hero";
+import { categoryHeroes } from "@/src/content/page-heroes";
 import { catalogContent } from "@/src/content/catalog";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -37,17 +39,8 @@ export default async function CategoryPage({ params }: Props) {
         <span>{"/"}</span>
         <span aria-current="page">{collections[key].title}</span>
       </nav>
-      <header className="rounded-3xl bg-[#f2f4f8] px-6 py-10 sm:px-10">
-        <p className="text-xs uppercase tracking-[.25em] text-beecah-blue">
-          {catalogContent.aColecaoBeecah}
-        </p>
-        <h1 className="mt-4 text-4xl tracking-tight sm:text-6xl">
-          {collections[key].title}
-        </h1>
-        <p className="mt-5 max-w-xl text-sm leading-7 text-neutral-600">
-          {collections[key].description}
-        </p>
-      </header>
+      <Hero {...categoryHeroes[key]} embedded />
+      <div id="produtos" className="scroll-mt-32" />
       <CollectionLinks current={"/categorias/" + key} />
       {failed || ranking.failed ? (
         <div role="alert" className="rounded-2xl bg-neutral-50 p-8">

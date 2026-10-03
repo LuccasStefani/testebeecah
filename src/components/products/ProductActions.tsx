@@ -1,5 +1,10 @@
 "use client";
 
+import { useFeedbackState } from "@/src/hooks/use-feedback-state";
+
+import { notify } from "@/src/lib/notifications";
+import { notificationContent } from "@/src/content/notifications";
+
 import { catalogContent } from "@/src/content/catalog";
 import { productStyles } from "@/src/styles/product";
 
@@ -39,13 +44,13 @@ export default function ProductActions({ product }: ProductActionsProps) {
   const router = useRouter();
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
-  const [actionError, setActionError] = useState("");
+  const [actionError, setActionError] = useFeedbackState("error");
 
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
 
-  const { addItem } = useCart();
+  const { addItem, loading: cartLoading, updating: cartUpdating } = useCart();
 
   const stock = product.stock;
   const isOutOfStock = stock <= 0;
@@ -109,7 +114,7 @@ export default function ProductActions({ product }: ProductActionsProps) {
   }
 
   async function handleAddToCart() {
-    if (adding || isOutOfStock) return;
+    if (adding || cartLoading || cartUpdating || isOutOfStock) return;
     setAdding(true);
     setAdded(false);
     setActionError("");
@@ -128,8 +133,12 @@ export default function ProductActions({ product }: ProductActionsProps) {
         quantity,
       );
       setAdded(true);
-    } catch {
-      setActionError(catalogContent.naoFoiPossivelAdicionarASacolaTenteNovamente);
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : catalogContent.naoFoiPossivelAdicionarASacolaTenteNovamente,
+      );
     } finally {
       setAdding(false);
     }
@@ -145,6 +154,7 @@ export default function ProductActions({ product }: ProductActionsProps) {
     } = await supabase.auth.getUser();
 
     if (!user) {
+      notify.info(notificationContent.loginRequired, undefined, "heart");
       router.push("/login");
       return;
     }
@@ -161,6 +171,7 @@ export default function ProductActions({ product }: ProductActionsProps) {
 
         if (error) {
           console.error(catalogContent.erroAoRemoverFavorito, error);
+          notify.error(notificationContent.favoriteError);
           return;
         }
 
@@ -181,6 +192,7 @@ export default function ProductActions({ product }: ProductActionsProps) {
 
       if (error) {
         console.error(catalogContent.erroAoAdicionarFavorito, error);
+        notify.error(notificationContent.favoriteError);
         return;
       }
 
@@ -190,6 +202,8 @@ export default function ProductActions({ product }: ProductActionsProps) {
         productId: product.id,
         isFavorite: true,
       });
+    } catch {
+      notify.error(notificationContent.favoriteError);
     } finally {
       setFavoriteLoading(false);
     }
@@ -224,7 +238,7 @@ export default function ProductActions({ product }: ProductActionsProps) {
       <div className={productStyles.productPurchaseButtons}>
         <button
           type="button"
-          disabled={isOutOfStock || adding}
+          disabled={isOutOfStock || adding || cartLoading || cartUpdating}
           onClick={handleAddToCart}
           className={productStyles.productAddButton}
         >

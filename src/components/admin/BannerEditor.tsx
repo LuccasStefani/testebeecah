@@ -1,5 +1,7 @@
 "use client";
 
+import { useFeedbackState } from "@/src/hooks/use-feedback-state";
+
 import { adminContent } from "@/src/content/admin";
 import { useState } from "react";
 import type { PopupConfig, PopupBanner } from "@/src/lib/popup-types";
@@ -22,8 +24,8 @@ export default function BannerEditor({
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [message, setMessage] = useFeedbackState("success");
+  const [error, setError] = useFeedbackState("error");
   const patch = (id: string, changes: Partial<PopupBanner>) => {
     setMessage("");
     setConfig((c) => ({

@@ -1,3 +1,4 @@
+import { Toaster } from "@/src/components/ui/toast";
 import { storeContent } from "@/src/content/store";
 import type { Metadata } from "next";
 import "./globals.css";
@@ -21,7 +22,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={cn("font-sans", geist.variable)}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

@@ -1,3 +1,4 @@
+import StoreSecondaryContent from "@/src/components/layout/StoreSecondaryContent";
 import { storeContent } from "@/src/content/store";
 import StorePreloader from "@/src/components/layout/StorePreloader";
 import PromotionPopupServer from "@/src/components/layout/PromotionPopupServer";
@@ -37,8 +38,10 @@ export default function StoreLayout({ children }: StoreLayoutProps) {
         {children}
       </main>
 
-      <Footer />
-      <PromotionPopupServer />
+      <StoreSecondaryContent>
+        <Footer />
+        <PromotionPopupServer />
+      </StoreSecondaryContent>
     </CartProvider>
   );
 }

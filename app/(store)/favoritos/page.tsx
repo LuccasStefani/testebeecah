@@ -1,3 +1,4 @@
+import PersonalPageHero from "@/src/components/layout/PersonalPageHero";
 import { catalogContent } from "@/src/content/catalog";
 import { redirect } from "next/navigation";
 
@@ -76,19 +77,7 @@ export default async function FavoritosPage() {
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-12">
-      <div>
-        <p className="text-sm uppercase tracking-[0.2em] text-neutral-500">
-          {catalogContent.minhaConta}
-        </p>
-
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-          {catalogContent.meusFavoritos}
-        </h1>
-
-        <p className="mt-2 text-neutral-500">
-          {catalogContent.perfumesQueVoceSalvouParaVerDepois}
-        </p>
-      </div>
+      <PersonalPageHero page="favoritos" />
 
       <FavoritesGrid initialProducts={products} />
     </section>

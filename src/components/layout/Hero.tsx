@@ -1,129 +1,155 @@
-"use client";
-
-import { storeContent } from "@/src/content/store";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { Playfair_Display } from "next/font/google";
+import { ChevronDown, Sparkle, Star } from "lucide-react";
+import { heroContent, type HeroConfig } from "@/src/content/hero";
 
-const Hero = () => {
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: "400",
+  style: "normal",
+  display: "swap",
+});
+
+// Soft, overlapping masks fade from 20px at the lower left to a sharp image.
+const progressiveBlurLayers = [
+  "backdrop-blur-[4px] [mask-image:linear-gradient(36deg,transparent_22.5%,black_27.5%,black_32.5%,transparent_40%)]",
+  "backdrop-blur-[8px] [mask-image:linear-gradient(36deg,transparent_15%,black_20%,black_25%,transparent_32.5%)]",
+  "backdrop-blur-[12px] [mask-image:linear-gradient(36deg,transparent_7.5%,black_12.5%,black_17.5%,transparent_25%)]",
+  "backdrop-blur-[16px] [mask-image:linear-gradient(36deg,transparent_0%,black_5%,black_10%,transparent_17.5%)]",
+  "backdrop-blur-[20px] [mask-image:linear-gradient(36deg,black_0%,black_2.5%,transparent_10%)]",
+] as const;
+export default function Hero({
+  content = heroContent,
+  imageSrc = "/images/banners/bghero2.jpg",
+  primaryHref = "/perfumes",
+  secondaryHref = "#colecao",
+  collectionHref = "#colecao",
+  embedded = false,
+  eyebrow,
+  spotlight,
+}: Partial<HeroConfig> & {
+  embedded?: boolean;
+  eyebrow?: string;
+  spotlight?: { name: string; imageUrl?: string };
+}) {
   return (
-    <section className="relative w-full overflow-hidden bg-beecah-white px-3 pb-3 pt-3 sm:px-4 sm:pb-4 lg:px-3 lg:pb-3">
-      <div className="relative mx-auto h-[38rem] w-full max-w-screen-2xl overflow-hidden rounded-2xl sm:h-[42rem] lg:h-[calc(100vh-7rem)] lg:min-h-[38rem] lg:max-h-[52rem]">
+    <section
+      aria-labelledby="hero-heading"
+      className={
+        embedded ? "w-full bg-white" : "w-full bg-white px-3 py-3 sm:px-4 lg:px-3"
+      }
+    >
+      <div className="relative isolate mx-auto min-h-[520px] w-full overflow-hidden rounded-[24px] sm:min-h-[300px] sm:aspect-[2.9/1] sm:rounded-[28px] md:min-h-[340px] lg:min-h-0">
         <Image
-          src="/images/banners/bghero2.jpg"
-          alt={storeContent.beecahCollection}
+          src={imageSrc}
+          alt={content.imageAlt}
           fill
           priority
-          quality={100}
-          sizes="100vw"
-          className="object-cover object-center"
+          quality={90}
+          sizes="(max-width: 1280px) 100vw, 1280px"
+          className="-z-20 object-cover object-[60%_center] sm:object-center"
+        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+          {progressiveBlurLayers.map((layer) => (
+            <span key={layer} className={`absolute inset-0 ${layer}`} />
+          ))}
+        </div>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-r from-black/75 via-black/30 to-transparent max-sm:bg-gradient-to-t max-sm:from-black/85 max-sm:via-black/30 max-sm:to-black/5"
         />
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent" />
-
-        {/* Bloco editorial */}
-        <div className="absolute left-0 top-0 z-20 w-5/6 max-w-sm rounded-br-3xl bg-beecah-white px-5 pb-5 pt-4 sm:w-96 sm:max-w-none sm:px-7 sm:pb-6 sm:pt-5 lg:w-[27rem] lg:px-8 lg:pb-7 lg:pt-6">
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-6 top-0 size-6 rounded-tl-3xl shadow-[-0.75rem_-0.75rem_0_0.75rem_var(--beecah-white)]"
-          />
-
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -bottom-6 left-0 size-6 rounded-tl-3xl shadow-[-0.75rem_-0.75rem_0_0.75rem_var(--beecah-white)]"
-          />
+        <div className="flex min-h-[520px] flex-col justify-end px-6 pt-8 pb-24 text-white sm:absolute sm:inset-0 sm:min-h-0 sm:justify-center sm:px-[3.4%] sm:py-[3%]">
+          {eyebrow ? (
+            <p className="mb-4 text-[10px] uppercase tracking-[0.22em] text-white/80 lg:text-xs">
+              {eyebrow}
+            </p>
+          ) : (
+            <div className="mb-4 sm:mb-3 lg:mb-4">
+              <div aria-hidden="true" className="mb-1 flex gap-0.5">
+                {Array.from({ length: 5 }, (_, index) => (
+                  <Star
+                    key={index}
+                    className="size-2.5 fill-current lg:size-3"
+                    strokeWidth={0}
+                  />
+                ))}
+              </div>
+              <p className="text-[10px] leading-4 text-white/85 lg:text-xs">
+                {content.trust}
+              </p>
+            </div>
+          )}
 
           <h1
-            className={[
-              "font-['Sorts_Mill_Goudy',serif] font-normal not-italic",
-              "text-3xl",
-              "italic",
-              "leading-tight",
-              "tracking-tight",
-              "text-beecah-black",
-              "sm:text-4xl",
-              "lg:text-5xl",
-            ].join(" ")}
+            id="hero-heading"
+            className={`${playfair.className} max-w-[12ch] text-[clamp(42px,6vw,76px)] leading-[0.98] font-normal not-italic tracking-[-0.045em]`}
           >
-            {storeContent.encontreUma}
+            {content.titleFirstLine}
             <br />
-
-            <span className="font-haerins not-italic">{storeContent.fragrancia}</span>
-
-            <span className="ml-4 italic">{storeContent.para}</span>
-
-            <br />
-
-            <span className="italic">{storeContent.chamarDeSua}</span>
+            <span className="font-['Bagind',serif] not-italic">
+              {content.titleAccent}
+            </span>{" "}
+            {content.titleSecondLine}
           </h1>
+          <p className="mt-4 max-w-[35ch] text-[13px] leading-relaxed text-white/80 sm:mt-3 sm:max-w-[42ch] sm:text-[clamp(11px,1.2vw,15px)] lg:mt-4">
+            {content.description}
+          </p>
 
-          <div className="mt-5 flex items-center gap-3">
-            <span className="block h-0.5 w-9 bg-beecah-black" />
-
-            <p className="text-xs font-medium uppercase tracking-[0.3em] text-beecah-black/65">
-              {storeContent.byRebecaHelen}
-            </p>
+          <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 sm:mt-5 lg:mt-7">
+            <Link
+              href={primaryHref}
+              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#171914] px-6 text-[10px] font-medium uppercase tracking-[0.04em] transition hover:bg-white hover:text-black focus-visible:outline-white sm:min-h-10 lg:min-h-12 lg:px-8 lg:text-xs"
+            >
+              {content.primaryAction}
+            </Link>
+            <Link
+              href={secondaryHref}
+              className="group inline-flex min-h-11 items-center gap-4 text-[11px] text-white/90 transition hover:text-white focus-visible:outline-white lg:text-xs"
+            >
+              <Image 
+              src="/icons/Speakers.svg"
+              width={18}
+              height={18}
+              alt=""/>
+              <span className="underline decoration-white/40 underline-offset-4 group-hover:decoration-white">
+                {content.secondaryAction}
+              </span>
+            </Link>
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2 sm:bottom-7 lg:bottom-8">
-          <Link
-            href="/perfumes"
-            className="flex h-14 min-w-56 cursor-pointer items-center justify-center rounded-2xl bg-beecah-black px-8 text-sm font-medium uppercase tracking-wide text-beecah-white shadow-lg transition duration-300 hover:-translate-y-0.5 hover:bg-beecah-blue"
-          >
-            {storeContent.explorarColecao2}
-          </Link>
-        </div>
-
-        {/* Perfumes */}
-        <div className="absolute bottom-0 right-0 z-20 hidden items-center rounded-tl-3xl bg-beecah-white pb-1 pl-3 pr-2 pt-2 sm:flex">
+        <Link
+          href={collectionHref}
+          className="absolute right-0 bottom-0 flex items-center gap-3 rounded-tl-[24px] bg-white pt-2 pr-1 pb-1 pl-3 text-black focus-visible:outline-offset-[-4px] sm:gap-4 sm:pl-3"
+        >
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute -top-6 right-0 size-6 rounded-br-3xl shadow-[0.75rem_0.75rem_0_0.75rem_var(--beecah-white)]"
+            className="pointer-events-none absolute -top-6 right-0 size-6 rounded-br-[24px] shadow-[12px_12px_0_12px_white]"
           />
-
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute -left-6 bottom-0 size-6 rounded-br-3xl shadow-[0.75rem_0.75rem_0_0.75rem_var(--beecah-white)]"
+            className="pointer-events-none absolute bottom-0 -left-6 size-6 rounded-br-[24px] shadow-[12px_12px_0_12px_white]"
           />
-
-          <Link
-            href="/perfumes"
-            aria-label={storeContent.verPerfumes}
-            className="relative z-10 flex size-11 items-center justify-center rounded-xl bg-beecah-black text-beecah-white transition duration-200 hover:bg-beecah-blue"
-          >
-            <ChevronDown size={17} strokeWidth={1.7} />
-          </Link>
-
-          <Link
-            href="/perfumes"
-            className="relative z-10 cursor-pointer px-4 text-sm font-medium uppercase tracking-wide text-beecah-black"
-          >
-            {storeContent.perfumes}
-          </Link>
-        </div>
-      </div>
-
-      {/* Perfumes mobile */}
-      <div className="mt-3 flex items-center justify-end gap-3 sm:hidden">
-        <Link
-          href="/perfumes"
-          aria-label={storeContent.verPerfumes}
-          className="flex size-10 items-center justify-center rounded-xl bg-beecah-black text-beecah-white transition hover:bg-beecah-blue"
-        >
-          <ChevronDown size={16} strokeWidth={1.7} />
-        </Link>
-
-        <Link
-          href="/perfumes"
-          className="cursor-pointer text-xs font-medium uppercase tracking-wide text-beecah-black"
-        >
-          {storeContent.perfumes}
+          <span className="relative flex size-11 items-center justify-center rounded-xl bg-[#171914] text-white lg:size-12">
+            {spotlight?.imageUrl ? (
+              <Image
+                src={spotlight.imageUrl}
+                alt=""
+                width={48}
+                height={48}
+                className="size-full rounded-xl object-cover"
+              />
+            ) : (
+              <ChevronDown size={18} strokeWidth={1.6} aria-hidden="true" />
+            )}
+          </span>
+          <span className="relative pr-1 text-xs font-medium uppercase tracking-wide lg:text-sm">
+            {spotlight ? spotlight.name : content.collectionLink}
+          </span>
         </Link>
       </div>
     </section>
   );
-};
-
-export default Hero;
+}
