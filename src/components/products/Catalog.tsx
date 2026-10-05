@@ -1,7 +1,7 @@
 "use client";
 import {
   productTypeContent,
-  productTypeLabel,
+  productTypeSearchText,
   parseProductType,
 } from "@/src/content/product-types";
 
@@ -57,7 +57,7 @@ export default function Catalog({
               p.brand,
               p.description,
               p.fragranceFamily,
-              productTypeLabel(p.productType) + "s",
+              productTypeSearchText(p.productType),
             ].join(" "),
           ).includes(normalize(search.trim()))) &&
         (category === "Todas" || p.category === category) &&

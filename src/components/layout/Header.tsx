@@ -158,7 +158,7 @@ export default function Header() {
             </Link>
             <details className="group relative">
               <summary className="flex cursor-pointer list-none items-center gap-1.5 py-3 transition hover:opacity-60 [&::-webkit-details-marker]:hidden">
-                {storeContent.perfumes}
+                {productTypeContent.navigation}
                 <ChevronDown
                   size={14}
                   aria-hidden="true"
@@ -170,6 +170,18 @@ export default function Header() {
                   [storeContent.arabes, "/categorias/arabes"],
                   [storeContent.feminino, "/categorias/feminino"],
                   [storeContent.masculino, "/categorias/masculino"],
+                  [
+                    productTypeContent.collections["perfume-de-cabelo"].title,
+                    "/categorias/perfume-de-cabelo",
+                  ],
+                  [
+                    productTypeContent.collections["creme-corporal"].title,
+                    "/categorias/creme-corporal",
+                  ],
+                  [
+                    productTypeContent.collections["creme-para-a-pele"].title,
+                    "/categorias/creme-para-a-pele",
+                  ],
                 ].map(([label, href]) => (
                   <Link
                     key={href}
@@ -443,6 +455,20 @@ export default function Header() {
           ================================== */}
 
           <MobileNavMenu isOpen={isMobileMenuOpen} onClose={closeMobileMenu}>
+            {["perfume-de-cabelo", "creme-corporal", "creme-para-a-pele"].map((key) => (
+              <Link
+                key={key}
+                href={`/categorias/${key}`}
+                onClick={closeMobileMenu}
+                className="text-beecah-black"
+              >
+                {
+                  productTypeContent.collections[
+                    key as keyof typeof productTypeContent.collections
+                  ].title
+                }
+              </Link>
+            ))}
             <Link
               href="/categorias/body-splash"
               onClick={closeMobileMenu}

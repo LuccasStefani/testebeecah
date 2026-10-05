@@ -1,5 +1,6 @@
 "use client";
 
+import type { ProductType } from "@/src/content/product-types";
 import { useFeedbackState } from "@/src/hooks/use-feedback-state";
 
 import { notify } from "@/src/lib/notifications";
@@ -37,6 +38,7 @@ type ProductActionsProps = {
     promoPrice?: number;
     imageUrl: string;
     stock: number;
+    productType?: ProductType;
   };
 };
 
@@ -129,6 +131,7 @@ export default function ProductActions({ product }: ProductActionsProps) {
           price: finalPrice,
           imageUrl: product.imageUrl,
           stock: product.stock,
+          productType: product.productType,
         },
         quantity,
       );

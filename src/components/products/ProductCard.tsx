@@ -130,6 +130,7 @@ export default function ProductCard({
           price: finalPrice,
           imageUrl: product.imageUrl,
           stock: product.stock,
+          productType: product.productType,
         },
         1,
       );

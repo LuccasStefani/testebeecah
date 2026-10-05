@@ -1,4 +1,5 @@
 "use client";
+import { adminControls } from "@/src/styles/admin-controls";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, X, LoaderCircle } from "lucide-react";
@@ -37,7 +38,7 @@ export default function TestimonialModeration({
         <button
           disabled={busy}
           onClick={() => update("approved")}
-          className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-white px-4 text-xs font-medium text-black disabled:opacity-50"
+          className={adminControls.primary}
         >
           {busy ? (
             <LoaderCircle size={15} className="animate-spin" />
@@ -51,7 +52,7 @@ export default function TestimonialModeration({
         <button
           disabled={busy}
           onClick={() => update("rejected")}
-          className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-neutral-800 px-4 text-xs text-white disabled:opacity-50"
+          className={adminControls.secondary}
         >
           <X size={15} />
           {status === "approved" ? c.unpublish : c.reject}

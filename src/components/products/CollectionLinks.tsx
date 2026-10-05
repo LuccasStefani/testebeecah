@@ -6,6 +6,15 @@ const links = [
   [catalogContent.arabes, "/categorias/arabes"],
   [productTypeContent.collections["body-splash"].title, "/categorias/body-splash"],
   [productTypeContent.collections.decantes.title, "/categorias/decantes"],
+  [
+    productTypeContent.collections["perfume-de-cabelo"].title,
+    "/categorias/perfume-de-cabelo",
+  ],
+  [productTypeContent.collections["creme-corporal"].title, "/categorias/creme-corporal"],
+  [
+    productTypeContent.collections["creme-para-a-pele"].title,
+    "/categorias/creme-para-a-pele",
+  ],
   [catalogContent.femininos, "/categorias/feminino"],
   [catalogContent.masculinos, "/categorias/masculino"],
   [catalogContent.novos, "/categorias/novos"],

@@ -14,7 +14,7 @@ export const catalogContent = {
   erroAoCarregarProdutosFavoritos: "Erro ao carregar produtos favoritos:",
   minhaConta: "Minha conta",
   meusFavoritos: "Meus favoritos",
-  perfumesQueVoceSalvouParaVerDepois: "Perfumes que você salvou para ver depois.",
+  perfumesQueVoceSalvouParaVerDepois: "Produtos que você salvou para ver depois.",
   seuProximo: "Seu próximo ",
   perfume: "perfume.",
   encontreAFragranciaQueCombinaComVoceExplore:
@@ -76,7 +76,7 @@ export const catalogContent = {
   arabes: "Árabes",
   colecoesDePerfumes: "Coleções da Beecah",
   voceAindaNaoAdicionouNenhumPerfumeAosFavoritos:
-    "Você ainda não adicionou nenhum perfume aos favoritos.",
+    "Você ainda não adicionou nenhum produto aos favoritos.",
   verPerfumes: "Ver perfumes",
   erroAoCarregarFavorito: "Erro ao carregar favorito:",
   naoFoiPossivelAdicionarASacolaTenteNovamente:
@@ -104,7 +104,7 @@ export const catalogContent = {
   relevancia: "Relevância",
   produtoEncontrado: "produto encontrado",
   produtosEncontrados: "produtos encontrados",
-  nenhumPerfumeEncontrado: "Nenhum perfume encontrado",
+  nenhumPerfumeEncontrado: "Nenhum produto encontrado",
   feminino: "Feminino",
   masculino: "Masculino",
   unissex: "Unissex",

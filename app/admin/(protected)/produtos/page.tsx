@@ -1,3 +1,4 @@
+import { adminControls } from "@/src/styles/admin-controls";
 import { productTypeLabel } from "@/src/content/product-types";
 import { adminContent } from "@/src/content/admin";
 import Link from "next/link";
@@ -51,10 +52,7 @@ export default async function AdminProductsPage() {
           </p>
         </div>
 
-        <Link
-          href="/admin/produtos/novo"
-          className="bg-neutral-950 px-5 py-3 text-sm font-medium text-white"
-        >
+        <Link href="/admin/produtos/novo" className={adminControls.primary}>
           {adminContent.novoProduto2}
         </Link>
       </div>

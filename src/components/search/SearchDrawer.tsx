@@ -1,7 +1,7 @@
 "use client";
 import {
   productTypeContent,
-  productTypeLabel,
+  productTypeSearchText,
   parseProductType,
   type ProductType,
 } from "@/src/content/product-types";
@@ -248,7 +248,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
 
       const matchesSearch =
         !term ||
-        (productTypeLabel(product.productType) + "s").toLowerCase().includes(term) ||
+        productTypeSearchText(product.productType).toLowerCase().includes(term) ||
         product.name.toLowerCase().includes(term) ||
         product.brand.toLowerCase().includes(term) ||
         product.category.toLowerCase().includes(term) ||

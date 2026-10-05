@@ -1,5 +1,6 @@
 "use client";
 
+import { adminControls } from "@/src/styles/admin-controls";
 import { useFeedbackState } from "@/src/hooks/use-feedback-state";
 
 import { adminContent } from "@/src/content/admin";
@@ -360,14 +361,11 @@ export default function BannerEditor({
             }))
           }
           disabled={config.banners.length >= 20}
-          className="rounded-xl border px-5 py-3 text-sm"
+          className={adminControls.secondary + " mr-3"}
         >
           {adminContent.adicionarBanner}
         </button>
-        <button
-          onClick={save}
-          className="ml-3 rounded-xl bg-neutral-950 px-5 py-3 text-sm text-white"
-        >
+        <button onClick={save} className={adminControls.primary}>
           {busy ? adminContent.salvando : adminContent.salvarAlteracoes}
         </button>
       </fieldset>

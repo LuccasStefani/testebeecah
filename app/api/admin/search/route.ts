@@ -1,4 +1,4 @@
-import { productTypeLabel } from "@/src/content/product-types";
+import { productTypeLabel, productTypeSearchText } from "@/src/content/product-types";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/src/lib/auth/require-admin";
 import { supabaseAdmin } from "@/src/lib/supabase/admin";
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
           }
           for (const p of data ?? []) {
             if (
-              (p.name + " " + p.brand + " " + productTypeLabel(p.product_type))
+              (p.name + " " + p.brand + " " + productTypeSearchText(p.product_type))
                 .toLocaleLowerCase("pt-BR")
                 .includes(q) &&
               count < 6

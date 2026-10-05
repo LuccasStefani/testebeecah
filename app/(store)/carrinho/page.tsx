@@ -1,5 +1,6 @@
 "use client";
 
+import { productTypeLabel } from "@/src/content/product-types";
 import { checkoutContent } from "@/src/content/checkout";
 import Image from "next/image";
 import { Playfair_Display } from "next/font/google";
@@ -250,7 +251,7 @@ export default function CartPage() {
                           ? "Indisponível — remova para continuar"
                           : item.quantity >= item.stock
                             ? checkoutContent.limiteDeEstoqueAtingido
-                            : checkoutContent.perfume}
+                            : productTypeLabel(item.productType)}
                       </p>
                     </div>
 

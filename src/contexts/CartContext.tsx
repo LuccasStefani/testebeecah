@@ -1,5 +1,6 @@
 "use client";
 
+import { parseProductType, type ProductType } from "@/src/content/product-types";
 import { notify } from "@/src/lib/notifications";
 import { notificationContent } from "@/src/content/notifications";
 
@@ -15,6 +16,7 @@ type CartItem = {
   imageUrl: string;
   quantity: number;
   stock: number;
+  productType?: ProductType;
 };
 
 type AddToCartProduct = {
@@ -24,6 +26,7 @@ type AddToCartProduct = {
   price: number;
   imageUrl: string;
   stock: number;
+  productType?: ProductType;
 };
 
 type CartContextType = {
@@ -189,6 +192,7 @@ export function CartProvider({ children }: CartProviderProps) {
           price,
           promo_price,
           stock,
+          product_type,
           active,
           product_images (
             image_url,
@@ -245,6 +249,7 @@ export function CartProvider({ children }: CartProviderProps) {
               product.stock,
             ),
             stock: product.stock,
+            productType: parseProductType(product.product_type),
           };
         }) ?? [];
 

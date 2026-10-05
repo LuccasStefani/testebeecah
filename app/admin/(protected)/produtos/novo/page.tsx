@@ -1,4 +1,6 @@
 "use client";
+import ProductImageDropzone from "@/src/components/admin/ProductImageDropzone";
+import { adminControls } from "@/src/styles/admin-controls";
 import ProductTypeField from "@/src/components/products/ProductTypeField";
 
 import { useFeedbackState } from "@/src/hooks/use-feedback-state";
@@ -7,7 +9,7 @@ import { notify } from "@/src/lib/notifications";
 import { notificationContent } from "@/src/content/notifications";
 
 import { adminContent } from "@/src/content/admin";
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -20,7 +22,6 @@ function notesToArray(value: string) {
 
 export default function NewProductPage() {
   const router = useRouter();
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -361,54 +362,7 @@ export default function NewProductPage() {
             {adminContent.aPrimeiraImagemSeraUsadaComoCapa}
           </p>
 
-          <input
-            ref={inputRef}
-            type="file"
-            multiple
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-            onChange={(event) => {
-              const selectedFiles = Array.from(event.target.files ?? []);
-
-              setFiles(selectedFiles);
-            }}
-          />
-
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            className="mt-6 w-full border-2 border-dashed border-neutral-300 px-6 py-10 transition hover:border-neutral-950"
-          >
-            <span className="block font-medium">{adminContent.selecionarImagens}</span>
-
-            <span className="mt-2 block text-sm text-neutral-500">
-              {adminContent.jpgPngOuWebp}
-            </span>
-          </button>
-
-          {files.length > 0 && (
-            <div className="mt-5 space-y-2">
-              {files.map((file, index) => (
-                <div
-                  key={`${file.name}-${index}`}
-                  className="flex items-center justify-between border border-neutral-200 px-4 py-3"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{file.name}</p>
-
-                    <p className="mt-1 text-xs text-neutral-500">
-                      {index === 0 ? adminContent.imagemPrincipal : `Imagem ${index + 1}`}
-                    </p>
-                  </div>
-
-                  <p className="text-xs text-neutral-400">
-                    {(file.size / 1024 / 1024).toFixed(2)}
-                    {adminContent.mb}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
+          <ProductImageDropzone files={files} onChange={setFiles} disabled={loading} />
         </div>
 
         <div className="border border-neutral-200 p-6">
@@ -436,18 +390,11 @@ export default function NewProductPage() {
         )}
 
         <div className="flex flex-wrap justify-end gap-3">
-          <Link
-            href="/admin/produtos"
-            className="border border-neutral-300 px-6 py-3 text-sm font-medium"
-          >
+          <Link href="/admin/produtos" className={adminControls.secondary}>
             {adminContent.cancelar}
           </Link>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-neutral-950 px-6 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <button type="submit" disabled={loading} className={adminControls.primary}>
             {loading ? adminContent.cadastrando : adminContent.cadastrarProduto}
           </button>
         </div>

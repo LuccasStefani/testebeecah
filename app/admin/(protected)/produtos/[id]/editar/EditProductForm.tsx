@@ -1,4 +1,5 @@
 "use client";
+import { adminControls } from "@/src/styles/admin-controls";
 import ProductTypeField from "@/src/components/products/ProductTypeField";
 import type { ProductType } from "@/src/content/product-types";
 
@@ -679,7 +680,7 @@ export default function EditProductForm({ product }: Props) {
                   type="button"
                   disabled={anyActionRunning || selectedFiles.length === 0}
                   onClick={handleUploadImages}
-                  className="mt-5 w-full bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  className={adminControls.primary + " mt-5 w-full"}
                 >
                   {uploadingImages
                     ? adminContent.enviandoImagens
@@ -808,17 +809,14 @@ export default function EditProductForm({ product }: Props) {
         {/* BOTÕES */}
 
         <div className="flex flex-wrap justify-end gap-3">
-          <Link
-            href="/admin/produtos"
-            className="border border-neutral-300 px-6 py-3 text-sm font-medium"
-          >
+          <Link href="/admin/produtos" className={adminControls.secondary}>
             {adminContent.cancelar}
           </Link>
 
           <button
             type="submit"
             disabled={anyActionRunning}
-            className="bg-neutral-950 px-6 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className={adminControls.primary}
           >
             {loading ? adminContent.salvando2 : adminContent.salvarAlteracoes}
           </button>

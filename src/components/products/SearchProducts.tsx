@@ -1,7 +1,7 @@
 "use client";
 import {
   productTypeContent,
-  productTypeLabel,
+  productTypeSearchText,
   parseProductType,
 } from "@/src/content/product-types";
 
@@ -41,7 +41,7 @@ export default function SearchProducts({ products }: SearchProductsProps) {
 
       const matchesSearch =
         !term ||
-        (productTypeLabel(product.productType) + "s").toLowerCase().includes(term) ||
+        productTypeSearchText(product.productType).toLowerCase().includes(term) ||
         product.name.toLowerCase().includes(term) ||
         product.brand.toLowerCase().includes(term) ||
         product.category.toLowerCase().includes(term) ||

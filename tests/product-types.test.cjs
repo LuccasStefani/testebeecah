@@ -121,17 +121,18 @@ const base = {
   isNew: true,
 };
 
-test("POST and PATCH save both formats without changing the independent selections", async () => {
+test("POST and PATCH save every format for masculine and feminine products", async () => {
   for (const method of ["POST", "PATCH"])
-    for (const productType of ["body-splash", "decant"]) {
-      const r = route(method);
-      const result = await r.run({ ...base, productType });
-      assert.equal(result.status, method === "POST" ? 201 : 200);
-      assert.equal(r.payload.product_type, productType);
-      assert.equal(r.payload.category, "Feminino");
-      assert.equal(r.payload.is_arabian, true);
-      assert.equal(r.payload.is_new, true);
-    }
+    for (const productType of types.productTypes)
+      for (const category of ["Feminino", "Masculino"]) {
+        const r = route(method);
+        const result = await r.run({ ...base, productType, category });
+        assert.equal(result.status, method === "POST" ? 201 : 200);
+        assert.equal(r.payload.product_type, productType);
+        assert.equal(r.payload.category, category);
+        assert.equal(r.payload.is_arabian, true);
+        assert.equal(r.payload.is_new, true);
+      }
 });
 
 test("PATCH omission preserves saved format; old POST defaults to perfume", async () => {
@@ -154,4 +155,29 @@ test("invalid formats and unauthenticated writes never reach the database", asyn
     assert.equal((await r.run({ ...base, productType: "decant" })).status, 401);
     assert.equal(r.calls, 0);
   }
+});
+
+test("care types have dedicated collections and retain gender and novelty selections", () => {
+  for (const [collection, productType] of [
+    ["perfume-de-cabelo", "hair-perfume"],
+    ["creme-corporal", "body-cream"],
+    ["creme-para-a-pele", "skin-cream"],
+  ]) {
+    const care = [
+      { id: "woman", productType, category: "Feminino", isNew: true },
+      { id: "man", productType, category: "Masculino" },
+    ];
+    const all = [...products, ...care];
+    assert.deepEqual(ids(selectCollection(all, collection)), ["woman", "man"]);
+    assert.ok(ids(selectCollection(all, "feminino")).includes("woman"));
+    assert.ok(ids(selectCollection(all, "masculino")).includes("man"));
+    assert.ok(ids(selectCollection(all, "novos")).includes("woman"));
+    assert.deepEqual(ids(selectCollection(all, "mais-vendidos", ["man"])), ["man"]);
+    assert.equal(types.parseProductType(productType), productType);
+  }
+});
+test("care search accepts the labels and common Portuguese plurals", () => {
+  assert.ok(types.productTypeSearchText("hair-perfume").includes("perfumes de cabelo"));
+  assert.ok(types.productTypeSearchText("body-cream").includes("creme de corpo"));
+  assert.ok(types.productTypeSearchText("skin-cream").includes("cremes para a pele"));
 });

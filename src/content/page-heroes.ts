@@ -25,10 +25,15 @@ function categoryHero(key: CollectionKey, title: string, accent: string): HeroCo
           : heroContent.imageAlt,
       primaryAction: "Explorar seleção",
       secondaryAction: "Toda a coleção",
-      collectionLink:
-        key === "body-splash" || key === "decantes"
-          ? collections[key].title
-          : heroContent.collectionLink,
+      collectionLink: [
+        "body-splash",
+        "decantes",
+        "perfume-de-cabelo",
+        "creme-corporal",
+        "creme-para-a-pele",
+      ].includes(key)
+        ? collections[key].title
+        : heroContent.collectionLink,
     },
   };
 }
@@ -38,6 +43,9 @@ export const categoryHeroes = {
     ...categoryHero("body-splash", "Body", "Splash"),
     imageSrc: "/images/banners/bodybanner.jpg",
   },
+  "perfume-de-cabelo": categoryHero("perfume-de-cabelo", "Perfumes", "de cabelo"),
+  "creme-corporal": categoryHero("creme-corporal", "Cremes", "corporais"),
+  "creme-para-a-pele": categoryHero("creme-para-a-pele", "Cremes", "para a pele"),
   decantes: categoryHero("decantes", "Seus", "decantes"),
   arabes: {
     ...categoryHero("arabes", "Perfumes", "árabes"),
