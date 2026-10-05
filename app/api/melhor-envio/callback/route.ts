@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/src/lib/auth/require-admin";
 import { NextRequest, NextResponse } from "next/server";
 
 import { supabaseAdmin } from "@/src/lib/supabase/admin";
@@ -11,6 +12,12 @@ type MelhorEnvioTokenResponse = {
 };
 
 export async function GET(request: NextRequest) {
+  const auth = await requireAdmin();
+
+  if (!auth.authorized) {
+    return NextResponse.json({ error: auth.message }, { status: auth.status });
+  }
+
   const clientId = process.env.MELHOR_ENVIO_CLIENT_ID;
 
   const clientSecret = process.env.MELHOR_ENVIO_CLIENT_SECRET;
@@ -19,7 +26,9 @@ export async function GET(request: NextRequest) {
 
   const baseUrl = process.env.MELHOR_ENVIO_BASE_URL;
 
-  if (!clientId || !clientSecret || !redirectUri || !baseUrl) {
+  const userAgent = process.env.MELHOR_ENVIO_USER_AGENT;
+
+  if (!clientId || !clientSecret || !redirectUri || !baseUrl || !userAgent) {
     return NextResponse.json(
       {
         error: "Configuração do Melhor Envio incompleta.",
@@ -65,7 +74,7 @@ export async function GET(request: NextRequest) {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        "User-Agent": "Beecah (testebeecah.vercel.app)",
+        "User-Agent": userAgent,
       },
 
       body: JSON.stringify({

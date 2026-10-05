@@ -2,6 +2,8 @@ import { adminContent } from "@/src/content/admin";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import WhatsAppOrderPayment from "@/src/components/admin/WhatsAppOrderPayment";
+import ShipmentActions from "@/src/components/admin/ShipmentActions";
 import { requireAdmin } from "@/src/lib/auth/require-admin";
 import { supabaseAdmin } from "@/src/lib/supabase/admin";
 
@@ -69,10 +71,41 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
 
   const { id } = await params;
 
+  /*
+   * 1. Carrega o pedido e os itens.
+   */
   const { data: order, error: orderError } = await supabaseAdmin
     .from("orders")
     .select(
-      "\n        id,\n        user_id,\n        status,\n        subtotal,\n        shipping_price,\n        shipping_service_id,\n        shipping_service_name,\n        shipping_company_id,\n        shipping_company_name,\n        shipping_delivery_min,\n        shipping_delivery_max,\n        total,\n        mercado_pago_preference_id,\n        mercado_pago_payment_id,\n        created_at,\n        updated_at,\n        order_items (\n          id,\n          product_id,\n          product_name,\n          unit_price,\n          quantity,\n          subtotal\n        )\n      ",
+      `
+        id,
+        user_id,
+        status,
+        subtotal,
+        shipping_price,
+        shipping_service_id,
+        shipping_service_name,
+        shipping_company_id,
+        shipping_company_name,
+        shipping_delivery_min,
+        shipping_delivery_max,
+        total,
+        checkout_channel,
+        checkout_payment_url,
+        checkout_shipping_locked,
+        mercado_pago_preference_id,
+        mercado_pago_payment_id,
+        created_at,
+        updated_at,
+        order_items (
+          id,
+          product_id,
+          product_name,
+          unit_price,
+          quantity,
+          subtotal
+        )
+      `,
     )
     .eq("id", id)
     .single();
@@ -81,19 +114,63 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  /*
+   * 2. Carrega em paralelo:
+   *
+   * - cliente;
+   * - snapshot do endereço;
+   * - shipment do Melhor Envio.
+   */
   const [
     { data: userData, error: userError },
     { data: shippingAddress, error: shippingAddressError },
+    { data: shipments, error: shipmentsError },
   ] = await Promise.all([
     supabaseAdmin.auth.admin.getUserById(order.user_id),
 
     supabaseAdmin
       .from("order_shipping_addresses")
       .select(
-        "\n        id,\n        recipient_name,\n        phone,\n        zip_code,\n        street,\n        number,\n        complement,\n        neighborhood,\n        city,\n        state,\n        created_at\n      ",
+        `
+          id,
+          recipient_name,
+          phone,
+          zip_code,
+          street,
+          number,
+          complement,
+          neighborhood,
+          city,
+          state,
+          created_at
+        `,
       )
       .eq("order_id", order.id)
       .maybeSingle(),
+
+    supabaseAdmin
+      .from("order_shipments")
+      .select(
+        `
+          id,
+          provider,
+          provider_shipment_id,
+          status,
+          provider_status,
+          tracking_code,
+          generated_at,
+          printed_at,
+          posted_at,
+          delivered_at,
+          created_at,
+          updated_at
+        `,
+      )
+      .eq("order_id", order.id)
+      .eq("provider", "melhor_envio")
+      .order("created_at", {
+        ascending: false,
+      }),
   ]);
 
   if (userError) {
@@ -106,6 +183,22 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
       shippingAddressError,
     );
   }
+
+  if (shipmentsError) {
+    console.error("Erro ao carregar envio do pedido:", shipmentsError);
+  }
+
+  /*
+   * Atualmente nossas APIs administrativas
+   * trabalham com um shipment por pedido.
+   *
+   * Se existir um shipment, usamos o mais
+   * recente para apresentar o estado na UI.
+   *
+   * As próprias APIs continuam protegidas
+   * contra múltiplos shipments nesta fase.
+   */
+  const shipment = shipments && shipments.length > 0 ? shipments[0] : null;
 
   const customerEmail = userData?.user?.email ?? adminContent.eMailNaoDisponivel;
 
@@ -196,7 +289,8 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
               <div className="leading-6 text-neutral-700">
                 <p>
                   {shippingAddress.street}
-                  {","} {shippingAddress.number}
+                  {", "}
+                  {shippingAddress.number}
                 </p>
 
                 {shippingAddress.complement && <p>{shippingAddress.complement}</p>}
@@ -205,7 +299,8 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
 
                 <p>
                   {shippingAddress.city}
-                  {" -"} {shippingAddress.state}
+                  {" - "}
+                  {shippingAddress.state}
                 </p>
 
                 <p>
@@ -266,6 +361,40 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
             </p>
           )}
         </div>
+      </div>
+
+      {order.checkout_channel === "whatsapp" && (
+        <WhatsAppOrderPayment
+          id={order.id}
+          status={order.status}
+          ready={!!order.checkout_payment_url}
+          shipping={order.shipping_price === null ? null : Number(order.shipping_price)}
+          storeUrl={(process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "")}
+          locked={order.checkout_shipping_locked}
+        />
+      )}
+
+      {/*
+       * PAINEL LOGÍSTICO
+       *
+       * O componente client chama somente
+       * as APIs administrativas que já
+       * validamos individualmente.
+       */}
+      <div className={order.checkout_channel === "whatsapp" ? "hidden" : "mt-8"}>
+        {order.checkout_channel !== "whatsapp" && (
+          <ShipmentActions
+            orderId={order.id}
+            orderStatus={order.status}
+            shipmentStatus={shipment?.status ?? null}
+            providerStatus={shipment?.provider_status ?? null}
+            trackingCode={shipment?.tracking_code ?? null}
+            generatedAt={shipment?.generated_at ?? null}
+            printedAt={shipment?.printed_at ?? null}
+            postedAt={shipment?.posted_at ?? null}
+            deliveredAt={shipment?.delivered_at ?? null}
+          />
+        )}
       </div>
 
       <div className="mt-8 border border-neutral-200">

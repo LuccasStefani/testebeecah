@@ -1,3 +1,4 @@
+import { checkoutMode } from "@/src/lib/checkout-mode";
 import { Preference } from "mercadopago";
 import { NextResponse } from "next/server";
 
@@ -17,6 +18,11 @@ function money(value: number) {
 }
 
 export async function POST(request: Request) {
+  if (checkoutMode === "whatsapp")
+    return NextResponse.json(
+      { success: false, message: "Continue pelo WhatsApp a partir da sacola." },
+      { status: 409 },
+    );
   let createdOrderId: string | null = null;
 
   /*

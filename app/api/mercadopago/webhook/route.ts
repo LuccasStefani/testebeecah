@@ -131,7 +131,10 @@ export async function POST(request: Request) {
         id,
         user_id,
         status,
-        stock_processed_at
+        stock_processed_at,
+        created_at,
+        total,
+        mercado_pago_payment_id
       `,
       )
       .eq("id", orderId)
@@ -144,6 +147,27 @@ export async function POST(request: Request) {
         success: true,
         ignored: true,
       });
+    }
+
+    if (
+      payment.currency_id !== "BRL" ||
+      Math.round(Number(payment.transaction_amount) * 100) !==
+        Math.round(Number(order.total) * 100)
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Pagamento não corresponde ao total do pedido." },
+        { status: 409 },
+      );
+    }
+    if (
+      order.stock_processed_at &&
+      (orderStatus === "pending" ||
+        orderStatus === "rejected" ||
+        orderStatus === "cancelled" ||
+        (order.mercado_pago_payment_id &&
+          String(payment.id) !== order.mercado_pago_payment_id))
+    ) {
+      return NextResponse.json({ success: true, ignored: true });
     }
 
     /*
@@ -217,7 +241,8 @@ export async function POST(request: Request) {
     }
 
     /*
-     * Depois da aprovação, limpamos o carrinho.
+     * Depois da aprovação, removemos apenas a seleção anterior ao pedido.
+     * Itens adicionados ou alterados durante a conversa ficam na sacola.
      *
      * Se o webhook for recebido novamente,
      * apagar um carrinho já vazio não causa
@@ -227,7 +252,8 @@ export async function POST(request: Request) {
       const { error: clearCartError } = await supabaseAdmin
         .from("cart_items")
         .delete()
-        .eq("user_id", order.user_id);
+        .eq("user_id", order.user_id)
+        .lte("updated_at", order.created_at);
 
       if (clearCartError) {
         console.error("Erro ao limpar carrinho após pagamento:", clearCartError);

@@ -1,7 +1,14 @@
+import { requireAdmin } from "@/src/lib/auth/require-admin";
 import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  const auth = await requireAdmin();
+
+  if (!auth.authorized) {
+    return NextResponse.json({ error: auth.message }, { status: auth.status });
+  }
+
   const clientId = process.env.MELHOR_ENVIO_CLIENT_ID;
 
   const redirectUri = process.env.MELHOR_ENVIO_REDIRECT_URI;

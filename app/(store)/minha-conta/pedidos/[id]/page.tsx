@@ -66,7 +66,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
   const { data: order, error } = await supabase
     .from("orders")
     .select(
-      "\n      id,\n      user_id,\n      status,\n      total,\n      mercado_pago_payment_id,\n      created_at,\n      updated_at,\n      order_items (\n        id,\n        product_id,\n        product_name,\n        unit_price,\n        quantity,\n        subtotal\n      )\n    ",
+      "\n      id,\n      user_id,\n      status,\n      checkout_channel,\n      total,\n      mercado_pago_payment_id,\n      created_at,\n      updated_at,\n      order_items (\n        id,\n        product_id,\n        product_name,\n        unit_price,\n        quantity,\n        subtotal\n      )\n    ",
     )
     .eq("id", id)
     .eq("user_id", user.id)
@@ -85,6 +85,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
         {accountContent.minhaConta}
       </Link>
 
+      {order.checkout_channel === "whatsapp" && (
+        <Link
+          href={`/checkout/pedido/${order.id}`}
+          className="mt-5 flex min-h-12 w-fit items-center rounded-xl bg-[#171914] px-5 text-sm text-white"
+        >
+          Acompanhar pedido e pagamento →
+        </Link>
+      )}
       <div className="mt-6">
         <p className="text-sm uppercase tracking-[0.2em] text-neutral-500">
           {accountContent.pedido}

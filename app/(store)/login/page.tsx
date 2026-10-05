@@ -11,6 +11,7 @@ import { authVisualContent } from "@/src/content/auth-visual";
 
 import { accountContent } from "@/src/content/account";
 import Link from "next/link";
+import { getLoginReturnPath } from "@/src/lib/login-return";
 import {
   ArrowRight,
   Eye,
@@ -87,9 +88,7 @@ export default function LoginPage() {
 
       notify.success(notificationContent.login, undefined, "login");
       router.replace(
-        new URLSearchParams(window.location.search).get("next") === "/carrinho"
-          ? "/carrinho"
-          : "/auth/continue",
+        getLoginReturnPath(new URLSearchParams(window.location.search).get("next")),
       );
       router.refresh();
     } catch {

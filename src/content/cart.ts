@@ -5,7 +5,7 @@ export const cartContent = {
   title: "Minha",
   accent: "sacola",
   description:
-    "Confira seus perfumes e escolha a entrega antes de seguir para o pagamento.",
+    "Confira sua seleção. Combine a entrega no WhatsApp e finalize com Mercado Pago.",
   products: "Seus perfumes",
   summary: "Resumo do pedido",
   continue: "Continuar comprando",

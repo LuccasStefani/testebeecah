@@ -21,7 +21,7 @@ export default function ProductGallery({ name, images }: ProductGalleryProps) {
           alt={name}
           fill
           priority
-          className="object-contain p-5 sm:p-8"
+          className="object-cover object-center"
           sizes="(max-width: 1024px) 100vw, 50vw"
         />
       </div>
@@ -45,7 +45,7 @@ export default function ProductGallery({ name, images }: ProductGalleryProps) {
                 src={image}
                 alt={`${name} - imagem ${index + 1}`}
                 fill
-                className="object-contain p-2"
+                className="object-cover object-center"
                 sizes="120px"
               />
             </button>

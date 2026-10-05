@@ -1,3 +1,4 @@
+import { checkoutMode } from "@/src/lib/checkout-mode";
 import { checkoutContent } from "@/src/content/checkout";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -11,6 +12,7 @@ type PageProps = {
 };
 
 export default async function CheckoutSelectedAddressPage({ params }: PageProps) {
+  if (checkoutMode === "whatsapp") redirect("/carrinho");
   const { id } = await params;
 
   const supabase = await createSupabaseServerClient();

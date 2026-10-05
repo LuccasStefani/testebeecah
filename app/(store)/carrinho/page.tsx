@@ -11,6 +11,10 @@ import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, LoaderCircle } from "luci
 import { AlertDialog } from "@base-ui/react/alert-dialog";
 import { motion, useReducedMotion } from "motion/react";
 import { notify } from "@/src/lib/notifications";
+import ShareCartWhatsApp from "@/src/components/checkout/ShareCartWhatsApp";
+import CheckoutSteps from "@/src/components/checkout/CheckoutSteps";
+import AssistedCheckoutSummary from "@/src/components/checkout/AssistedCheckoutSummary";
+import { checkoutMode } from "@/src/lib/checkout-mode";
 import CheckoutSummary from "@/src/components/checkout/CheckoutSummary";
 import { useCart } from "@/src/contexts/CartContext";
 
@@ -126,6 +130,9 @@ export default function CartPage() {
       </a>
       <div className="mx-auto grid w-full max-w-7xl items-start gap-8 lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_460px] xl:gap-12">
         <div className="min-w-0 py-3">
+          <div className="mb-7">
+            <CheckoutSteps current={1} />
+          </div>
           <div className="mb-7 flex flex-wrap items-end justify-between gap-5">
             <div>
               <h2 className={playfair.className + " text-3xl tracking-tight sm:text-4xl"}>
@@ -359,7 +366,14 @@ export default function CartPage() {
             {cartContent.summary}
           </h2>
 
-          <CheckoutSummary />
+          {checkoutMode === "whatsapp" ? (
+            <AssistedCheckoutSummary />
+          ) : (
+            <>
+              <CheckoutSummary />
+              <ShareCartWhatsApp />
+            </>
+          )}
         </aside>
       </div>
     </section>
