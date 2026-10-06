@@ -1,3 +1,4 @@
+import { activePromoPrice } from "@/src/lib/promotions";
 import { supabaseAdmin } from "@/src/lib/supabase/admin";
 import type { PopupConfig, PopupSlide } from "@/src/lib/popup-types";
 import PromotionPopup from "./PromotionPopup";
@@ -13,7 +14,9 @@ export default async function PromotionPopupServer() {
   if (!active.length) return null;
   const { data: products, error: productError } = await supabaseAdmin
     .from("products")
-    .select("id,name,slug,price,promo_price,product_images(image_url,position,is_cover)")
+    .select(
+      "id,name,slug,price,promo_price,promo_ends_on,product_images(image_url,position,is_cover)",
+    )
     .in(
       "id",
       active.map((b) => b.productId),
@@ -25,7 +28,7 @@ export default async function PromotionPopupServer() {
     const p = products?.find((p) => p.id === b.productId);
     if (
       !p ||
-      !p.promo_price ||
+      activePromoPrice(p) === undefined ||
       Number(p.promo_price) >= Number(p.price) ||
       Number(p.promo_price) <= 0
     )

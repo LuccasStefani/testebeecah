@@ -1,3 +1,4 @@
+import { activePromoPrice } from "@/src/lib/promotions";
 import { parseProductType } from "@/src/content/product-types";
 import { cache } from "react";
 import { createSupabaseServerClient } from "@/src/lib/supabase/server";
@@ -15,7 +16,7 @@ export const getCatalog = cache(async () => {
       brand,
       description,
       price,
-      promo_price,
+      promo_price,promo_ends_on,
       stock,
       category,
       product_type,
@@ -61,7 +62,8 @@ export const getCatalog = cache(async () => {
 
       price: Number(product.price),
 
-      promoPrice: product.promo_price !== null ? Number(product.promo_price) : undefined,
+      promoPrice: activePromoPrice(product),
+      promoEndsOn: product.promo_ends_on,
 
       stock: product.stock,
       category: product.category,

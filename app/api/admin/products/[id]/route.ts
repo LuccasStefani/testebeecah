@@ -1,3 +1,5 @@
+import { isPromotionDate } from "@/src/lib/promotions";
+import { promotionContent } from "@/src/content/promotions";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { isProductType, productTypeContent } from "@/src/content/product-types";
 import { NextResponse } from "next/server";
@@ -63,6 +65,7 @@ export async function PATCH(request: Request, { params }: RouteProps) {
       description,
       price,
       promoPrice,
+      promoEndsOn,
       stock,
       weight,
       width,
@@ -154,6 +157,19 @@ export async function PATCH(request: Request, { params }: RouteProps) {
       }
     }
 
+    if (
+      promoEndsOn !== undefined &&
+      promoEndsOn !== null &&
+      promoEndsOn !== "" &&
+      !isPromotionDate(promoEndsOn)
+    ) {
+      return NextResponse.json(
+        { success: false, message: promotionContent.invalidDate },
+        { status: 400 },
+      );
+    }
+    const parsedPromoEndsOn = parsedPromoPrice === null ? null : promoEndsOn || null;
+
     const parsedWeight = parseOptionalPositiveNumber(weight);
 
     const parsedWidth = parseOptionalPositiveNumber(width);
@@ -195,6 +211,9 @@ export async function PATCH(request: Request, { params }: RouteProps) {
 
         price: parsedPrice,
         promo_price: parsedPromoPrice,
+        ...(promoEndsOn !== undefined || parsedPromoPrice === null
+          ? { promo_ends_on: parsedPromoEndsOn }
+          : {}),
         stock: parsedStock,
         weight: parsedWeight,
         width: parsedWidth,

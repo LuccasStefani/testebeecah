@@ -1,4 +1,6 @@
 "use client";
+
+import { promotionContent } from "@/src/content/promotions";
 import ProductImageDropzone from "@/src/components/admin/ProductImageDropzone";
 import { adminControls } from "@/src/styles/admin-controls";
 import ProductTypeField from "@/src/components/products/ProductTypeField";
@@ -67,6 +69,7 @@ export default function NewProductPage() {
 
         price: form.get("price"),
         promoPrice: form.get("promoPrice"),
+        promoEndsOn: form.get("promoEndsOn"),
         stock: form.get("stock"),
 
         weight: form.get("weight"),
@@ -262,6 +265,11 @@ export default function NewProductPage() {
               step="0.01"
               placeholder={"219.90"}
             />
+
+            <div>
+              <Field label={promotionContent.deadline} name="promoEndsOn" type="date" />
+              <p className="mt-2 text-xs text-neutral-400">{promotionContent.help}</p>
+            </div>
 
             <Field
               label={adminContent.estoque}

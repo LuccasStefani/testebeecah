@@ -1,3 +1,4 @@
+import { activePromoPrice } from "@/src/lib/promotions";
 import { parseProductType } from "@/src/content/product-types";
 import PersonalPageHero from "@/src/components/layout/PersonalPageHero";
 import { catalogContent } from "@/src/content/catalog";
@@ -35,7 +36,7 @@ export default async function FavoritosPage() {
     const { data: productsData, error: productsError } = await supabase
       .from("products")
       .select(
-        "\n        id,\n        name,\n        slug,\n        brand,\n        description,\n        price,\n        promo_price,\n        stock,\n        category,\n          product_type,\n        product_images (\n          image_url,\n          position,\n          is_cover\n        )\n      ",
+        "\n        id,\n        name,\n        slug,\n        brand,\n        description,\n        price,\n        promo_price,promo_ends_on,\n        stock,\n        category,\n          product_type,\n        product_images (\n          image_url,\n          position,\n          is_cover\n        )\n      ",
       )
       .in("id", productIds)
       .eq("active", true);
@@ -67,8 +68,8 @@ export default async function FavoritosPage() {
           brand: product.brand,
           description: product.description,
           price: Number(product.price),
-          promoPrice:
-            product.promo_price !== null ? Number(product.promo_price) : undefined,
+          promoPrice: activePromoPrice(product),
+          promoEndsOn: product.promo_ends_on,
           stock: product.stock,
           category: product.category,
           productType: parseProductType(product.product_type),

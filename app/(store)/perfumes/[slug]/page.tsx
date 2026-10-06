@@ -1,3 +1,4 @@
+import { activePromoPrice } from "@/src/lib/promotions";
 import { productTypeLabel, parseProductType } from "@/src/content/product-types";
 import { catalogContent } from "@/src/content/catalog";
 import { productStyles } from "@/src/styles/product";
@@ -28,7 +29,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "\n      id,\n      name,\n      slug,\n      brand,\n      description,\n      price,\n      promo_price,\n      stock,\n      category,\n          product_type,\n      volume,\n      fragrance_family,\n      top_notes,\n      heart_notes,\n      base_notes,\n      featured,\n      active,\n      product_images (\n        id,\n        image_url,\n        position,\n        is_cover\n      )\n    ",
+      "\n      id,\n      name,\n      slug,\n      brand,\n      description,\n      price,\n      promo_price,promo_ends_on,\n      stock,\n      category,\n          product_type,\n      volume,\n      fragrance_family,\n      top_notes,\n      heart_notes,\n      base_notes,\n      featured,\n      active,\n      product_images (\n        id,\n        image_url,\n        position,\n        is_cover\n      )\n    ",
     )
     .eq("slug", slug)
     .eq("active", true)
@@ -53,7 +54,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
     price: Number(data.price),
 
-    promoPrice: data.promo_price !== null ? Number(data.promo_price) : undefined,
+    promoPrice: activePromoPrice(data),
+    promoEndsOn: data.promo_ends_on,
 
     stock: data.stock,
     category: data.category,

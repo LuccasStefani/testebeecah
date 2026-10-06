@@ -24,7 +24,7 @@ export default async function EditProductPage({ params }: PageProps) {
   const { data: product, error } = await supabaseAdmin
     .from("products")
     .select(
-      "\n      id,\n      name,\n      brand,\n      description,\n      price,\n      promo_price,\n      stock,\n      weight,\n      width,\n      height,\n      length,\n      category,\n      product_type,\n      is_arabian,\n      is_new,\n      volume,\n      fragrance_family,\n      top_notes,\n      heart_notes,\n      base_notes,\n      featured,\n      active,\n      product_images (\n        id,\n        image_url,\n        position,\n        is_cover\n      )\n    ",
+      "\n      id,\n      name,\n      brand,\n      description,\n      price,\n      promo_price,promo_ends_on,\n      stock,\n      weight,\n      width,\n      height,\n      length,\n      category,\n      product_type,\n      is_arabian,\n      is_new,\n      volume,\n      fragrance_family,\n      top_notes,\n      heart_notes,\n      base_notes,\n      featured,\n      active,\n      product_images (\n        id,\n        image_url,\n        position,\n        is_cover\n      )\n    ",
     )
     .eq("id", id)
     .single();
@@ -49,6 +49,7 @@ export default async function EditProductPage({ params }: PageProps) {
 
         promoPrice: product.promo_price !== null ? Number(product.promo_price) : null,
 
+        promoEndsOn: product.promo_ends_on,
         stock: product.stock,
         isArabian: product.is_arabian,
         isNew: product.is_new,

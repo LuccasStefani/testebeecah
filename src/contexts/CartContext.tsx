@@ -1,4 +1,5 @@
 "use client";
+import { activePromoPrice } from "@/src/lib/promotions";
 
 import { parseProductType, type ProductType } from "@/src/content/product-types";
 import { notify } from "@/src/lib/notifications";
@@ -190,7 +191,7 @@ export function CartProvider({ children }: CartProviderProps) {
           name,
           slug,
           price,
-          promo_price,
+          promo_price,promo_ends_on,
           stock,
           product_type,
           active,
@@ -232,10 +233,7 @@ export function CartProvider({ children }: CartProviderProps) {
             return a.position - b.position;
           });
 
-          const finalPrice =
-            product.promo_price !== null
-              ? Number(product.promo_price)
-              : Number(product.price);
+          const finalPrice = activePromoPrice(product) ?? Number(product.price);
 
           return {
             id: product.id,

@@ -181,3 +181,20 @@ test("care search accepts the labels and common Portuguese plurals", () => {
   assert.ok(types.productTypeSearchText("body-cream").includes("creme de corpo"));
   assert.ok(types.productTypeSearchText("skin-cream").includes("cremes para a pele"));
 });
+
+test("admin POST and PATCH persist valid promotion deadlines and reject impossible dates", async () => {
+  for (const method of ["POST", "PATCH"]) {
+    const valid = route(method);
+    await valid.run({ ...base, promoPrice: 60, promoEndsOn: "2026-10-11" });
+    assert.equal(valid.payload.promo_ends_on, "2026-10-11");
+    const invalid = route(method);
+    assert.equal(
+      (await invalid.run({ ...base, promoPrice: 60, promoEndsOn: "2026-02-30" })).status,
+      400,
+    );
+    assert.equal(invalid.calls, 0);
+    const cleared = route(method);
+    await cleared.run({ ...base, promoPrice: "", promoEndsOn: "2026-10-11" });
+    assert.equal(cleared.payload.promo_ends_on, null);
+  }
+});

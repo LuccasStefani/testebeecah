@@ -1,6 +1,8 @@
 import type { ContentDictionary } from "./types";
 
 export const showcaseContent = {
+  promotions: "Promoções da semana",
+  promotionEyebrow: "Sua próxima escolha, por menos",
   bestSellerBadge: "Mais vendido",
   arabian: "Perfume árabe",
   newProduct: "Novidade",

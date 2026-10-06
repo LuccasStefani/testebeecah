@@ -79,7 +79,9 @@ export default function SearchResultCard({
                 <del>{currency.format(product.price)}</del>
               </p>
             )}
-            <p className="text-base font-semibold leading-tight tracking-tight sm:text-xl">
+            <p
+              className={`text-base font-semibold leading-tight tracking-tight sm:text-xl ${hasPromotion ? "text-rose-700" : "text-beecah-black"}`}
+            >
               {hasPromotion && <span className="sr-only">{content.currentPrice} </span>}
               {currency.format(price)}
             </p>

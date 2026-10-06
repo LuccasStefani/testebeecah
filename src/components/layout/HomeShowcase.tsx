@@ -11,14 +11,23 @@ export default function HomeShowcase({
   products,
   bestSellerIds,
   failed,
+  promotion = false,
+  validity,
 }: {
   products: Product[];
   bestSellerIds: string[];
   failed: boolean;
+  promotion?: boolean;
+  validity?: string;
 }) {
-  const slides = products.length
-    ? Array.from({ length: 6 }, (_, index) => products[index % products.length])
-    : [];
+  const sectionId = promotion ? "promocoes-da-semana" : "colecao";
+  const titleId = `${sectionId}-title`;
+  const trackId = `${sectionId}-track`;
+  const slides = promotion
+    ? products
+    : products.length
+      ? Array.from({ length: 6 }, (_, index) => products[index % products.length])
+      : [];
   const track = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: true, end: false });
 
@@ -58,27 +67,30 @@ export default function HomeShowcase({
 
   return (
     <section
-      id="colecao"
-      aria-labelledby="showcase-title"
+      id={sectionId}
+      aria-labelledby={titleId}
       className="px-4 pt-2 pb-10 sm:px-6 sm:pb-14"
     >
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
           <p className="text-[9px] uppercase tracking-[0.16em] text-neutral-500">
-            {showcaseContent.eyebrow}
+            {promotion ? showcaseContent.promotionEyebrow : showcaseContent.eyebrow}
           </p>
           <h2
-            id="showcase-title"
+            id={titleId}
             className="mt-1 font-['Sorts_Mill_Goudy',serif] text-3xl leading-tight tracking-tight sm:text-4xl"
           >
-            {showcaseContent.selection}
+            {promotion ? showcaseContent.promotions : showcaseContent.selection}
           </h2>
+          {promotion && validity ? (
+            <p className="mt-2 text-sm text-neutral-600">{validity}</p>
+          ) : null}
         </div>
         <div className="flex gap-2">
           <button
             type="button"
             aria-label={showcaseContent.previous}
-            aria-controls="showcase-track"
+            aria-controls={trackId}
             disabled={edges.start || !products.length}
             onClick={() => move(-1)}
             className="flex size-11 items-center justify-center rounded-xl bg-[#171914] text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-30"
@@ -88,7 +100,7 @@ export default function HomeShowcase({
           <button
             type="button"
             aria-label={showcaseContent.next}
-            aria-controls="showcase-track"
+            aria-controls={trackId}
             disabled={edges.end || !products.length}
             onClick={() => move(1)}
             className="flex size-11 items-center justify-center rounded-xl bg-[#171914] text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-30"
@@ -100,9 +112,9 @@ export default function HomeShowcase({
       {products.length ? (
         <div
           ref={track}
-          id="showcase-track"
+          id={trackId}
           role="region"
-          aria-label={showcaseContent.region}
+          aria-label={promotion ? showcaseContent.promotions : showcaseContent.region}
           tabIndex={0}
           className="flex items-stretch snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4"
         >

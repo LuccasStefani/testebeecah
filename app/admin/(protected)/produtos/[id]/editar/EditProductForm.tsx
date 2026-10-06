@@ -1,4 +1,6 @@
 "use client";
+
+import { promotionContent } from "@/src/content/promotions";
 import { adminControls } from "@/src/styles/admin-controls";
 import ProductTypeField from "@/src/components/products/ProductTypeField";
 import type { ProductType } from "@/src/content/product-types";
@@ -25,6 +27,7 @@ type Product = {
   description: string;
   price: number;
   promoPrice: number | null;
+  promoEndsOn: string | null;
   stock: number;
 
   weight: number | null;
@@ -92,6 +95,7 @@ export default function EditProductForm({ product }: Props) {
 
         price: form.get("price"),
         promoPrice: form.get("promoPrice"),
+        promoEndsOn: form.get("promoEndsOn"),
         stock: form.get("stock"),
 
         weight: form.get("weight"),
@@ -501,6 +505,16 @@ export default function EditProductForm({ product }: Props) {
               step="0.01"
               defaultValue={product.promoPrice !== null ? String(product.promoPrice) : ""}
             />
+
+            <div>
+              <Field
+                label={promotionContent.deadline}
+                name="promoEndsOn"
+                type="date"
+                defaultValue={product.promoEndsOn ?? ""}
+              />
+              <p className="mt-2 text-xs text-neutral-400">{promotionContent.help}</p>
+            </div>
 
             <Field
               label={adminContent.estoque}

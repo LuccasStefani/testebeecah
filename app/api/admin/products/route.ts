@@ -1,3 +1,5 @@
+import { isPromotionDate } from "@/src/lib/promotions";
+import { promotionContent } from "@/src/content/promotions";
 import { isProductType, productTypeContent } from "@/src/content/product-types";
 import { NextResponse } from "next/server";
 
@@ -52,6 +54,7 @@ export async function POST(request: Request) {
       description,
       price,
       promoPrice,
+      promoEndsOn,
       stock,
       category,
       productType,
@@ -144,6 +147,19 @@ export async function POST(request: Request) {
       }
     }
 
+    if (
+      promoEndsOn !== undefined &&
+      promoEndsOn !== null &&
+      promoEndsOn !== "" &&
+      !isPromotionDate(promoEndsOn)
+    ) {
+      return NextResponse.json(
+        { success: false, message: promotionContent.invalidDate },
+        { status: 400 },
+      );
+    }
+    const parsedPromoEndsOn = parsedPromoPrice === null ? null : promoEndsOn || null;
+
     const parsedWeight = parseOptionalPositiveNumber(weight);
 
     const parsedWidth = parseOptionalPositiveNumber(width);
@@ -214,6 +230,9 @@ export async function POST(request: Request) {
 
         price: parsedPrice,
         promo_price: parsedPromoPrice,
+        ...(promoEndsOn !== undefined || parsedPromoPrice === null
+          ? { promo_ends_on: parsedPromoEndsOn }
+          : {}),
         stock: parsedStock,
 
         category: category.trim(),

@@ -10,6 +10,7 @@ export type Product = {
 
   price: number;
   promoPrice?: number;
+  promoEndsOn?: string | null;
 
   stock: number;
 

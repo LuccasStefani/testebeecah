@@ -1,4 +1,6 @@
 "use client";
+import { activePromoPrice } from "@/src/lib/promotions";
+
 import {
   productTypeContent,
   productTypeSearchText,
@@ -35,6 +37,7 @@ type SupabaseProduct = {
   description: string;
   price: number | string;
   promo_price: number | string | null;
+  promo_ends_on: string | null;
   stock: number;
   category: string;
   product_type: ProductType;
@@ -116,7 +119,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
       const { data, error } = await supabase
         .from("products")
         .select(
-          "\n          id,\n          name,\n          slug,\n          brand,\n          description,\n          price,\n          promo_price,\n          stock,\n          category,\n          product_type,\n          volume,\n          fragrance_family,\n          top_notes,\n          heart_notes,\n          base_notes,\n          featured,\n          active,\n          product_images (\n            id,\n            image_url,\n            position,\n            is_cover\n          )\n        ",
+          "\n          id,\n          name,\n          slug,\n          brand,\n          description,\n          price,\n          promo_price,promo_ends_on,\n          stock,\n          category,\n          product_type,\n          volume,\n          fragrance_family,\n          top_notes,\n          heart_notes,\n          base_notes,\n          featured,\n          active,\n          product_images (\n            id,\n            image_url,\n            position,\n            is_cover\n          )\n        ",
         )
         .eq("active", true)
         .order("created_at", {
@@ -150,8 +153,8 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
 
             price: Number(product.price),
 
-            promoPrice:
-              product.promo_price !== null ? Number(product.promo_price) : undefined,
+            promoPrice: activePromoPrice(product),
+            promoEndsOn: product.promo_ends_on,
 
             stock: product.stock,
             category: product.category,

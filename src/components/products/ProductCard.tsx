@@ -1,4 +1,6 @@
 "use client";
+import { formatPromotionDate } from "@/src/lib/promotions";
+import { promotionContent } from "@/src/content/promotions";
 import { productTypeLabel } from "@/src/content/product-types";
 
 import { useFeedbackState } from "@/src/hooks/use-feedback-state";
@@ -379,9 +381,19 @@ export default function ProductCard({
                 </>
               ) : null}
             </p>
-            <p className="mt-0.5 text-base font-semibold tracking-tight sm:text-xl">
+            <p
+              className={`mt-0.5 text-base font-semibold tracking-tight sm:text-xl ${hasPromotion ? "text-rose-700" : "text-beecah-black"}`}
+            >
               {formatPrice(finalPrice)}
             </p>
+            {hasPromotion && product.promoEndsOn ? (
+              <p className="mt-1 text-[10px] font-medium text-rose-700 sm:text-xs">
+                {promotionContent.validity}{" "}
+                <time dateTime={product.promoEndsOn}>
+                  {formatPromotionDate(product.promoEndsOn)}
+                </time>
+              </p>
+            ) : null}
           </div>
           <div className="flex shrink-0 gap-2">
             <button

@@ -1,3 +1,4 @@
+import { promotionContent } from "@/src/content/promotions";
 import HomeBodySplash from "@/src/components/layout/HomeBodySplash";
 import { getTestimonials } from "@/src/lib/testimonials";
 import HomeMotion from "@/src/components/layout/HomeMotion";
@@ -19,6 +20,12 @@ export default async function Home() {
     getBestSellerIds(),
     getTestimonials(),
   ]);
+  const promotionalProducts = products.filter(
+    (product) =>
+      product.stock > 0 &&
+      product.promoPrice !== undefined &&
+      product.promoPrice < product.price,
+  );
   const bestSellers = selectCollection(products, "mais-vendidos", ranking.ids);
   const sortedProducts = [...products].sort(
     (a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)),
@@ -50,6 +57,19 @@ export default async function Home() {
           <a href="#colecao">{storeContent.encontreSeuProximoPerfume}</a>
         </div>
         <Bento />
+        {promotionalProducts.length > 0 && (
+          <HomeShowcase
+            products={promotionalProducts}
+            bestSellerIds={ranking.ids}
+            failed={false}
+            validity={
+              promotionalProducts.some((product) => product.promoEndsOn)
+                ? promotionContent.differentDates
+                : undefined
+            }
+            promotion
+          />
+        )}
         <HomeBodySplash products={selectCollection(products, "body-splash")} />
       </HomeMotion>
 

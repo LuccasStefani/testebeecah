@@ -1,3 +1,4 @@
+import { activePromoPrice } from "@/src/lib/promotions";
 import { checkoutMode } from "@/src/lib/checkout-mode";
 import { Preference } from "mercadopago";
 import { NextResponse } from "next/server";
@@ -283,7 +284,7 @@ export async function POST(request: Request) {
         id,
         name,
         price,
-        promo_price,
+        promo_price,promo_ends_on,
         stock,
         active,
         weight,
@@ -343,8 +344,7 @@ export async function POST(request: Request) {
 
       const regularPrice = Number(product.price);
 
-      const promotionalPrice =
-        product.promo_price !== null ? Number(product.promo_price) : null;
+      const promotionalPrice = activePromoPrice(product) ?? null;
 
       const unitPrice = promotionalPrice !== null ? promotionalPrice : regularPrice;
 
