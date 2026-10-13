@@ -28,6 +28,7 @@ function categoryHero(key: CollectionKey, title: string, accent: string): HeroCo
       collectionLink: [
         "body-splash",
         "decantes",
+        "miniaturas",
         "perfume-de-cabelo",
         "creme-corporal",
         "creme-para-a-pele",
@@ -46,6 +47,7 @@ export const categoryHeroes = {
   "perfume-de-cabelo": categoryHero("perfume-de-cabelo", "Perfumes", "de cabelo"),
   "creme-corporal": categoryHero("creme-corporal", "Cremes", "corporais"),
   "creme-para-a-pele": categoryHero("creme-para-a-pele", "Cremes", "para a pele"),
+  miniaturas: categoryHero("miniaturas", "Pequenos", "favoritos"),
   decantes: categoryHero("decantes", "Seus", "decantes"),
   arabes: {
     ...categoryHero("arabes", "Perfumes", "árabes"),

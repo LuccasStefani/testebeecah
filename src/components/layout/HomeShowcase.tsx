@@ -13,21 +13,32 @@ export default function HomeShowcase({
   failed,
   promotion = false,
   validity,
+  id,
+  title,
+  eyebrow,
+  embedded = false,
+  repeat = true,
 }: {
   products: Product[];
   bestSellerIds: string[];
   failed: boolean;
   promotion?: boolean;
   validity?: string;
+  id?: string;
+  title?: string;
+  eyebrow?: string;
+  embedded?: boolean;
+  repeat?: boolean;
 }) {
-  const sectionId = promotion ? "promocoes-da-semana" : "colecao";
+  const sectionId = id ?? (promotion ? "promocoes-da-semana" : "colecao");
   const titleId = `${sectionId}-title`;
   const trackId = `${sectionId}-track`;
-  const slides = promotion
-    ? products
-    : products.length
-      ? Array.from({ length: 6 }, (_, index) => products[index % products.length])
-      : [];
+  const slides =
+    promotion || !repeat
+      ? products
+      : products.length
+        ? Array.from({ length: 6 }, (_, index) => products[index % products.length])
+        : [];
   const track = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: true, end: false });
 
@@ -69,18 +80,20 @@ export default function HomeShowcase({
     <section
       id={sectionId}
       aria-labelledby={titleId}
-      className="px-4 pt-2 pb-10 sm:px-6 sm:pb-14"
+      className={embedded ? "mt-7 min-w-0" : "px-4 pt-2 pb-10 sm:px-6 sm:pb-14"}
     >
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
           <p className="text-[9px] uppercase tracking-[0.16em] text-neutral-500">
-            {promotion ? showcaseContent.promotionEyebrow : showcaseContent.eyebrow}
+            {eyebrow ??
+              (promotion ? showcaseContent.promotionEyebrow : showcaseContent.eyebrow)}
           </p>
           <h2
             id={titleId}
             className="mt-1 font-['Sorts_Mill_Goudy',serif] text-3xl leading-tight tracking-tight sm:text-4xl"
           >
-            {promotion ? showcaseContent.promotions : showcaseContent.selection}
+            {title ??
+              (promotion ? showcaseContent.promotions : showcaseContent.selection)}
           </h2>
           {promotion && validity ? (
             <p className="mt-2 text-sm text-neutral-600">{validity}</p>
@@ -114,7 +127,9 @@ export default function HomeShowcase({
           ref={track}
           id={trackId}
           role="region"
-          aria-label={promotion ? showcaseContent.promotions : showcaseContent.region}
+          aria-label={
+            title ?? (promotion ? showcaseContent.promotions : showcaseContent.region)
+          }
           tabIndex={0}
           className="flex items-stretch snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4"
         >

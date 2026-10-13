@@ -1,13 +1,7 @@
 import Image from "next/image";
 import { showcaseContent } from "@/src/content/showcase";
 
-const brands = [
-  { name: "Versace", src: "/images/brand1.png" },
-  { name: "Brand Collection", src: "/images/brand2.png" },
-  { name: "Zara", src: "/images/brand3.png" },
-  { name: "Prada", src: "/images/brand4.png" },
-  { name: "Lattafa", src: "/images/brand5.png" },
-];
+import { brandSlideItems as brands } from "@/src/content/brands";
 
 export default function BrandSlide() {
   return (
@@ -26,15 +20,34 @@ export default function BrandSlide() {
               {[...brands, ...brands].map((brand, index) => (
                 <div
                   key={`${brand.src}-${index}`}
-                  className="flex h-10 w-[90px] shrink-0 items-center justify-center px-2 sm:px-4 sm:h-16 sm:w-40"
+                  className="flex h-14 w-32 shrink-0 items-center justify-center px-3 sm:h-16 sm:w-40 sm:px-5"
                 >
-                  <Image
-                    src={brand.src}
-                    alt={group === 0 && index < brands.length ? brand.name : ""}
-                    width={300}
-                    height={200}
-                    className="h-full w-full object-contain grayscale"
-                  />
+                  <div
+                    className="relative overflow-hidden"
+                    style={{
+                      width: Math.min(
+                        112,
+                        (32 * brand.visibleWidth) / brand.visibleHeight,
+                      ),
+                      maxWidth: "100%",
+                      aspectRatio: String(brand.visibleWidth / brand.visibleHeight),
+                    }}
+                  >
+                    <Image
+                      src={brand.src}
+                      alt={group === 0 && index < brands.length ? brand.name : ""}
+                      width={brand.width}
+                      height={brand.height}
+                      sizes="160px"
+                      className="absolute max-w-none grayscale"
+                      style={{
+                        width: (brand.width / brand.visibleWidth) * 100 + "%",
+                        height: "auto",
+                        left: (-brand.x / brand.visibleWidth) * 100 + "%",
+                        top: (-brand.y / brand.visibleHeight) * 100 + "%",
+                      }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>

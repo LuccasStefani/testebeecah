@@ -198,3 +198,14 @@ test("admin POST and PATCH persist valid promotion deadlines and reject impossib
     assert.equal(cleared.payload.promo_ends_on, null);
   }
 });
+
+test("miniatures have their own collection, search terms and remain in gender selections", () => {
+  const items = [
+    { id: "mini", productType: "miniature", category: "Feminino" },
+    { id: "decant", productType: "decant", category: "Feminino" },
+  ];
+  assert.deepEqual(ids(selectCollection(items, "miniaturas")), ["mini"]);
+  assert.deepEqual(ids(selectCollection(items, "feminino")), ["mini", "decant"]);
+  assert.equal(types.productTypeLabel("miniature"), "Miniatura");
+  assert.ok(types.productTypeSearchText("miniature").includes("miniaturas"));
+});

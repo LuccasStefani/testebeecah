@@ -1,4 +1,5 @@
 "use client";
+import { searchInputStyles } from "@/src/styles/search";
 
 import { adminContent } from "@/src/content/admin";
 import { adminStyles } from "@/src/styles/admin";
@@ -45,11 +46,7 @@ export type DashboardData = {
 };
 const money = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-const tabs = [
-  adminContent.desempenho,
-  adminContent.produtos,
-  adminContent.operacao,
-];
+const tabs = [adminContent.desempenho, adminContent.produtos, adminContent.operacao];
 export default function Dashboard({ data }: { data: DashboardData }) {
   const router = useRouter();
   const [tab, setTab] = useState(0);
@@ -57,13 +54,11 @@ export default function Dashboard({ data }: { data: DashboardData }) {
   const [ranking, setRanking] = useState("sales");
   const [search, setSearch] = useState("");
   const since = new Date(data.updatedAt).getTime() - days * 86400000;
-  const orders = data.orders.filter(
-    (o) => new Date(o.created_at).getTime() >= since
-  );
+  const orders = data.orders.filter((o) => new Date(o.created_at).getTime() >= since);
   const paid = orders.filter((o) => o.status === "approved");
   const revenue = paid.reduce((sum, o) => sum + Number(o.total), 0);
   const sales = data.sales.filter(
-    (s) => new Date(s.orders.created_at).getTime() >= since
+    (s) => new Date(s.orders.created_at).getTime() >= since,
   );
   const units = sales.reduce((sum, s) => sum + Number(s.quantity), 0);
   const sold = new Map<
@@ -83,9 +78,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
     sold.set(id, row);
   });
   const fav = new Map<string, number>();
-  data.favorites.forEach((f) =>
-    fav.set(f.product_id, (fav.get(f.product_id) || 0) + 1)
-  );
+  data.favorites.forEach((f) => fav.set(f.product_id, (fav.get(f.product_id) || 0) + 1));
   const favorites = data.products
     .map((p) => ({
       id: p.id,
@@ -113,9 +106,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
     },
     {
       label: adminContent.ticketMedio,
-      value: unavailable("orders")
-        ? "—"
-        : money(paid.length ? revenue / paid.length : 0),
+      value: unavailable("orders") ? "—" : money(paid.length ? revenue / paid.length : 0),
       hint: adminContent.valorAprovadoPedidosAprovados,
     },
     {
@@ -146,7 +137,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
   data.clicks
     .filter((c) => new Date(c.created_at).getTime() >= since)
     .forEach((c) =>
-      clickCounts.set(c.product_id, (clickCounts.get(c.product_id) || 0) + 1)
+      clickCounts.set(c.product_id, (clickCounts.get(c.product_id) || 0) + 1),
     );
   const clicked = data.products
     .map((p) => ({
@@ -157,15 +148,10 @@ export default function Dashboard({ data }: { data: DashboardData }) {
     }))
     .filter((p) => p.count > 0)
     .sort((a, b) => b.count - a.count);
-  const rows = (ranking === "clicks"
-    ? clicked
-    : ranking === "favorites"
-    ? favorites
-    : best
+  const rows = (
+    ranking === "clicks" ? clicked : ranking === "favorites" ? favorites : best
   ).filter((p) =>
-    p.name
-      .toLocaleLowerCase("pt-BR")
-      .includes(search.toLocaleLowerCase("pt-BR"))
+    p.name.toLocaleLowerCase("pt-BR").includes(search.toLocaleLowerCase("pt-BR")),
   );
   function rankList(list: typeof best, unit: string) {
     return list.length ? (
@@ -183,9 +169,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
             </span>
             <span className={adminStyles.dashProduct}>
               {p.id ? (
-                <Link href={"/admin/produtos/" + p.id + "/editar"}>
-                  {p.name}
-                </Link>
+                <Link href={"/admin/produtos/" + p.id + "/editar"}>{p.name}</Link>
               ) : (
                 p.name
               )}
@@ -213,9 +197,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
     );
   }
   return (
-    <section
-      className={[adminStyles.adminDashboard, "ranking-"].join(" ") + ranking}
-    >
+    <section className={[adminStyles.adminDashboard, "ranking-"].join(" ") + ranking}>
       <header className={adminStyles.dashHeader}>
         <div>
           <p className={adminStyles.dashKicker}>
@@ -266,8 +248,8 @@ export default function Dashboard({ data }: { data: DashboardData }) {
                   e.key === "Home"
                     ? 0
                     : e.key === "End"
-                    ? 2
-                    : (i + (e.key === "ArrowRight" ? 1 : 2)) % 3;
+                      ? 2
+                      : (i + (e.key === "ArrowRight" ? 1 : 2)) % 3;
                 setTab(next);
                 document.getElementById("dash-tab-" + next)?.focus();
               }
@@ -297,7 +279,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
                   sales: "vendas",
                   favorites: "favoritos",
                   clicks: "cliques",
-                }[e])
+                })[e],
             )
             .join(", ")}
           {"."}
@@ -349,10 +331,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
                           <div
                             style={{
                               height:
-                                Math.max(
-                                  (b.value / max) * 100,
-                                  b.value ? 2 : 0
-                                ) + "%",
+                                Math.max((b.value / max) * 100, b.value ? 2 : 0) + "%",
                             }}
                           />
                         </div>
@@ -390,10 +369,9 @@ export default function Dashboard({ data }: { data: DashboardData }) {
           <>
             <div className={adminStyles.dashRankingTabs}>
               <label className={adminStyles.dashSearch}>
-                <span className="sr-only">
-                  {adminContent.buscarPerfumeNoRanking}
-                </span>
+                <span className="sr-only">{adminContent.buscarPerfumeNoRanking}</span>
                 <input
+                  className={searchInputStyles}
                   type="search"
                   placeholder={adminContent.buscarPerfume}
                   value={search}
@@ -430,15 +408,15 @@ export default function Dashboard({ data }: { data: DashboardData }) {
                       {ranking === "favorites"
                         ? adminContent.osFavoritosDosClientes
                         : ranking === "clicks"
-                        ? adminContent.interesseNosPerfumes
-                        : adminContent.perfumesMaisVendidos}
+                          ? adminContent.interesseNosPerfumes
+                          : adminContent.perfumesMaisVendidos}
                     </h2>
                     <p>
                       {ranking === "favorites"
                         ? adminContent.favoritosSalvosAtualmenteTodosOsPeriodos
                         : ranking === "clicks"
-                        ? adminContent.cliquesUnicosPorSessaoProdutoEDiaPeriodo
-                        : adminContent.pagamentosAprovadosPeriodoSelecionado}
+                          ? adminContent.cliquesUnicosPorSessaoProdutoEDiaPeriodo
+                          : adminContent.pagamentosAprovadosPeriodoSelecionado}
                     </p>
                   </div>
                 </div>
@@ -446,8 +424,8 @@ export default function Dashboard({ data }: { data: DashboardData }) {
                   ranking === "clicks"
                     ? "clicks"
                     : ranking === "favorites"
-                    ? "favorites"
-                    : "sales"
+                      ? "favorites"
+                      : "sales",
                 ) || unavailable("products") ? (
                   <div className={adminStyles.dashEmpty}>
                     {adminContent.rankingIndisponivel}
@@ -458,8 +436,8 @@ export default function Dashboard({ data }: { data: DashboardData }) {
                     ranking === "favorites"
                       ? "favoritos"
                       : ranking === "clicks"
-                      ? "cliques"
-                      : "un."
+                        ? "cliques"
+                        : "un.",
                   )
                 )}
                 {ranking === "clicks" && (
@@ -469,20 +447,18 @@ export default function Dashboard({ data }: { data: DashboardData }) {
                 )}
               </article>
               <article
-                className={[adminStyles.dashCard, adminStyles.dashBlue].join(
-                  " "
-                )}
+                className={[
+                  adminStyles.dashCard,
+                  adminStyles.dashBlue,
+                  "bg-none! bg-neutral-900! text-neutral-100! rounded-2xl! [&_dl>div]:bg-transparent! [&_dl>div]:text-neutral-200! [&_h2]:text-white! [&_a]:text-neutral-100!",
+                ].join(" ")}
               >
-                <p className={adminStyles.dashKicker}>
-                  {adminContent.catalogoAgora}
-                </p>
+                <p className={adminStyles.dashKicker}>{adminContent.catalogoAgora}</p>
                 <h2>{adminContent.umaVisaoDaSuaSelecao}</h2>
                 <dl className={adminStyles.dashCatalog}>
                   <div>
                     <dt>{adminContent.produtosCadastrados}</dt>
-                    <dd>
-                      {unavailable("products") ? "—" : data.products.length}
-                    </dd>
+                    <dd>{unavailable("products") ? "—" : data.products.length}</dd>
                   </div>
                   <div>
                     <dt>{adminContent.ativosNaLoja}</dt>
@@ -494,9 +470,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
                   </div>
                   <div>
                     <dt>{adminContent.favoritosSalvos}</dt>
-                    <dd>
-                      {unavailable("favorites") ? "—" : data.favorites.length}
-                    </dd>
+                    <dd>{unavailable("favorites") ? "—" : data.favorites.length}</dd>
                   </div>
                 </dl>
                 <Link href="/admin/produtos">
@@ -513,9 +487,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
               <div className={adminStyles.dashCardTitle}>
                 <div>
                   <h2>{adminContent.atencaoAoEstoque}</h2>
-                  <p>
-                    {adminContent.produtosAtivosComAte5UnidadesSituacaoAtual}
-                  </p>
+                  <p>{adminContent.produtosAtivosComAte5UnidadesSituacaoAtual}</p>
                 </div>
                 <Link href="/admin/estoque">{adminContent.verTodos}</Link>
               </div>
@@ -527,13 +499,9 @@ export default function Dashboard({ data }: { data: DashboardData }) {
                 <ol className={adminStyles.dashStock}>
                   {low.slice(0, 5).map((p) => (
                     <li key={p.id}>
-                      <Link href={"/admin/produtos/" + p.id + "/editar"}>
-                        {p.name}
-                      </Link>
+                      <Link href={"/admin/produtos/" + p.id + "/editar"}>{p.name}</Link>
                       <span className={p.stock <= 0 ? "out" : ""}>
-                        {p.stock <= 0
-                          ? adminContent.esgotado
-                          : p.stock + " un."}
+                        {p.stock <= 0 ? adminContent.esgotado : p.stock + " un."}
                       </span>
                     </li>
                   ))}
@@ -571,9 +539,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
                   ].map((s) => (
                     <div key={s.status}>
                       <dt>{s.label}</dt>
-                      <dd>
-                        {orders.filter((o) => o.status === s.status).length}
-                      </dd>
+                      <dd>{orders.filter((o) => o.status === s.status).length}</dd>
                     </div>
                   ))}
                 </dl>

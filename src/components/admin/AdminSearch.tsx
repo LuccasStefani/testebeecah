@@ -1,4 +1,5 @@
 "use client";
+import { searchInputStyles } from "@/src/styles/search";
 
 import { adminContent } from "@/src/content/admin";
 import { adminStyles } from "@/src/styles/admin";
@@ -72,6 +73,8 @@ export default function AdminSearch() {
       <div className={adminStyles.adminSearchField}>
         <Search size={17} />
         <input
+          className={searchInputStyles}
+          type="search"
           ref={input}
           aria-label={adminContent.buscarProdutosPedidosClientesESecoes}
           aria-controls="admin-search-results"

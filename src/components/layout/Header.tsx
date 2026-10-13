@@ -168,6 +168,10 @@ export default function Header() {
               <div className="absolute left-0 top-full z-30 grid min-w-44 gap-1 rounded-2xl bg-white p-2 shadow-lg">
                 {[
                   [storeContent.arabes, "/categorias/arabes"],
+                  [
+                    productTypeContent.collections.miniaturas.title,
+                    "/categorias/miniaturas",
+                  ],
                   [storeContent.feminino, "/categorias/feminino"],
                   [storeContent.masculino, "/categorias/masculino"],
                   [
@@ -455,7 +459,12 @@ export default function Header() {
           ================================== */}
 
           <MobileNavMenu isOpen={isMobileMenuOpen} onClose={closeMobileMenu}>
-            {["perfume-de-cabelo", "creme-corporal", "creme-para-a-pele"].map((key) => (
+            {[
+              "miniaturas",
+              "perfume-de-cabelo",
+              "creme-corporal",
+              "creme-para-a-pele",
+            ].map((key) => (
               <Link
                 key={key}
                 href={`/categorias/${key}`}

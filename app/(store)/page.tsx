@@ -1,3 +1,5 @@
+import HomeMiniatures from "@/src/components/layout/HomeMiniatures";
+import HomeCare from "@/src/components/layout/HomeCare";
 import { promotionContent } from "@/src/content/promotions";
 import HomeBodySplash from "@/src/components/layout/HomeBodySplash";
 import { getTestimonials } from "@/src/lib/testimonials";
@@ -71,6 +73,11 @@ export default async function Home() {
           />
         )}
         <HomeBodySplash products={selectCollection(products, "body-splash")} />
+        <HomeCare products={products} />
+        <HomeMiniatures
+          products={selectCollection(products, "miniaturas")}
+          failed={failed}
+        />
       </HomeMotion>
 
       <HomeTestimonials items={reviews.items} />

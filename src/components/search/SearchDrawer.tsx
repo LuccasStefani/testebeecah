@@ -1,4 +1,5 @@
 "use client";
+import { searchInputStyles } from "@/src/styles/search";
 import { activePromoPrice } from "@/src/lib/promotions";
 
 import {
@@ -469,16 +470,10 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                       autoFocus
                       onChange={(event) => setSearch(event.target.value)}
                       placeholder={storeContent.procurePorUmPerfume}
-                      className="
-                        min-w-0
-                        flex-1
-                        bg-transparent
-                        pl-2
-                        text-base
-                        text-beecah-white
-                        outline-none
-                        placeholder:text-white/45
-                      "
+                      className={
+                        searchInputStyles +
+                        " min-w-0 flex-1 bg-transparent pl-2 text-base text-beecah-white outline-none placeholder:text-white/45"
+                      }
                     />
                   </div>
 

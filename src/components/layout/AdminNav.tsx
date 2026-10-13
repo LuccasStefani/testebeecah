@@ -43,11 +43,11 @@ export default function AdminNav() {
             className={
               "flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-sm transition " +
               (active
-                ? "bg-beecah-blue text-white"
-                : "text-neutral-600 hover:bg-neutral-100")
+                ? "bg-neutral-700 text-white"
+                : "text-neutral-300 hover:bg-neutral-800")
             }
           >
-            <Icon size={18} />
+            <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
             {label}
           </Link>
         );

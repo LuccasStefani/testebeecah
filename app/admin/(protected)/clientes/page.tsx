@@ -1,3 +1,4 @@
+import { searchInputStyles } from "@/src/styles/search";
 import { adminContent } from "@/src/content/admin";
 import { adminStyles } from "@/src/styles/admin";
 import Link from "next/link";
@@ -124,10 +125,13 @@ export default async function CustomersPage({
           <Search size={17} className="text-neutral-400" />
           <span className="sr-only">{adminContent.buscarPorNomeOuEMail}</span>
           <input
+            type="search"
             name="q"
             defaultValue={q}
             placeholder={adminContent.buscarPorNomeOuEMail}
-            className="min-w-0 w-full bg-transparent px-2 py-3 text-sm"
+            className={
+              searchInputStyles + " min-w-0 w-full bg-transparent px-2 py-3 text-sm"
+            }
           />
         </label>
         <label>

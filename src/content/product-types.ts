@@ -2,6 +2,7 @@ export const productTypes = [
   "perfume",
   "body-splash",
   "decant",
+  "miniature",
   "hair-perfume",
   "body-cream",
   "skin-cream",
@@ -18,11 +19,17 @@ export const productTypeContent = {
     perfume: "Perfume",
     "body-splash": "Body Splash",
     decant: "Decante",
+    miniature: "Miniatura",
     "hair-perfume": "Perfume de cabelo",
     "body-cream": "Creme corporal",
     "skin-cream": "Creme para a pele",
   },
   collections: {
+    miniaturas: {
+      title: "Miniaturas",
+      description:
+        "Pequenos frascos para descobrir novas fragrâncias e levar seus favoritos com você. Explore nossa seleção de miniaturas.",
+    },
     "body-splash": {
       title: "Body Splash",
       description:
@@ -54,6 +61,7 @@ export const productTypeContent = {
 export const productTypeCollections = {
   "body-splash": "body-splash",
   decantes: "decant",
+  miniaturas: "miniature",
   "perfume-de-cabelo": "hair-perfume",
   "creme-corporal": "body-cream",
   "creme-para-a-pele": "skin-cream",
@@ -74,6 +82,7 @@ export function productTypeSearchText(value: unknown): string {
     perfume: "perfume perfumes",
     "body-splash": "body splash body splashes",
     decant: "decant decante decantes",
+    miniature: "miniatura miniaturas mini perfume mini perfumes",
     "hair-perfume":
       "perfume de cabelo perfumes de cabelo perfume para cabelo perfumes para cabelo",
     "body-cream": "creme corporal cremes corporais creme de corpo cremes de corpo",

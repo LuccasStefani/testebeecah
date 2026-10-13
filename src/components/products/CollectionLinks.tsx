@@ -6,6 +6,7 @@ const links = [
   [catalogContent.arabes, "/categorias/arabes"],
   [productTypeContent.collections["body-splash"].title, "/categorias/body-splash"],
   [productTypeContent.collections.decantes.title, "/categorias/decantes"],
+  [productTypeContent.collections.miniaturas.title, "/categorias/miniaturas"],
   [
     productTypeContent.collections["perfume-de-cabelo"].title,
     "/categorias/perfume-de-cabelo",

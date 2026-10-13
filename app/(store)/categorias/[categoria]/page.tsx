@@ -12,7 +12,10 @@ import {
   selectCollection,
   type CollectionKey,
 } from "@/src/lib/product-collections";
-type Props = { params: Promise<{ categoria: string }> };
+type Props = {
+  params: Promise<{ categoria: string }>;
+  searchParams: Promise<{ genero?: string }>;
+};
 function resolve(key: string): CollectionKey {
   if (!Object.hasOwn(collections, key)) notFound();
   return key as CollectionKey;
@@ -21,17 +24,20 @@ export async function generateMetadata({ params }: Props) {
   const key = resolve((await params).categoria);
   return { title: collections[key].title, description: collections[key].description };
 }
-export default async function CategoryPage({ params }: Props) {
+export default async function CategoryPage({ params, searchParams }: Props) {
   const key = resolve((await params).categoria);
   const { products, failed } = await getCatalog();
   const ranking =
     key === "mais-vendidos" ? await getBestSellerIds() : { ids: [], failed: false };
   const selection = selectCollection(products, key, ranking.ids);
+  const gender = (await searchParams).genero;
+  const initialCategory =
+    gender && ["Masculino", "Feminino", "Unissex"].includes(gender) ? gender : "Todas";
   return (
-    <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
+    <section className="mx-auto w-full min-w-0 max-w-7xl px-3 py-3 sm:px-4 sm:py-8">
       <nav
         aria-label={catalogContent.caminhoDeNavegacao}
-        className="mb-8 flex gap-3 text-xs text-neutral-500"
+        className="mb-4 flex flex-wrap gap-x-3 gap-y-1 text-xs sm:mb-6 text-neutral-500"
       >
         <Link href="/">{catalogContent.inicio}</Link>
         <span>{"/"}</span>
@@ -39,7 +45,7 @@ export default async function CategoryPage({ params }: Props) {
         <span>{"/"}</span>
         <span aria-current="page">{collections[key].title}</span>
       </nav>
-      <Hero {...categoryHeroes[key]} embedded />
+      <Hero {...categoryHeroes[key]} embedded compactMobile />
       <div id="produtos" className="scroll-mt-32" />
       <CollectionLinks current={"/categorias/" + key} />
       {failed || ranking.failed ? (
@@ -51,7 +57,8 @@ export default async function CategoryPage({ params }: Props) {
         </div>
       ) : (
         <Catalog
-          key={key}
+          key={`${key}-${initialCategory}`}
+          initialCategory={initialCategory}
           products={selection}
           defaultOrderLabel={
             key === "mais-vendidos"

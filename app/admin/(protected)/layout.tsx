@@ -21,14 +21,14 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <div className={[adminStyles.adminWorkspace, "admin-dark"].join(" ")}>
+    <div className={[adminStyles.adminWorkspace, "admin-dark dark"].join(" ")}>
       <header className={adminStyles.adminTopbar}>
         <Link href="/admin" className={adminStyles.adminBrand}>
           <Image
-            src="/images/beecah-logo-preloader.png"
+            src="/images/logo/LogoWhite.svg"
             alt={adminContent.beecahCollection}
-            width={165}
-            height={97}
+            width={233}
+            height={118}
             priority
             unoptimized
           />

@@ -1,4 +1,5 @@
 "use client";
+import { searchInputStyles } from "@/src/styles/search";
 import {
   productTypeContent,
   productTypeSearchText,
@@ -154,7 +155,7 @@ export default function Catalog({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={catalogContent.exYaraAmadeirado}
-                className={inputClass}
+                className={inputClass + " " + searchInputStyles}
               />
             </label>
             <label className="text-sm">

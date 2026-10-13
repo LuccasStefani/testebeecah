@@ -9,6 +9,7 @@ import { storeContent } from "@/src/content/store";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { X, ChevronLeft, ChevronRight, Pause, Play, ArrowRight } from "lucide-react";
 import type { PopupSlide } from "@/src/lib/popup-types";
 export default function PromotionPopup({
@@ -109,9 +110,13 @@ export default function PromotionPopup({
             style={{ backgroundImage: "url(" + JSON.stringify(slide.image) + ")" }}
           />
           <div className="flex min-w-0 flex-col items-center justify-center px-5 py-5 text-center [overflow-wrap:anywhere] sm:px-10 sm:py-9">
-            <p className="font-haerins text-2xl text-beecah-blue">
-              {storeContent.beecah}
-            </p>
+            <Image
+              src="/images/logo/LogoBlack.svg"
+              alt={storeContent.beecah}
+              width={99}
+              height={50}
+              className="h-auto w-[110px] shrink-0 object-contain sm:w-[130px]"
+            />
             <span className="mt-3 rounded-full bg-rose-50 sm:mt-5 px-4 py-2 text-xs font-medium text-rose-800">
               {Math.round((1 - slide.promoPrice / slide.price) * 100)}
               {storeContent.deDesconto}

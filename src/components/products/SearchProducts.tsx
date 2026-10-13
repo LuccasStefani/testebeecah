@@ -1,4 +1,5 @@
 "use client";
+import { searchInputStyles } from "@/src/styles/search";
 import {
   productTypeContent,
   productTypeSearchText,
@@ -113,7 +114,10 @@ export default function SearchProducts({ products }: SearchProductsProps) {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder={catalogContent.exYaraLattafaMasculino}
-          className="w-full border border-neutral-300 px-5 py-4 outline-none transition focus:border-neutral-950"
+          className={
+            searchInputStyles +
+            " w-full border border-neutral-300 px-5 py-4 outline-none transition focus:border-neutral-950"
+          }
         />
       </div>
 
