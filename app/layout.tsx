@@ -1,3 +1,4 @@
+import GradualBlur from "@/src/components/ui/GradualBlur";
 import { Toaster } from "@/src/components/ui/toast";
 import { storeContent } from "@/src/content/store";
 import type { Metadata } from "next";
@@ -24,6 +25,16 @@ export default function RootLayout({
     <html lang="pt-BR" className={cn("font-sans", geist.variable)}>
       <body>
         {children}
+        <GradualBlur
+          target="page"
+          position="bottom"
+          height="7rem"
+          strength={2}
+          divCount={5}
+          curve="bezier"
+          exponential
+          opacity={1}
+        />
         <Toaster />
       </body>
     </html>

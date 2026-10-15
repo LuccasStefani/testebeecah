@@ -41,7 +41,7 @@ export default async function PromotionPopupServer() {
         id: b.id,
         title: b.title,
         description: b.description,
-        image: b.imageUrl || images[0]?.image_url || "/images/banners/bghero2.jpg",
+        image: b.imageUrl || images[0]?.image_url || "/images/optimized/bghero2-dcdd93c4d7.webp",
         name: p.name,
         href: "/perfumes/" + p.slug,
         price: Number(p.price),

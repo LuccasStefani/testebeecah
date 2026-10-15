@@ -1,3 +1,4 @@
+import { revalidateCatalog } from "@/src/lib/revalidate-catalog";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 
@@ -138,12 +139,16 @@ export async function DELETE(_request: Request, { params }: RouteProps) {
         r2Error,
       );
 
+      revalidateCatalog();
+
       return NextResponse.json({
         success: true,
         warning:
           "A imagem foi removida da loja, mas o arquivo pode ter permanecido no R2.",
       });
     }
+
+    revalidateCatalog();
 
     return NextResponse.json({
       success: true,

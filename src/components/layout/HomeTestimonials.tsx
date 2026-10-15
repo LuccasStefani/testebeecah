@@ -1,4 +1,5 @@
 "use client";
+import { sectionAction } from "@/src/styles/section-actions";
 
 import { useRef, useState, type RefObject } from "react";
 import Link from "next/link";
@@ -129,10 +130,7 @@ export default function HomeTestimonials({
           <p className="mx-auto mt-4 max-w-64 text-sm leading-6 text-neutral-500">
             {content.description}
           </p>
-          <Link
-            href="/depoimentos"
-            className="mt-6 inline-flex min-h-11 items-center gap-3 rounded-xl bg-[#171914] px-5 text-xs text-white transition hover:bg-[#2d416f] focus-visible:outline-2 focus-visible:outline-offset-4"
-          >
+          <Link href="/depoimentos" className={sectionAction + " mt-6"}>
             {content.action}
             <ArrowUpRight size={15} aria-hidden="true" />
           </Link>

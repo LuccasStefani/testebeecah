@@ -38,7 +38,7 @@ export default function NewsPage() {
         </div>
         <div className={homeStyles.homeComingImage}>
           <Image
-            src="/images/banners/womanbanner.jpg"
+            src="/images/optimized/bghero2-dcdd93c4d7.webp"
             alt={storeContent.universoDeFragranciasBeecah}
             fill
             priority

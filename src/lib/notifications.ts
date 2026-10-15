@@ -12,7 +12,10 @@ export type NotificationIcon =
   | "bag";
 export type NotificationKind = "success" | "error" | "info";
 
-export const toastManager = Toast.createToastManager<{ icon: NotificationIcon }>();
+export const toastManager = Toast.createToastManager<{
+  icon: NotificationIcon;
+  duration: number;
+}>();
 
 function show(
   kind: NotificationKind,
@@ -27,9 +30,12 @@ function show(
     title,
     description,
     type: kind,
-    timeout: kind === "error" ? 6500 : 4500,
+    timeout: 0,
     priority: kind === "error" ? "high" : "low",
-    data: { icon: icon ?? (kind === "success" ? "check" : kind) },
+    data: {
+      icon: icon ?? (kind === "success" ? "check" : kind),
+      duration: kind === "error" ? 6500 : 4000,
+    },
   });
 }
 

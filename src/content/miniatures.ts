@@ -7,7 +7,7 @@ export const miniatureContent = {
   action: "Explorar miniaturas",
   href: "/categorias/miniaturas",
   all: "Ver todos os perfumes",
-  image: "/images/banners/bento2.jpeg",
+  image: "/images/optimized/bento2-c270742d20.webp",
   imageAlt: "Perfumes da coleção Beecah",
   selection: "Pequenos favoritos",
   empty:

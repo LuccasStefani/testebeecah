@@ -1,3 +1,4 @@
+import { sectionAction } from "@/src/styles/section-actions";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
@@ -34,10 +35,7 @@ export default function HomeMiniatures({
           <p className="mt-5 max-w-[40ch] text-sm leading-7 text-neutral-600">
             {content.description}
           </p>
-          <Link
-            href={content.href}
-            className="mt-6 inline-flex min-h-12 items-center gap-5 rounded-xl bg-[#171914] px-6 text-xs font-medium text-white transition-colors hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-4"
-          >
+          <Link href={content.href} className={sectionAction + " mt-6"}>
             {content.action}
             <ArrowUpRight size={17} aria-hidden="true" />
           </Link>
@@ -52,29 +50,17 @@ export default function HomeMiniatures({
           />
         </div>
       </div>
-      {products.length > 0 || failed ? (
-        <HomeShowcase
-          id="miniaturas-vitrine"
-          title={content.selection}
-          eyebrow={content.eyebrow}
-          products={products.slice(0, 12)}
-          bestSellerIds={[]}
-          failed={failed}
-          embedded
-          repeat={false}
-        />
-      ) : (
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-neutral-500">
-          <p>{content.empty}</p>
-          <Link
-            href="/perfumes"
-            className="inline-flex min-h-11 items-center gap-2 text-xs text-[#171914] underline underline-offset-4"
-          >
-            {content.all}
-            <ArrowUpRight size={15} aria-hidden="true" />
-          </Link>
-        </div>
-      )}
+      <HomeShowcase
+        id="miniaturas-vitrine"
+        title={content.selection}
+        eyebrow={content.eyebrow}
+        products={products.slice(0, 12)}
+        bestSellerIds={[]}
+        failed={failed}
+        embedded
+        repeat={false}
+        emptyMessage={content.empty}
+      />
     </section>
   );
 }

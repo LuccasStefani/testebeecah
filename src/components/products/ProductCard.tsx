@@ -265,11 +265,12 @@ export default function ProductCard({
             src={product.imageUrl || "/images/products/placeholder.svg"}
             alt={product.name}
             fill
+            quality={65}
             className="object-cover transition-transform duration-700 group-hover/card:scale-[1.035] motion-reduce:transform-none motion-reduce:transition-none"
             sizes={
               showcase
                 ? "(max-width: 640px) 220px, (max-width: 1024px) 240px, 260px"
-                : "(max-width: 640px) 47vw, (max-width: 1024px) 46vw, 25vw"
+                : "(max-width: 640px) 47vw, (max-width: 1024px) 46vw, (max-width: 1280px) 25vw, 320px"
             }
           />
         </Link>

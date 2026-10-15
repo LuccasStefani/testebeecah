@@ -1,0 +1,2 @@
+export const sectionAction =
+  "inline-flex w-fit max-w-full min-h-10 items-center justify-center gap-2 rounded-xl bg-[#171914] px-5 py-3 text-center text-[10px] font-medium uppercase leading-4 tracking-[0.04em] text-white transition-colors hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-4 sm:px-6 lg:min-h-12 lg:px-8 lg:text-xs [&_svg]:static [&_svg]:m-0 [&_svg]:size-4 [&_svg]:shrink-0";

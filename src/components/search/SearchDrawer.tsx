@@ -112,9 +112,10 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
 
   useEffect(() => {
     if (!open || loaded) return;
+    let cancelled = false;
 
     async function loadProducts() {
-      setLoading(true);
+      setLoading(products.length === 0);
       setError(null);
 
       const { data, error } = await supabase
@@ -127,6 +128,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
           ascending: false,
         });
 
+      if (cancelled) return;
       if (error) {
         console.error(storeContent.erroAoCarregarProdutosDaBusca, error);
 
@@ -186,8 +188,17 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
       setLoading(false);
     }
 
-    loadProducts();
-  }, [open, loaded]);
+    void loadProducts();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, loaded, products.length]);
+
+  useEffect(() => {
+    const invalidate = () => setLoaded(false);
+    window.addEventListener("beecah:catalog-updated", invalidate);
+    return () => window.removeEventListener("beecah:catalog-updated", invalidate);
+  }, []);
 
   /* =========================================
      BLOQUEAR SCROLL

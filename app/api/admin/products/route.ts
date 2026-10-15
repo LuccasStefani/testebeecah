@@ -1,3 +1,4 @@
+import { revalidateCatalog } from "@/src/lib/revalidate-catalog";
 import { isPromotionDate } from "@/src/lib/promotions";
 import { promotionContent } from "@/src/content/promotions";
 import { isProductType, productTypeContent } from "@/src/content/product-types";
@@ -276,6 +277,8 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
+
+    revalidateCatalog();
 
     return NextResponse.json(
       {

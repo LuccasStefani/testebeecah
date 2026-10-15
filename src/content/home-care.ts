@@ -14,6 +14,7 @@ type CareSelection = {
 };
 
 export const homeCareContent = {
+  mensPerfumes: "Perfumes masculinos",
   forHim: "Na rotina dele",
   forHer: "Um momento para ela",
   signature: "BEECAH COLLECTION",
@@ -31,7 +32,7 @@ export const homeCareContent = {
       accent: "dia renovado.",
       description:
         "O frescor do body splash, o cuidado do creme. Encontre seus favoritos para usar depois do banho e ao longo do dia.",
-      image: "/images/banners/masculino.jpg",
+      image: "/images/optimized/masculino-608053910e.webp",
       imageAlt: "Composição da coleção masculina Beecah",
       links: [
         {
@@ -53,7 +54,7 @@ export const homeCareContent = {
       accent: "só seu.",
       description:
         "Texturas e fragrâncias para o seu momento de cuidado. Explore os cremes para o corpo e para a pele e escolha o que combina com sua rotina.",
-      image: "/images/banners/bento4.jpg",
+      image: "/images/optimized/bento4-5072a42b2e.webp",
       imageAlt: "Composição da coleção feminina Beecah",
       links: [
         { label: "Cremes corporais", href: "/categorias/creme-corporal?genero=Feminino" },

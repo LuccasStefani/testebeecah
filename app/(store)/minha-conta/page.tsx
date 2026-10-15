@@ -108,7 +108,7 @@ export default async function MinhaContaPage() {
       <header className={accountStyles.accountIntro}>
         <div className={accountStyles.accountIntroImage}>
           <Image
-            src="/images/banners/bghero2.jpg"
+            src="/images/optimized/bghero2-dcdd93c4d7.webp"
             alt={""}
             fill
             sizes="(max-width: 767px) 100vw, 800px"

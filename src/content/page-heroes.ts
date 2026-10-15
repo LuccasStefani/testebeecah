@@ -4,7 +4,7 @@ import { collections, type CollectionKey } from "@/src/lib/product-collections";
 
 // Edit the background, copy and links independently for each destination here.
 const defaults = {
-  imageSrc: "/images/banners/bghero2.jpg",
+  imageSrc: "/images/optimized/bghero2-dcdd93c4d7.webp",
   primaryHref: "#produtos",
   secondaryHref: "/perfumes",
   collectionHref: "#produtos",
@@ -42,16 +42,23 @@ function categoryHero(key: CollectionKey, title: string, accent: string): HeroCo
 export const categoryHeroes = {
   "body-splash": {
     ...categoryHero("body-splash", "Body", "Splash"),
-    imageSrc: "/images/banners/bodybanner.jpg",
+    imageSrc: "/images/optimized/bodybanner-5d7c880f45.webp",
   },
   "perfume-de-cabelo": categoryHero("perfume-de-cabelo", "Perfumes", "de cabelo"),
   "creme-corporal": categoryHero("creme-corporal", "Cremes", "corporais"),
   "creme-para-a-pele": categoryHero("creme-para-a-pele", "Cremes", "para a pele"),
   miniaturas: categoryHero("miniaturas", "Pequenos", "favoritos"),
-  decantes: categoryHero("decantes", "Seus", "decantes"),
+  decantes: {
+    ...categoryHero("decantes", "Seus", "decantes"),
+    imageSrc: "/images/optimized/bento2-c270742d20.webp",
+    content: {
+      ...categoryHero("decantes", "Seus", "decantes").content,
+      imageAlt: "Seleção de decantes Beecah",
+    },
+  },
   arabes: {
     ...categoryHero("arabes", "Perfumes", "árabes"),
-    imageSrc: "/images/banners/arabebanner.jpg",
+    imageSrc: "/images/optimized/arabebanner-dc5f944b41.webp",
     content: {
       ...categoryHero("arabes", "Perfumes", "árabes").content,
       imageAlt: "Coleção de perfumes árabes Beecah",
@@ -60,7 +67,7 @@ export const categoryHeroes = {
   feminino: categoryHero("feminino", "Perfumes", "femininos"),
   masculino: {
     ...categoryHero("masculino", "Perfumes", "masculinos"),
-    imageSrc: "/images/banners/masculino.jpg",
+    imageSrc: "/images/optimized/masculino-608053910e.webp",
     content: {
       ...categoryHero("masculino", "Perfumes", "masculinos").content,
       imageAlt: "Coleção de perfumes masculinos Beecah",

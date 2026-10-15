@@ -8,7 +8,7 @@ export const bodySplashContent = {
     "Fragrâncias leves para depois do banho e para renovar ao longo do dia. Escolha as notas que combinam com você.",
   action: "Descobrir a coleção",
   href: "/categorias/body-splash",
-  image: "/images/banners/bodysplashposter.jpg",
+  image: "/images/optimized/bodysplashposter-0a48bdac36.webp",
   video: "/video/usebody.mp4",
   imageAlt: "Seleção de body splashes em uma composição com embalagens cor-de-rosa.",
   signature: "BEECAH COLLECTION",
@@ -27,7 +27,7 @@ export const bodySplashPreviewContent = {
   previous: "Ver body splashes anteriores",
   next: "Ver próximos body splashes",
   region: "Vitrine de Body Splash",
-  image: "/images/banners/bodybanner.jpg",
+  image: "/images/optimized/bodybanner-5d7c880f45.webp",
   imageAlt: "Seleção ilustrativa de body splashes Victoria’s Secret",
 } as const satisfies ContentDictionary;
 

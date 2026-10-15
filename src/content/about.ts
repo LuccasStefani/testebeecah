@@ -10,7 +10,7 @@ export const aboutContent = {
   ],
   primary: "Encontre seu perfume",
   secondary: "Fale com a Beecah",
-  image: "/images/banners/bghero2.jpg",
+  image: "/images/optimized/bghero2-dcdd93c4d7.webp",
   imageAlt: "Campanha da Beecah em um salão com flores e lustres",
   caption: "Uma coleção. Muitas formas de ser.",
   signature: "Beecah Collection",

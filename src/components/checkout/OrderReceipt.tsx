@@ -63,7 +63,7 @@ export default function OrderReceipt({
       <div className="grid overflow-hidden rounded-[28px] bg-[#f4f3ef] lg:grid-cols-[0.85fr_1.15fr]">
         <div className="relative isolate flex min-h-64 flex-col justify-end overflow-hidden bg-[#171914] p-7 text-white sm:p-10 lg:min-h-full">
           <Image
-            src="/images/banners/bento2.jpeg"
+            src="/images/optimized/bento2-c270742d20.webp"
             alt=""
             fill
             sizes="(min-width: 1024px) 40vw, 100vw"

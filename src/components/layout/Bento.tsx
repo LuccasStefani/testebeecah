@@ -1,3 +1,4 @@
+import { sectionAction } from "@/src/styles/section-actions";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
@@ -11,8 +12,10 @@ function BentoImage({ tile }: { tile: BentoTile }) {
       fill
       sizes={
         tile.kind === "offer"
-          ? "(min-width: 768px) 67vw, 100vw"
-          : "(min-width: 768px) 45vw, 100vw"
+          ? "(min-width: 1280px) 840px, (min-width: 768px) 67vw, 100vw"
+          : tile.id === "novos"
+            ? "(min-width: 1280px) 630px, (min-width: 768px) 50vw, 100vw"
+            : "(min-width: 1280px) 420px, (min-width: 768px) 34vw, 100vw"
       }
       className={`object-cover transition-transform duration-700 group-hover:scale-[1.035] motion-reduce:transition-none motion-reduce:transform-none ${tile.imagePosition ?? "object-center"}`}
     />
@@ -59,7 +62,7 @@ export default function Bento() {
                       {tile.note}
                     </p>
                   )}
-                  <span className="inline-flex min-h-11 items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 text-xs font-medium leading-4 text-[#171914] transition-colors group-hover:bg-[#171914] group-hover:text-white group-focus-visible:bg-[#171914] group-focus-visible:text-white motion-reduce:transition-none">
+                  <span className={sectionAction + " group-hover:bg-neutral-700"}>
                     {tile.action}
                     <ArrowUpRight size={16} strokeWidth={1.6} aria-hidden="true" />
                   </span>

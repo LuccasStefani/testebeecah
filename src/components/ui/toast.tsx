@@ -9,10 +9,11 @@ import {
   LogOut,
   Heart,
   ShoppingBag,
-  X,
 } from "lucide-react";
 import { notificationContent } from "@/src/content/notifications";
 import { toastManager, type NotificationIcon } from "@/src/lib/notifications";
+
+import SwipeToast from "./SwipeToast";
 
 const icons = {
   check: CircleCheck,
@@ -25,7 +26,10 @@ const icons = {
 } satisfies Record<NotificationIcon, typeof CircleCheck>;
 
 function ToastList() {
-  const { toasts } = Toast.useToastManager<{ icon: NotificationIcon }>();
+  const { toasts } = Toast.useToastManager<{
+    icon: NotificationIcon;
+    duration: number;
+  }>();
 
   return (
     <Toast.Portal>
@@ -40,24 +44,23 @@ function ToastList() {
             <Toast.Root
               key={toast.id}
               toast={toast}
-              swipeDirection={["right", "down"]}
-              className="pointer-events-auto relative w-full rounded-2xl border border-white/15 bg-neutral-950 p-4 text-white shadow-[0_12px_40px_#00000026] transition-[opacity,transform] duration-200 data-[starting-style]:translate-y-3 data-[starting-style]:opacity-0 data-[ending-style]:translate-y-3 data-[ending-style]:opacity-0 data-[limited]:hidden motion-reduce:transition-none"
+              className="pointer-events-auto w-full data-[limited]:hidden"
             >
-              <Toast.Content className="flex items-start gap-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white text-black">
-                  <Icon size={19} strokeWidth={1.7} aria-hidden="true" />
-                </span>
-                <div className="min-w-0 flex-1 self-center py-0.5">
-                  <Toast.Title className="text-sm leading-5 font-medium" />
-                  <Toast.Description className="mt-1 text-xs leading-5 text-neutral-300 empty:hidden" />
-                </div>
-                <Toast.Close
-                  aria-label={notificationContent.close}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                >
-                  <X size={16} aria-hidden="true" />
-                </Toast.Close>
-              </Toast.Content>
+              <SwipeToast
+                key={toast.updateKey}
+                inline
+                open={toast.transitionStatus !== "ending"}
+                title={toast.title}
+                description={toast.description}
+                icon={<Icon size={18} strokeWidth={1.7} />}
+                onClose={() => toastManager.close(toast.id)}
+                background="#27272a"
+                color="#f5f5f5"
+                fuseColor="#f5f5f5"
+                duration={toast.data?.duration ?? 4000}
+                closeButton
+                className="w-full!"
+              />
             </Toast.Root>
           );
         })}
@@ -69,7 +72,7 @@ function ToastList() {
 /** Global shadcn/Base UI toast host; survives navigation between pages. */
 export function Toaster() {
   return (
-    <Toast.Provider toastManager={toastManager} timeout={4500} limit={3}>
+    <Toast.Provider toastManager={toastManager} timeout={0} limit={3}>
       <ToastList />
     </Toast.Provider>
   );

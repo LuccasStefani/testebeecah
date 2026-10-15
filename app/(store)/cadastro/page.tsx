@@ -129,7 +129,7 @@ export default function CadastroPage() {
         <div
           className="relative hidden overflow-hidden bg-beecah-blue md:block"
           style={{
-            backgroundImage: "url('/images/banners/bghero2.jpg')",
+            backgroundImage: "url('/images/optimized/bghero2-dcdd93c4d7.webp')",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
@@ -141,7 +141,7 @@ export default function CadastroPage() {
               loop
               playsInline
               preload="none"
-              poster="/images/banners/bghero2.jpg"
+              poster="/images/optimized/bghero2-dcdd93c4d7.webp"
               aria-label={authVisualContent.videoLabel}
               onPlay={() => setPlaying(true)}
               onPause={() => setPlaying(false)}

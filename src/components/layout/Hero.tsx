@@ -21,7 +21,7 @@ const progressiveBlurLayers = [
 ] as const;
 export default function Hero({
   content = heroContent,
-  imageSrc = "/images/banners/bodybanner.jpg",
+  imageSrc = "/images/optimized/bodybanner-5d7c880f45.webp",
   primaryHref = "/perfumes",
   secondaryHref = "#colecao",
   collectionHref = "#colecao",

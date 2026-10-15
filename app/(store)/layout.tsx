@@ -1,3 +1,6 @@
+import CatalogSync from "@/src/components/products/CatalogSync";
+import { getCatalog } from "@/src/lib/catalog";
+import { catalogRevision } from "@/src/lib/catalog-revision";
 import CookieConsent from "@/src/components/layout/CookieConsent";
 import StoreSecondaryContent from "@/src/components/layout/StoreSecondaryContent";
 import { storeContent } from "@/src/content/store";
@@ -13,9 +16,11 @@ type StoreLayoutProps = {
   children: React.ReactNode;
 };
 
-export default function StoreLayout({ children }: StoreLayoutProps) {
+export default async function StoreLayout({ children }: StoreLayoutProps) {
+  const { products, failed } = await getCatalog();
   return (
     <CartProvider>
+      <CatalogSync revision={failed ? null : catalogRevision(products)} />
       <StorePreloader />
       <ClickTracking />
       <CookieConsent />

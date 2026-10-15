@@ -1,3 +1,4 @@
+import { revalidateCatalog } from "@/src/lib/revalidate-catalog";
 import { NextResponse } from "next/server";
 
 import { requireAdmin } from "@/src/lib/auth/require-admin";
@@ -50,6 +51,7 @@ export async function PATCH(_request: Request, { params }: RouteProps) {
     }
 
     if (image.is_cover) {
+      revalidateCatalog();
       return NextResponse.json({
         success: true,
         message: "Esta imagem já é a capa do produto.",
@@ -96,6 +98,8 @@ export async function PATCH(_request: Request, { params }: RouteProps) {
         { status: 500 },
       );
     }
+
+    revalidateCatalog();
 
     return NextResponse.json({
       success: true,

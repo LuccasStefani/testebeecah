@@ -110,7 +110,7 @@ export const homeStyles = {
     "[&_.home-coming]:grid-cols-[1fr_1fr] [&_.home-coming]:mt-10 [&_.home-coming]:mr-3",
     "[&_.home-coming]:mb-10 [&_.home-coming]:ml-3 [&_.home-coming]:rounded-[20px]",
     "[&_.home-coming]:overflow-hidden [&_.home-coming]:bg-[#eeede8] [&_.home-button]:inline-flex",
-    "[&_.home-button]:items-center [&_.home-button]:justify-between [&_.home-button]:gap-7",
+    "[&_.home-button]:items-center [&_.home-button]:justify-center [&_.home-button]:gap-2",
     "[&_.home-button]:min-h-[50px] [&_.home-button]:mt-3 [&_.home-button]:pt-[15px]",
     "[&_.home-button]:pr-[22px] [&_.home-button]:pb-[15px] [&_.home-button]:pl-[22px]",
     "[&_.home-button]:rounded-[12px] [&_.home-button]:bg-[#1e1e1e] [&_.home-button]:text-white",

@@ -7,7 +7,7 @@ export const personalPageHeroes = {
     titleAccent: "Beecah",
     description:
       "Fragrâncias que acompanham quem você é. Conheça a nossa coleção e encontre seu próximo perfume.",
-    imageSrc: "/images/banners/bghero2.jpg",
+    imageSrc: "/images/optimized/bghero2-dcdd93c4d7.webp",
   },
   carrinho: {
     eyebrow: "Minha conta",
@@ -15,14 +15,14 @@ export const personalPageHeroes = {
     titleAccent: "sacola",
     description:
       "Seus perfumes escolhidos, reunidos em um só lugar. Confira os itens e continue sua compra.",
-    imageSrc: "/images/banners/bghero2.jpg",
+    imageSrc: "/images/optimized/bghero2-dcdd93c4d7.webp",
   },
   favoritos: {
     eyebrow: "Minha conta",
     titleFirstLine: "Meus",
     titleAccent: "favoritos",
     description: "Perfumes que você salvou para ver depois.",
-    imageSrc: "/images/banners/bghero2.jpg",
+    imageSrc: "/images/optimized/bghero2-dcdd93c4d7.webp",
   },
 } satisfies Record<
   string,

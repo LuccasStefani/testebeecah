@@ -1,3 +1,4 @@
+import { revalidateCatalog } from "@/src/lib/revalidate-catalog";
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 
@@ -155,6 +156,8 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
+
+    revalidateCatalog();
 
     return NextResponse.json({
       success: true,

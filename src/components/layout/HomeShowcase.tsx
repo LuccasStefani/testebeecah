@@ -18,6 +18,7 @@ export default function HomeShowcase({
   eyebrow,
   embedded = false,
   repeat = true,
+  emptyMessage,
 }: {
   products: Product[];
   bestSellerIds: string[];
@@ -29,6 +30,7 @@ export default function HomeShowcase({
   eyebrow?: string;
   embedded?: boolean;
   repeat?: boolean;
+  emptyMessage?: string;
 }) {
   const sectionId = id ?? (promotion ? "promocoes-da-semana" : "colecao");
   const titleId = `${sectionId}-title`;
@@ -151,7 +153,9 @@ export default function HomeShowcase({
           className="rounded-2xl bg-neutral-50 p-8 text-sm text-neutral-600"
           role={failed ? "alert" : "status"}
         >
-          <p>{failed ? showcaseContent.failed : showcaseContent.empty}</p>
+          <p>
+            {failed ? showcaseContent.failed : (emptyMessage ?? showcaseContent.empty)}
+          </p>
           <Link
             href="/perfumes"
             className="mt-3 inline-block underline underline-offset-4"

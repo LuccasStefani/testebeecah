@@ -18,7 +18,7 @@ export const bentoContent: { tiles: BentoTile[] } = {
     {
       id: "ofertas",
       kind: "offer",
-      image: "/images/banners/bento1.jpeg",
+      image: "/images/optimized/bento1-931426ac8b.webp",
       href: "/perfumes?ofertas=true",
       eyebrow: "Oferta de Primavera",
       title: "Ganhe até\n50% Off",
@@ -29,7 +29,7 @@ export const bentoContent: { tiles: BentoTile[] } = {
     {
       id: "populares",
       kind: "collection",
-      image: "/images/banners/bento2.jpeg",
+      image: "/images/optimized/bento2-c270742d20.webp",
       href: "/categorias/decantes",
       title: "Decantes Populares",
       action: "Explorar",
@@ -38,7 +38,7 @@ export const bentoContent: { tiles: BentoTile[] } = {
     {
       id: "arabes",
       kind: "collection",
-      image: "/images/banners/bento3.png",
+      image: "/images/optimized/bento3-7fe950165b.webp",
       href: "/categorias/arabes",
       title: "Coleções\nde luxo",
       description: "Mais de 230 produtos",
@@ -48,7 +48,7 @@ export const bentoContent: { tiles: BentoTile[] } = {
     {
       id: "feminino",
       kind: "collection",
-      image: "/images/banners/bento4.jpg",
+      image: "/images/optimized/bento4-d0b99dc204.webp",
       href: "/categorias/feminino",
       title: "Coleções\nfemininas",
       description: "Mais de 230 produtos",
@@ -58,7 +58,7 @@ export const bentoContent: { tiles: BentoTile[] } = {
     {
       id: "novos",
       kind: "collection",
-      image: "/images/banners/yara.jpg",
+      image: "/images/optimized/yara-c89c607240.webp",
       href: "/categorias/novos",
       title: "Novos\nprodutos",
       action: "Explorar",

@@ -1,3 +1,4 @@
+import { revalidateCatalog } from "@/src/lib/revalidate-catalog";
 import { isPromotionDate } from "@/src/lib/promotions";
 import { promotionContent } from "@/src/content/promotions";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
@@ -260,6 +261,8 @@ export async function PATCH(request: Request, { params }: RouteProps) {
       );
     }
 
+    revalidateCatalog();
+
     return NextResponse.json({
       success: true,
       message: "Produto atualizado com sucesso.",
@@ -360,6 +363,7 @@ export async function DELETE(_request: Request, { params }: RouteProps) {
     }
 
     if (failedR2Deletes.length > 0) {
+      revalidateCatalog();
       return NextResponse.json({
         success: true,
         warning:
@@ -367,6 +371,8 @@ export async function DELETE(_request: Request, { params }: RouteProps) {
         failedImages: failedR2Deletes.length,
       });
     }
+
+    revalidateCatalog();
 
     return NextResponse.json({
       success: true,

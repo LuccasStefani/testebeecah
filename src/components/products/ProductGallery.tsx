@@ -11,7 +11,11 @@ type ProductGalleryProps = {
 };
 
 export default function ProductGallery({ name, images }: ProductGalleryProps) {
-  const [selectedImage, setSelectedImage] = useState(images[0]);
+  const [selection, setSelectedImage] = useState<string | null>(null);
+  const selectedImage =
+    selection && images.includes(selection)
+      ? selection
+      : (images[0] ?? "/images/products/placeholder.svg");
 
   return (
     <div className={productStyles.productGallery}>
@@ -22,7 +26,7 @@ export default function ProductGallery({ name, images }: ProductGalleryProps) {
           fill
           priority
           className="object-cover object-center"
-          sizes="(max-width: 1024px) 100vw, 50vw"
+          sizes="(max-width: 1024px) 100vw, (max-width: 1280px) 50vw, 640px"
         />
       </div>
 

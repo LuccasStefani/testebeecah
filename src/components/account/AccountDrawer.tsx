@@ -295,7 +295,7 @@ function AccountContent({ onClose }: { onClose: () => void }) {
         <>
           <div className="relative h-48 shrink-0 overflow-hidden rounded-[22px]">
             <Image
-              src="/images/banners/bghero2.jpg"
+              src="/images/optimized/bghero2-dcdd93c4d7.webp"
               alt={accountContent.fragranciasEMomentosBeecah}
               fill
               sizes="480px"

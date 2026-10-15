@@ -1,3 +1,4 @@
+import { sectionAction } from "@/src/styles/section-actions";
 import Image from "next/image";
 import Link from "next/link";
 import { Playfair_Display } from "next/font/google";
@@ -35,10 +36,7 @@ export default function HomeBodySplash({ products }: { products: Product[] }) {
           <p className="mt-5 max-w-[36ch] text-sm leading-7 text-[#65655e]">
             {content.description}
           </p>
-          <Link
-            href={content.href}
-            className="mt-7 inline-flex min-h-12 items-center justify-center gap-5 rounded-xl bg-[#171914] px-6 text-xs font-medium text-white transition hover:bg-[#2d416f] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2d416f]"
-          >
+          <Link href={content.href} className={sectionAction + " mt-7"}>
             {content.action}
             <ArrowUpRight size={17} aria-hidden="true" />
           </Link>
@@ -84,10 +82,7 @@ export default function HomeBodySplash({ products }: { products: Product[] }) {
         <div className="mt-8">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <h3 className={playfair.className + " text-2xl"}>{content.selection}</h3>
-            <Link
-              href={content.href}
-              className="inline-flex min-h-11 items-center gap-2 text-xs underline underline-offset-4"
-            >
+            <Link href={content.href} className={sectionAction}>
               {content.all}
               <ArrowUpRight size={15} aria-hidden="true" />
             </Link>

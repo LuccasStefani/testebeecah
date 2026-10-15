@@ -1,3 +1,4 @@
+import { sectionAction } from "@/src/styles/section-actions";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
@@ -77,20 +78,11 @@ export default function HomeCare({ products }: { products: Product[] }) {
                   {section.description}
                 </p>
                 <div className="mt-6 flex w-full flex-wrap items-center gap-3">
-                  {section.links.map((link, linkIndex) => (
+                  {section.links.map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
-                      className={
-                        "inline-flex min-h-11 items-center justify-center gap-3 rounded-xl px-4 py-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 " +
-                        (linkIndex === 0
-                          ? dark
-                            ? "bg-white text-[#171914] hover:bg-neutral-200"
-                            : "bg-[#171914] text-white hover:bg-neutral-700"
-                          : dark
-                            ? "text-white underline decoration-white/30 underline-offset-4 hover:bg-white/10"
-                            : "text-[#171914] underline decoration-black/30 underline-offset-4 hover:bg-black/5")
-                      }
+                      className={sectionAction + (dark ? " border border-white/20" : "")}
                     >
                       {link.label}
                       <ArrowUpRight size={16} aria-hidden="true" />
@@ -113,14 +105,29 @@ export default function HomeCare({ products }: { products: Product[] }) {
             ) : (
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3 px-1 text-sm text-neutral-500">
                 <p className="max-w-xl">{content.empty}</p>
-                <Link
-                  href={content.catalog}
-                  className="inline-flex min-h-11 items-center gap-2 text-xs text-[#171914] underline underline-offset-4"
-                >
+                <Link href={content.catalog} className={sectionAction}>
                   {content.explore}
                   <ArrowUpRight size={15} aria-hidden="true" />
                 </Link>
               </div>
+            )}
+            {section.gender === "Masculino" && (
+              <HomeShowcase
+                id="perfumes-masculinos-vitrine"
+                title={content.mensPerfumes}
+                eyebrow={section.eyebrow}
+                products={products
+                  .filter(
+                    (product) =>
+                      product.category === "Masculino" &&
+                      (!product.productType || product.productType === "perfume"),
+                  )
+                  .slice(0, 12)}
+                bestSellerIds={[]}
+                failed={false}
+                repeat={false}
+                embedded
+              />
             )}
           </section>
         );
